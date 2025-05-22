@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.linkedin.types;
+package app.awaytogo.gateway.resume.linkedin.types;
 
 public enum PhoneType {
     HOME,

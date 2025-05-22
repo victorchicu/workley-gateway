@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.linkedin.types;
+package app.awaytogo.gateway.common.types;
 
 public enum ResourceType {
     PDF,

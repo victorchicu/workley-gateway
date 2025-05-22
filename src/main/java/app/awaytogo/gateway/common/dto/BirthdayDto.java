@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.linkedin.dto;
+package app.awaytogo.gateway.common.dto;
 
 public class BirthdayDto {
     private int month;

@@ -1,6 +1,6 @@
-package app.awaytogo.gateway.linkedin.dto;
+package app.awaytogo.gateway.common.dto;
 
-import app.awaytogo.gateway.linkedin.types.WebsiteType;
+import app.awaytogo.gateway.resume.linkedin.types.WebsiteType;
 
 public class WebsiteDto {
     private String url;

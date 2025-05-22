@@ -1,6 +1,6 @@
-package app.awaytogo.gateway.linkedin.converters;
+package app.awaytogo.gateway.common.converters;
 
-import app.awaytogo.gateway.linkedin.types.ResourceType;
+import app.awaytogo.gateway.common.types.ResourceType;
 import jakarta.validation.constraints.NotNull;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.core.convert.converter.Converter;
