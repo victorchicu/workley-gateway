@@ -1,6 +1,6 @@
-package app.awaytogo.gateway.resume.linkedin;
+package app.awaytogo.gateway.resume.importers.linkedin;
 
-import app.awaytogo.gateway.resume.ResumeImporter;
+import app.awaytogo.gateway.resume.importers.ResumeImporter;
 import app.awaytogo.gateway.common.objects.Profile;
 import app.awaytogo.gateway.common.types.ResourceType;
 import org.springframework.stereotype.Service;

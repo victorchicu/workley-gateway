@@ -1,7 +1,7 @@
 package app.awaytogo.gateway.common.dto;
 
-import app.awaytogo.gateway.resume.linkedin.types.ImType;
-import app.awaytogo.gateway.resume.linkedin.types.PhoneType;
+import app.awaytogo.gateway.resume.importers.linkedin.types.ImType;
+import app.awaytogo.gateway.resume.importers.linkedin.types.PhoneType;
 
 import java.util.List;
 

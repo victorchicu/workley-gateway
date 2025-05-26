@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.resume;
+package app.awaytogo.gateway.resume.importers;
 
 import app.awaytogo.gateway.common.objects.Profile;
 import app.awaytogo.gateway.common.types.ResourceType;

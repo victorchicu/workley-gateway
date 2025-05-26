@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.resume.linkedin.types;
+package app.awaytogo.gateway.resume.importers.linkedin.types;
 
 public enum WebsiteType {
     PERSONAL,

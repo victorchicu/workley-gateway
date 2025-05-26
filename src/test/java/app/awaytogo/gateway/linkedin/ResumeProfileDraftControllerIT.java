@@ -5,7 +5,7 @@ import app.awaytogo.gateway.common.dto.ResumeImportRequestDto;
 import app.awaytogo.gateway.common.dto.ResumeImportResultDto;
 import org.junit.jupiter.api.Test;
 
-public class ResumeBuilderControllerIT extends TestRunner {
+public class ResumeProfileDraftControllerIT extends TestRunner {
     @Test
     void testImport() {
         ResumeImportResultDto p =
