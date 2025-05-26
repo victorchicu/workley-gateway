@@ -8,4 +8,9 @@ public class ResumeProfileDraftServiceImpl implements ResumeProfileDraftService 
     public void createResume(DraftResume resume) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public DraftResume findResume(String profileId) {
+        throw new UnsupportedOperationException();
+    }
 }
