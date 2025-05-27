@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.common.dto;
+package app.awaytogo.gateway.resume.common.dto;
 
 import app.awaytogo.gateway.resume.importers.linkedin.types.WebsiteType;
 

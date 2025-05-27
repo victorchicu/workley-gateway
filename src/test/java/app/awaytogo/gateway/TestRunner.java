@@ -1,7 +1,7 @@
 package app.awaytogo.gateway;
 
-import app.awaytogo.gateway.common.dto.ResumeImportRequestDto;
-import app.awaytogo.gateway.common.dto.ResumeImportResultDto;
+import app.awaytogo.gateway.resume.common.dto.ResumeImportRequestDto;
+import app.awaytogo.gateway.resume.common.dto.ResumeImportResultDto;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

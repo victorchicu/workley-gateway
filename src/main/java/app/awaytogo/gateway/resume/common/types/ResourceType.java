@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.common.types;
+package app.awaytogo.gateway.resume.common.types;
 
 public enum ResourceType {
     PDF,
