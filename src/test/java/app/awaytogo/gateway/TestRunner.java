@@ -1,7 +1,7 @@
 package app.awaytogo.gateway;
 
-import app.awaytogo.gateway.resume.common.dto.ResumeImportRequestDto;
-import app.awaytogo.gateway.resume.common.dto.ResumeImportResultDto;
+import app.awaytogo.gateway.resume.submission.ResumeSubmissionRequest;
+import app.awaytogo.gateway.resume.dto.ResumeImportResultDto;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +17,7 @@ public class TestRunner {
     @Autowired
     protected WebTestClient webTestClient;
 
-    protected ResumeImportResultDto importFrom(String resource, ResumeImportRequestDto dto) {
+    protected ResumeImportResultDto importFrom(String resource, ResumeSubmissionRequest dto) {
         return post("/api/resumes/{resource}/import", dto, List.of(resource))
                 .expectStatus().isOk()
                 .expectBody(ResumeImportResultDto.class)

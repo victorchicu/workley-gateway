@@ -1,10 +1,10 @@
-package app.awaytogo.gateway.resume.repository.data;
+package app.awaytogo.gateway.resume.submission.repository.data;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document
-public class ResumeEntity {
+public class ResumeSubmissionEntity {
     @Id
     private String id;
     private String profileId;
@@ -13,7 +13,7 @@ public class ResumeEntity {
         return id;
     }
 
-    public ResumeEntity setId(String id) {
+    public ResumeSubmissionEntity setId(String id) {
         this.id = id;
         return this;
     }
@@ -22,7 +22,7 @@ public class ResumeEntity {
         return profileId;
     }
 
-    public ResumeEntity setProfileId(String profileId) {
+    public ResumeSubmissionEntity setProfileId(String profileId) {
         this.profileId = profileId;
         return this;
     }
