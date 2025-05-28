@@ -13,12 +13,12 @@ public class ResumeSubmissionController {
     }
 
     @PostMapping
-    public Mono<ResumeSubmissionResult> submitResume(ResumeSubmissionRequest resumeSubmissionRequest) {
+    public Mono<ResumeSubmissionResult> submit(ResumeSubmissionRequest resumeSubmissionRequest) {
         return resumeSubmissionService.submit(
                 new ResumeSubmission());
     }
 
-    public Mono<ResumeSubmissionResult> findResumeSubmission() {
+    public Mono<ResumeSubmissionResult> findSubmission() {
         throw new UnsupportedOperationException();
     }
 }
