@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ResumeSubmissionEntity {
     @Id
     private String id;
-    private String profileId;
+    private String link;
 
     public String getId() {
         return id;
@@ -18,12 +18,12 @@ public class ResumeSubmissionEntity {
         return this;
     }
 
-    public String getProfileId() {
-        return profileId;
+    public String getLink() {
+        return link;
     }
 
-    public ResumeSubmissionEntity setProfileId(String profileId) {
-        this.profileId = profileId;
+    public ResumeSubmissionEntity setLink(String link) {
+        this.link = link;
         return this;
     }
 }
