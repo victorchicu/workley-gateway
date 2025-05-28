@@ -1,7 +1,7 @@
-package app.awaytogo.gateway.resume.submission.repository.impl;
+package app.awaytogo.gateway.resume.submissions.repository.impl;
 
-import app.awaytogo.gateway.resume.submission.repository.ExtendedResumeSubmissionRepository;
-import app.awaytogo.gateway.resume.submission.repository.data.ResumeSubmissionEntity;
+import app.awaytogo.gateway.resume.submissions.repository.ExtendedResumeSubmissionRepository;
+import app.awaytogo.gateway.resume.submissions.repository.data.ResumeSubmissionEntity;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;

@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.resume.submission;
+package app.awaytogo.gateway.resume.submissions;
 
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;

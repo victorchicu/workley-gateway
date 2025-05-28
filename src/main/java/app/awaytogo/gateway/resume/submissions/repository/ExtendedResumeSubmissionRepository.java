@@ -1,6 +1,6 @@
-package app.awaytogo.gateway.resume.submission.repository;
+package app.awaytogo.gateway.resume.submissions.repository;
 
-import app.awaytogo.gateway.resume.submission.repository.data.ResumeSubmissionEntity;
+import app.awaytogo.gateway.resume.submissions.repository.data.ResumeSubmissionEntity;
 import reactor.core.publisher.Mono;
 
 public interface ExtendedResumeSubmissionRepository {

@@ -1,6 +1,6 @@
 package app.awaytogo.gateway;
 
-import app.awaytogo.gateway.resume.submission.ResumeSubmissionRequest;
+import app.awaytogo.gateway.resume.submissions.ResumeSubmissionRequest;
 import app.awaytogo.gateway.resume.dto.ResumeImportResultDto;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

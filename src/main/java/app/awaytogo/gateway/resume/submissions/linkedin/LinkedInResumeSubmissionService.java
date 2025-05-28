@@ -1,9 +1,9 @@
-package app.awaytogo.gateway.resume.submission.linkedin;
+package app.awaytogo.gateway.resume.submissions.linkedin;
 
-import app.awaytogo.gateway.resume.submission.ResumeSubmission;
-import app.awaytogo.gateway.resume.submission.ResumeSubmissionResult;
-import app.awaytogo.gateway.resume.submission.ResumeSubmissionService;
-import app.awaytogo.gateway.resume.submission.repository.ResumeSubmissionSubmissionRepository;
+import app.awaytogo.gateway.resume.submissions.ResumeSubmission;
+import app.awaytogo.gateway.resume.submissions.ResumeSubmissionResult;
+import app.awaytogo.gateway.resume.submissions.ResumeSubmissionService;
+import app.awaytogo.gateway.resume.submissions.repository.ResumeSubmissionSubmissionRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 

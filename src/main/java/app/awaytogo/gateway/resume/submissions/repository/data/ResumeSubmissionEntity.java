@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.resume.submission.repository.data;
+package app.awaytogo.gateway.resume.submissions.repository.data;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

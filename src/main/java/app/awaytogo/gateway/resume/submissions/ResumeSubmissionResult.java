@@ -1,4 +1,4 @@
-package app.awaytogo.gateway.resume.submission;
+package app.awaytogo.gateway.resume.submissions;
 
 public record ResumeSubmissionResult(String submissionId) {
 

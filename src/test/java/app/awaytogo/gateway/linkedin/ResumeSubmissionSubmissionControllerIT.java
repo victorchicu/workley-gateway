@@ -1,7 +1,7 @@
 package app.awaytogo.gateway.linkedin;
 
 import app.awaytogo.gateway.TestRunner;
-import app.awaytogo.gateway.resume.submission.ResumeSubmissionRequest;
+import app.awaytogo.gateway.resume.submissions.ResumeSubmissionRequest;
 import app.awaytogo.gateway.resume.dto.ResumeImportResultDto;
 import org.junit.jupiter.api.Test;
 
