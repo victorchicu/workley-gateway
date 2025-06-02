@@ -1,4 +1,6 @@
 package app.awaytogo.gateway.resume.infrastructure.messaging.kafka.publisher;
 
-public class KafkaDomainEventPublisher {
+import app.awaytogo.gateway.resume.infrastructure.messaging.DomainEventPublisher;
+
+public class KafkaDomainEventPublisher implements DomainEventPublisher {
 }

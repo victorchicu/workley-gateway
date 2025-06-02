@@ -1,4 +1,4 @@
 package app.awaytogo.gateway.resume.dto;
 
-public class SubmitResumeRequest {
+public class CreateResumeApiRequest {
 }
