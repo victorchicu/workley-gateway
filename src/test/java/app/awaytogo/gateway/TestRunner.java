@@ -54,15 +54,6 @@ public class TestRunner {
                 .sign(Algorithm.HMAC256("secret"));
     }
 
-    protected Map<String, Object> createResume(CreateResumeRequest apiRequest) {
-        return post("/api/resumes", apiRequest, Collections.emptyList())
-                .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<Map<String, Object>>() {
-                })
-                .returnResult()
-                .getResponseBody();
-    }
-
     protected <T> T toObject(Message<byte[]> output, Class<T> clazz) throws IOException {
         return objectMapper.readValue(output.getPayload(), clazz);
     }
