@@ -1,30 +1,4 @@
-server:
-  ssl:
-    enabled: false
-  port: 8443
-  error:
-    include-message: always
-  reactive:
-    session:
-      timeout: 30d
-      cookie:
-        max-age: 30d
-  forward-headers-strategy: framework
 spring:
-  mail:
-    host: smtp-relay.brevo.com
-    port: 587
-    username: 82431b001@smtp-brevo.com
-    password: IQN7YF4wgh5rRB2P
-    protocol: smtp
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-  kafka:
-    bootstrap-servers: ${GATEWAY_KAFKA_BOOTSTRAP_SERVERS}
   cloud:
     stream:
       bindings:
@@ -84,35 +58,8 @@ spring:
         generateResumePdfRequest;
         updateResumeReadModel;
         prepareWebSocketNotification
-    gateway:
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowed-methods: GET, POST, PUT, DELETE, OPTIONS
-            allowed-headers: "*"
-            allow-credentials: true
-            allowed-origin-patterns: "https://*.awaytogo.app"
-        add-to-simple-url-handler-mapping: true
-      routes:
-        - id: awaytogo-websocket
-          uri: http://websocket:1613
-          predicates:
-            - Path=/api/websocket/**
-          filters:
-            - StripPrefix=2
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${GATEWAY_KEYCLOAK_ISSUER_URI}
-  application:
-    name: awaytogo-gateway
-#management:
-#  endpoint:
-#    health:
-#      probes:
-#        enabled: true
-#  endpoints:
-#    web:
-#      exposure:
-#        include: health
+          issuer-uri: test-issuer

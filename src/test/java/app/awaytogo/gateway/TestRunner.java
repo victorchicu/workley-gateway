@@ -1,6 +1,6 @@
 package app.awaytogo.gateway;
 
-import app.awaytogo.gateway.resume.dto.CreateResumeApiRequest;
+import app.awaytogo.gateway.resume.dto.CreateResumeRequest;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,8 +24,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import static org.springframework.test.web.reactive.server.WebTestClient.*;
 
 @RunWith(SpringRunner.class)
 @Testcontainers
@@ -56,7 +54,7 @@ public class TestRunner {
                 .sign(Algorithm.HMAC256("secret"));
     }
 
-    protected Map<String, Object> createResume(CreateResumeApiRequest apiRequest) {
+    protected Map<String, Object> createResume(CreateResumeRequest apiRequest) {
         return post("/api/resumes", apiRequest, Collections.emptyList())
                 .expectStatus().isOk()
                 .expectBody(new ParameterizedTypeReference<Map<String, Object>>() {

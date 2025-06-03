@@ -4,7 +4,7 @@ import app.awaytogo.gateway.resume.command.CreateResumeCommand;
 import app.awaytogo.gateway.resume.command.handler.CreateResumeCommandHandler;
 import app.awaytogo.gateway.resume.domain.ResumeId;
 import app.awaytogo.gateway.resume.domain.ResumeStatus;
-import app.awaytogo.gateway.resume.dto.CreateResumeApiRequest;
+import app.awaytogo.gateway.resume.dto.CreateResumeRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,18 +34,15 @@ public class ResumeCommandController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<Map<String, String>>> createResume(Principal principal, @Valid @RequestBody CreateResumeApiRequest apiRequest) {
+    public Mono<ResponseEntity<Map<String, String>>> createResume(Principal principal, @Valid @RequestBody CreateResumeRequest createResumeRequest) {
 
-        String userId = principal.getName();
-        String newResumeId = ResumeId.generate().value();
-
-        log.info("Received request to create resume. Generated ID: {} for user: {} from LinkedIn URL: {}",
-                newResumeId, userId, apiRequest.linkedinUrl());
+        String resumeId = ResumeId.generate().value();
+        log.info("Received request to create resume. New ID: {} for user: {} and LinkedIn URL: {}", resumeId, principal.getName(), createResumeRequest.linkedinUrl());
 
         CreateResumeCommand command = new CreateResumeCommand(
-                newResumeId,
-                userId,
-                apiRequest.linkedinUrl()
+                resumeId,
+                principal.getName(),
+                createResumeRequest.linkedinUrl()
         );
 
         return createResumeCommandHandler.handle(command)
@@ -54,27 +51,27 @@ public class ResumeCommandController {
                                     .scheme("https")
                                     .host("awaytogo.app")
                                     .path("/resumes/{id}")
-                                    .buildAndExpand(newResumeId)
+                                    .buildAndExpand(resumeId)
                                     .toUri();
-                            log.info("Resume creation initiated. ID: {}. Location: {}", newResumeId, location);
+                            log.info("Resume creation initiated. ID: {}. Location: {}", resumeId, location);
                             return ResponseEntity.created(location)
                                     .body(Map.of(
-                                            "resumeId", newResumeId,
+                                            "resumeId", resumeId,
                                             "message", "Resume creation initiated successfully.",
                                             "status", ResumeStatus.PENDING_PROFILE_FETCH.toString()
                                     ));
                         })
                         .onErrorResume(IllegalArgumentException.class, e -> {
-                            log.warn("Invalid argument during resume creation for user {}: {}", userId, e.getMessage());
+                            log.warn("Invalid argument during resume creation for user {}: {}", principal.getName(), e.getMessage());
                             // Consider using ProblemDetail for richer error responses (RFC 7807)
                             return Mono.just(ResponseEntity.badRequest().body(Map.of("error", "Invalid request data: " + e.getMessage())));
                         })
                         .onErrorResume(OptimisticLockingFailureException.class, e -> { // Specific exception from EventStore
-                            log.warn("Concurrency issue creating resume {}: {}", newResumeId, e.getMessage());
+                            log.warn("Concurrency issue creating resume {}: {}", resumeId, e.getMessage());
                             return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage())));
                         })
                         .onErrorResume(Exception.class, e -> {
-                            log.error("Error creating resume for user {}: {}", userId, e.getMessage(), e);
+                            log.error("Error creating resume for user {}: {}", principal.getName(), e.getMessage(), e);
                             return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                     .body(Map.of("error", "An unexpected error occurred.")));
                         }));
