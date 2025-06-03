@@ -23,9 +23,7 @@ public class SecurityConfiguration {
                 )
                 .requestCache(ServerHttpSecurity.RequestCacheSpec::disable)
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
-                        // Permit access to resume submissions (including anonymous users)
-                        .pathMatchers("/resume/submissions/**").permitAll()
-                        // By default, authenticate any other exchange
+                        .pathMatchers("/api/resumes/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .requestCache(ServerHttpSecurity.RequestCacheSpec::disable)

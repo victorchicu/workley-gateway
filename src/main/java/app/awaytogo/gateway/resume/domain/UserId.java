@@ -1,4 +1,5 @@
 package app.awaytogo.gateway.resume.domain;
 
-public class ResumeProgress {
+public record UserId(String value) {
+
 }

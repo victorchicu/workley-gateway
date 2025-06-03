@@ -31,9 +31,14 @@ dependencies {
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    testImplementation 'com.auth0:java-jwt:4.4.0'
     testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.testcontainers:kafka'
+    testImplementation 'org.testcontainers:mongodb'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.springframework.cloud:spring-cloud-stream-test-binder'
 }
 
 dependencyManagement {
