@@ -1,12 +1,8 @@
 package app.awaytogo.command.infrastructure.eventstore.impl;
 
-import app.awaytogo.command.api.controller.CommandController;
 import app.awaytogo.command.domain.event.DomainEvent;
 import app.awaytogo.command.domain.exception.AggregateVersionConflictException;
-import app.awaytogo.command.infrastructure.eventstore.AggregateSnapshot;
-import app.awaytogo.command.infrastructure.eventstore.EventDocument;
-import app.awaytogo.command.infrastructure.eventstore.EventSerializer;
-import app.awaytogo.command.infrastructure.eventstore.SnapshotDocument;
+import app.awaytogo.command.infrastructure.eventstore.*;
 import app.awaytogo.command.infrastructure.messaging.KafkaEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +11,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
-import org.springframework.util.IdGenerator;
+import org.springframework.util.SimpleIdGenerator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class MongoEventStore {
+public class MongoEventStore implements EventStore {
     private static final Logger log = LoggerFactory.getLogger(MongoEventStore.class);
 
     private final EventSerializer eventSerializer;
@@ -53,7 +49,7 @@ public class MongoEventStore {
                     for (DomainEvent event : events) {
                         version++;
                         EventDocument doc = EventDocument.builder()
-                                .eventId(IdGenerator.generateId())
+                                .eventId(new SimpleIdGenerator().generateId().toString())
                                 .aggregateId(aggregateId)
                                 .eventType(event.getClass().getSimpleName())
                                 .eventData(eventSerializer.serialize(event))
