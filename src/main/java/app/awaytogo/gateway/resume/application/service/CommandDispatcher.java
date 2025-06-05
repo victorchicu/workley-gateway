@@ -13,17 +13,17 @@ import java.util.Map;
 public class CommandDispatcher {
     private static final Logger log = LoggerFactory.getLogger(CommandDispatcher.class);
 
-    private final Map<String, CommandHandler<?>> handlers;
+    private final Map<String, CommandHandler<? extends Command>> testHandlers;
 
-    public CommandDispatcher(Map<String, CommandHandler<?>> handlers) {
-        this.handlers = handlers;
+    public CommandDispatcher(Map<String, CommandHandler<? extends Command>> testHandlers) {
+        this.testHandlers = testHandlers;
     }
 
     @SuppressWarnings("unchecked")
     public Mono<String> dispatch(Command command) {
         String commandType = command.getClass().getSimpleName();
 
-        CommandHandler<Command> commandHandler = (CommandHandler<Command>) handlers.get(commandType);
+        CommandHandler<Command> commandHandler = (CommandHandler<Command>) testHandlers.get(commandType);
 
         if (commandHandler == null) {
             return Mono.error(new IllegalArgumentException(
