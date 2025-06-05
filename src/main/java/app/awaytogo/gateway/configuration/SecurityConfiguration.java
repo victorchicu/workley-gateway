@@ -23,7 +23,7 @@ public class SecurityConfiguration {
                 )
                 .requestCache(ServerHttpSecurity.RequestCacheSpec::disable)
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
-                        .pathMatchers("/api/resumes/**").permitAll()
+                        .pathMatchers("/api/v1/resumes/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .requestCache(ServerHttpSecurity.RequestCacheSpec::disable)
