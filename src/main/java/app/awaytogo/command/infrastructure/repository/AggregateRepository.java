@@ -56,35 +56,6 @@ public class AggregateRepository {
                 .doOnSuccess(v -> log.debug("Saved aggregate {} with {} new events", aggregateId, newEvents.size()));
     }
 
-    private Mono<ResumeAggregate> loadFromSnapshot(String aggregateId, AggregateSnapshot snapshot) {
-        // Deserialize aggregate from snapshot
-        ResumeAggregate aggregate = snapshotStrategy.deserialize(snapshot.getAggregateData());
-        aggregate.setVersion(snapshot.getVersion());
-
-        // Load events after snapshot
-        return eventStore.getEvents(aggregateId, snapshot.getVersion())
-                .collectList()
-                .map(events -> {
-                    events.forEach(aggregate::apply);
-                    aggregate.setVersion(snapshot.getVersion() + events.size());
-                    return aggregate;
-                });
-    }
-
-    private Mono<ResumeAggregate> loadFromEvents(String aggregateId) {
-        return eventStore.getEvents(aggregateId)
-                .collectList()
-                .map(events -> {
-                    if (events.isEmpty()) {
-                        return null;
-                    }
-                    ResumeAggregate aggregate = new ResumeAggregate();
-                    events.forEach(aggregate::apply);
-                    aggregate.setVersion((long) events.size());
-                    return aggregate;
-                });
-    }
-
     private boolean shouldTakeSnapshot(ResumeAggregate aggregate) {
         return aggregate.getVersion() % SNAPSHOT_FREQUENCY == 0;
     }
@@ -100,5 +71,30 @@ public class AggregateRepository {
         return eventStore.saveSnapshot(snapshot)
                 .doOnSuccess(v -> log.debug("Created snapshot for aggregate {} at version {}",
                         aggregate.getId(), aggregate.getVersion()));
+    }
+
+    private Mono<ResumeAggregate> loadFromEvents(String aggregateId) {
+        return eventStore.getEvents(aggregateId)
+                .collectList()
+                .mapNotNull(events -> {
+                    ResumeAggregate aggregate = ResumeAggregate.fromEvents(events);
+                    aggregate.setVersion((long) events.size());
+                    return aggregate;
+                });
+    }
+
+    private Mono<ResumeAggregate> loadFromSnapshot(String aggregateId, AggregateSnapshot snapshot) {
+        // Deserialize aggregate from snapshot
+        ResumeAggregate aggregate = snapshotStrategy.deserialize(snapshot.getAggregateData());
+        aggregate.setVersion(snapshot.getVersion());
+
+        // Load events after snapshot
+        return eventStore.getEvents(aggregateId, snapshot.getVersion())
+                .collectList()
+                .map(events -> {
+                    events.forEach(aggregate::apply);
+                    aggregate.setVersion(snapshot.getVersion() + events.size());
+                    return aggregate;
+                });
     }
 }
