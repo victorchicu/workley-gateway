@@ -30,7 +30,7 @@ public class TestResumeCommandController extends TestRunner {
     public void createResume() {
 
         CommandResponse actual = post("/api/v1/resumes", new CreateResumeRequest("https://linkedin.com/in/victorchicu"), Collections.emptyList())
-                .expectStatus().isOk()
+                .expectStatus().isCreated()
                 // @formatter:off
                 .expectBody(CommandResponse.class)
                 // @formatter:on

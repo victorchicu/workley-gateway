@@ -1,7 +1,7 @@
 package app.awaytogo.gateway.resume.infrastructure.eventstore.impl;
 
 import app.awaytogo.gateway.resume.domain.event.DomainEvent;
-import app.awaytogo.gateway.resume.domain.exception.AggregateVersionConflictException;
+import app.awaytogo.gateway.resume.domain.exception.InfrastructureException;
 import app.awaytogo.gateway.resume.infrastructure.eventstore.*;
 import app.awaytogo.gateway.resume.infrastructure.messaging.KafkaEventPublisher;
 import org.slf4j.Logger;
@@ -23,15 +23,15 @@ public class MongoEventStore implements EventStore {
 
     private final EventSerializer eventSerializer;
     private final KafkaEventPublisher eventPublisher;
-    private final ReactiveMongoTemplate mongoTemplate;
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
 
     private static final String EVENT_COLLECTION = "events";
     private static final String SNAPSHOT_COLLECTION = "snapshots";
 
-    public MongoEventStore(EventSerializer eventSerializer, KafkaEventPublisher eventPublisher, ReactiveMongoTemplate mongoTemplate) {
+    public MongoEventStore(EventSerializer eventSerializer, KafkaEventPublisher eventPublisher, ReactiveMongoTemplate reactiveMongoTemplate) {
         this.eventSerializer = eventSerializer;
         this.eventPublisher = eventPublisher;
-        this.mongoTemplate = mongoTemplate;
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
     @Override
@@ -46,17 +46,17 @@ public class MongoEventStore implements EventStore {
 
                     for (DomainEvent event : events) {
                         version++;
-                        EventDocument doc = EventDocument.builder()
+                        EventDocument eventDocument = EventDocument.builder()
                                 .aggregateId(aggregateId)
                                 .eventType(event.getClass().getSimpleName())
                                 .eventData(eventSerializer.serialize(event))
                                 .eventVersion(version)
                                 .timestamp(event.getTimestamp())
                                 .build();
-                        eventDocuments.add(doc);
+                        eventDocuments.add(eventDocument);
                     }
 
-                    return mongoTemplate.insertAll(eventDocuments)
+                    return reactiveMongoTemplate.insertAll(eventDocuments)
                             .collectList()
                             .flatMap(saved -> publishEvents(events))
                             .then();
@@ -70,8 +70,8 @@ public class MongoEventStore implements EventStore {
         Query query = Query.query(Criteria.where("aggregateId").is(aggregateId))
                 .with(Sort.by(Sort.Direction.ASC, "eventVersion"));
 
-        return mongoTemplate.find(query, EventDocument.class, EVENT_COLLECTION)
-                .map(doc -> eventSerializer.deserialize(doc.getEventData(), doc.getEventType()))
+        return reactiveMongoTemplate.find(query, EventDocument.class, EVENT_COLLECTION)
+                .map(eventDocument -> eventSerializer.deserialize(eventDocument.getEventData(), eventDocument.getEventType()))
                 .doOnComplete(() -> log.debug("Loaded all events for aggregate {}", aggregateId));
     }
 
@@ -82,23 +82,25 @@ public class MongoEventStore implements EventStore {
                         .and("eventVersion").gt(fromVersion)
         ).with(Sort.by(Sort.Direction.ASC, "eventVersion"));
 
-        return mongoTemplate.find(query, EventDocument.class, EVENT_COLLECTION)
+        return reactiveMongoTemplate.find(query, EventDocument.class, EVENT_COLLECTION)
                 .map(doc -> eventSerializer.deserialize(doc.getEventData(), doc.getEventType()));
     }
 
     @Override
     public Mono<AggregateSnapshot> getLatestSnapshot(String aggregateId) {
-        Query query = Query.query(Criteria.where("aggregateId").is(aggregateId))
+        Query query = Query.query(Criteria.where("aggregateId").is(aggregateId).orOperator(Criteria.where("resumeId").is(aggregateId)))
                 .with(Sort.by(Sort.Direction.DESC, "version"))
                 .limit(1);
 
-        return mongoTemplate.findOne(query, SnapshotDocument.class, SNAPSHOT_COLLECTION)
-                .map(doc -> AggregateSnapshot.builder()
-                        .aggregateId(doc.getAggregateId())
-                        .aggregateData(doc.getAggregateData())
-                        .version(doc.getVersion())
-                        .timestamp(doc.getTimestamp())
-                        .build())
+        return reactiveMongoTemplate.findOne(query, SnapshotDocument.class, SNAPSHOT_COLLECTION)
+                .map(snapshotDocument ->
+                        AggregateSnapshot.builder()
+                                .aggregateId(snapshotDocument.getAggregateId())
+                                .aggregateData(snapshotDocument.getAggregateData())
+                                .version(snapshotDocument.getVersion())
+                                .timestamp(snapshotDocument.getTimestamp())
+                                .build()
+                )
                 .doOnSuccess(snapshot -> {
                     if (snapshot != null) {
                         log.debug("Found snapshot for aggregate {} at version {}", aggregateId, snapshot.getVersion());
@@ -116,7 +118,7 @@ public class MongoEventStore implements EventStore {
                 .timestamp(snapshot.getTimestamp())
                 .build();
 
-        return mongoTemplate.save(document, SNAPSHOT_COLLECTION)
+        return reactiveMongoTemplate.save(document, SNAPSHOT_COLLECTION)
                 .doOnSuccess(saved -> log.debug("Saved snapshot for aggregate {} at version {}",
                         snapshot.getAggregateId(), snapshot.getVersion()))
                 .then();
@@ -131,12 +133,12 @@ public class MongoEventStore implements EventStore {
                 .with(Sort.by(Sort.Direction.DESC, "eventVersion"))
                 .limit(1);
 
-        return mongoTemplate.findOne(query, EventDocument.class, EVENT_COLLECTION)
+        return reactiveMongoTemplate.findOne(query, EventDocument.class, EVENT_COLLECTION)
                 .map(EventDocument::getEventVersion)
                 .defaultIfEmpty(0L)
                 .flatMap(currentVersion -> {
                     if (!currentVersion.equals(expectedVersion)) {
-                        return Mono.error(new AggregateVersionConflictException(
+                        return Mono.error(new InfrastructureException(
                                 String.format("Version conflict for aggregate %s. Expected: %d, Current: %d",
                                         aggregateId, expectedVersion, currentVersion)
                         ));

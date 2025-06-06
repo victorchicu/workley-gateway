@@ -1,5 +1,6 @@
 package app.awaytogo.gateway.resume.application.service;
 
+import app.awaytogo.gateway.resume.api.dto.CommandResponse;
 import app.awaytogo.gateway.resume.application.handler.CommandHandler;
 import app.awaytogo.gateway.resume.domain.command.Command;
 import org.slf4j.Logger;
@@ -13,17 +14,17 @@ import java.util.Map;
 public class CommandDispatcher {
     private static final Logger log = LoggerFactory.getLogger(CommandDispatcher.class);
 
-    private final Map<String, CommandHandler<? extends Command>> testHandlers;
+    private final Map<String, CommandHandler<? extends Command>> commandHandlers;
 
-    public CommandDispatcher(Map<String, CommandHandler<? extends Command>> testHandlers) {
-        this.testHandlers = testHandlers;
+    public CommandDispatcher(Map<String, CommandHandler<? extends Command>> commandHandlers) {
+        this.commandHandlers = commandHandlers;
     }
 
     @SuppressWarnings("unchecked")
     public Mono<String> dispatch(Command command) {
         String commandType = command.getClass().getSimpleName();
 
-        CommandHandler<Command> commandHandler = (CommandHandler<Command>) testHandlers.get(commandType);
+        CommandHandler<Command> commandHandler = (CommandHandler<Command>) commandHandlers.get(commandType);
 
         if (commandHandler == null) {
             return Mono.error(new IllegalArgumentException(
@@ -31,7 +32,8 @@ public class CommandDispatcher {
             ));
         }
 
-        log.debug("Dispatching command {} to handler {}", commandType, commandHandler.getClass().getSimpleName());
+        log.debug("Dispatching command {} to handler {}",
+                commandType, commandHandler.getClass().getSimpleName());
 
         return commandHandler.handle(command)
                 .doOnSuccess(result ->

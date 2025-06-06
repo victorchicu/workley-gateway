@@ -23,7 +23,7 @@ public class EventSerializer {
 
     public DomainEvent deserialize(String eventData, String eventType) {
         try {
-            Class<?> eventClass = Class.forName("com.resume.command.domain.event." + eventType);
+            Class<?> eventClass = Class.forName("app.awaytogo.gateway.resume.domain.event." + eventType);
             return (DomainEvent) objectMapper.readValue(eventData, eventClass);
         } catch (Exception e) {
             throw new RuntimeException("Failed to deserialize event", e);

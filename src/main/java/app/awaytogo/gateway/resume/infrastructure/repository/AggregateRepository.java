@@ -25,7 +25,22 @@ public class AggregateRepository {
         this.snapshotStrategy = snapshotStrategy;
     }
 
-    private static final int SNAPSHOT_FREQUENCY = 10; // Take snapshot every 10 events
+    private static final int SNAPSHOT_FREQUENCY = 10;
+
+    public Mono<Void> save(ResumeAggregate aggregate, List<DomainEvent> newEvents) {
+        String aggregateId = aggregate.getAggregateId();
+        Long currentVersion = aggregate.getVersion();
+
+        return eventStore.saveEvents(aggregateId, newEvents, currentVersion)
+                .then(Mono.defer(() -> {
+                    aggregate.setVersion(currentVersion + newEvents.size());
+                    if (shouldTakeSnapshot(aggregate)) {
+                        return takeSnapshot(aggregate);
+                    }
+                    return Mono.empty();
+                }))
+                .doOnSuccess(v -> log.debug("Saved aggregate {} with {} new events", aggregateId, newEvents.size()));
+    }
 
     public Mono<ResumeAggregate> load(String aggregateId) {
         return eventStore.getLatestSnapshot(aggregateId)
@@ -38,36 +53,16 @@ public class AggregateRepository {
                 });
     }
 
-    public Mono<Void> save(ResumeAggregate aggregate, List<DomainEvent> newEvents) {
-        String aggregateId = aggregate.getId();
-        Long currentVersion = aggregate.getVersion();
-
-        return eventStore.saveEvents(aggregateId, newEvents, currentVersion)
-                .then(Mono.defer(() -> {
-                    // Update aggregate version
-                    aggregate.setVersion(currentVersion + newEvents.size());
-
-                    // Check if we need to take a snapshot
-                    if (shouldTakeSnapshot(aggregate)) {
-                        return takeSnapshot(aggregate);
-                    }
-                    return Mono.empty();
-                }))
-                .doOnSuccess(v -> log.debug("Saved aggregate {} with {} new events", aggregateId, newEvents.size()));
-    }
 
     private Mono<ResumeAggregate> loadFromSnapshot(String aggregateId, AggregateSnapshot snapshot) {
-        // Deserialize aggregate from snapshot
-        ResumeAggregate aggregate = snapshotStrategy.deserialize(snapshot.getAggregateData());
-        aggregate.setVersion(snapshot.getVersion());
-
-        // Load events after snapshot
+        ResumeAggregate resumeAggregate = snapshotStrategy.deserialize(snapshot.getAggregateData());
+        resumeAggregate.setVersion(snapshot.getVersion());
         return eventStore.getEvents(aggregateId, snapshot.getVersion())
                 .collectList()
                 .map(events -> {
-                    events.forEach(aggregate::apply);
-                    aggregate.setVersion(snapshot.getVersion() + events.size());
-                    return aggregate;
+                    events.forEach(resumeAggregate::apply);
+                    resumeAggregate.setVersion(snapshot.getVersion() + events.size());
+                    return resumeAggregate;
                 });
     }
 
@@ -82,12 +77,12 @@ public class AggregateRepository {
     }
 
     private boolean shouldTakeSnapshot(ResumeAggregate aggregate) {
-        return aggregate.getVersion() % SNAPSHOT_FREQUENCY == 0;
+        return aggregate.getVersion() %SNAPSHOT_FREQUENCY == 0;
     }
 
     private Mono<Void> takeSnapshot(ResumeAggregate aggregate) {
         AggregateSnapshot snapshot = AggregateSnapshot.builder()
-                .aggregateId(aggregate.getId())
+                .aggregateId(aggregate.getAggregateId())
                 .aggregateData(snapshotStrategy.serialize(aggregate))
                 .version(aggregate.getVersion())
                 .timestamp(Instant.now())
@@ -95,6 +90,6 @@ public class AggregateRepository {
 
         return eventStore.saveSnapshot(snapshot)
                 .doOnSuccess(v -> log.debug("Created snapshot for aggregate {} at version {}",
-                        aggregate.getId(), aggregate.getVersion()));
+                        aggregate.getAggregateId(), aggregate.getVersion()));
     }
 }

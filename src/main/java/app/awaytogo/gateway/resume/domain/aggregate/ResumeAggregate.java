@@ -1,7 +1,7 @@
 package app.awaytogo.gateway.resume.domain.aggregate;
 
 import app.awaytogo.gateway.resume.domain.command.CreateResumeCommand;
-import app.awaytogo.gateway.resume.domain.enums.ResumeState;
+import app.awaytogo.gateway.resume.domain.enums.ProcessingState;
 import app.awaytogo.gateway.resume.domain.event.DomainEvent;
 import app.awaytogo.gateway.resume.domain.event.ResumeCreationInitiated;
 import app.awaytogo.gateway.resume.domain.exception.DomainException;
@@ -10,24 +10,15 @@ import java.time.Instant;
 import java.util.List;
 
 public class ResumeAggregate implements AggregateRoot {
-    private String id;
     private String resumeId;
-    private ResumeState resumeState;
+    private String aggregateId;
+    private ProcessingState processingState;
     private Long version;
 
     public static ResumeAggregate fromEvents(List<DomainEvent> events) {
         ResumeAggregate aggregate = new ResumeAggregate();
         events.forEach(aggregate::apply);
         return aggregate;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public ResumeAggregate setId(String id) {
-        this.id = id;
-        return this;
     }
 
     public String getResumeId() {
@@ -39,12 +30,21 @@ public class ResumeAggregate implements AggregateRoot {
         return this;
     }
 
-    public ResumeState getResumeState() {
-        return resumeState;
+    public String getAggregateId() {
+        return aggregateId;
     }
 
-    public ResumeAggregate setResumeState(ResumeState resumeState) {
-        this.resumeState = resumeState;
+    public ResumeAggregate setAggregateId(String aggregateId) {
+        this.aggregateId = aggregateId;
+        return this;
+    }
+
+    public ProcessingState getResumeState() {
+        return processingState;
+    }
+
+    public ResumeAggregate setResumeState(ProcessingState processingState) {
+        this.processingState = processingState;
         return this;
     }
 
@@ -61,23 +61,22 @@ public class ResumeAggregate implements AggregateRoot {
         switch (event) {
             case ResumeCreationInitiated e -> {
                 this.resumeId = e.getResumeId();
-                this.resumeState = ResumeState.INITIATED;
+                this.processingState = ProcessingState.INITIATED;
             }
-            default -> {
-                this.resumeState = ResumeState.UNDEFINED;
-            }
+            default -> this.processingState = ProcessingState.UNKNOWN;
         }
     }
 
     public List<DomainEvent> handle(CreateResumeCommand command) {
-        if (this.id != null) {
-            throw new DomainException("Resume already exists");
+        if (this.aggregateId != null) {
+            throw new DomainException("You’ve already completed this step.");
         }
-        return List.of(new ResumeCreationInitiated(
-                command.getResumeId(),
-                command.getUserId(),
-                command.getLinkedinUrl(),
-                Instant.now()
-        ));
+        return List.of(
+                new ResumeCreationInitiated(
+                        command.getResumeId(),
+                        command.getPrincipal().getName(),
+                        command.getSource(),
+                        Instant.now()
+                ));
     }
 }

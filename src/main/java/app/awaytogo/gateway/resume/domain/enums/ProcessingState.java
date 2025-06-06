@@ -1,9 +1,9 @@
 package app.awaytogo.gateway.resume.domain.enums;
 
-public enum ResumeState {
-    UNDEFINED,
+public enum ProcessingState {
+    UNKNOWN,
     INITIATED,
     PROFILE_FETCHING,
-    PROFILE_FETCHED,
+    PROFILE_FETCHED_OK,
     PROFILE_FETCH_FAILED,
 }

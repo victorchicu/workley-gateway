@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
-@Document(collation = "events")
+@Document(collection = "events")
 public class EventDocument {
     @Id
     private String id;

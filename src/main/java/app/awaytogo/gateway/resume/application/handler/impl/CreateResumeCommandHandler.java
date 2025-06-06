@@ -26,11 +26,11 @@ public class CreateResumeCommandHandler implements CommandHandler<CreateResumeCo
         return aggregateRepository.load(command.getResumeId())
                 .defaultIfEmpty(
                         new ResumeAggregate()
-//                                .setId()
+                                .setResumeId(command.getResumeId())
                 )
                 .flatMap(aggregate -> {
                     List<DomainEvent> events = aggregate.handle(command);
-                    return eventStore.saveEvents(aggregate.getId(), events, aggregate.getVersion())
+                    return eventStore.saveEvents(aggregate.getAggregateId(), events, aggregate.getVersion())
                             .thenReturn(command.getResumeId());
                 });
     }

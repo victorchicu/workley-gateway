@@ -1,11 +1,13 @@
 package app.awaytogo.gateway.resume.infrastructure.eventstore;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
 @Document(collection = "snapshots")
 public class SnapshotDocument {
+    @Id
     private String id;
     private String aggregateId;
     private String aggregateType;

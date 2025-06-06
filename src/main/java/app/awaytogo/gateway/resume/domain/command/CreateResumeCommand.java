@@ -1,45 +1,48 @@
 package app.awaytogo.gateway.resume.domain.command;
 
+import java.security.Principal;
 import java.time.Instant;
 
 public class CreateResumeCommand implements Command {
+    String source;
     String resumeId;
-    String userId;
-    String linkedinUrl;
     Instant timestamp;
+    Principal principal;
 
     private CreateResumeCommand(Builder builder) {
         resumeId = builder.resumeId;
-        userId = builder.userId;
-        linkedinUrl = builder.linkedinUrl;
+        source = builder.source;
         timestamp = builder.timestamp;
+        principal = builder.principal;
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
+    public String getSource() {
+        return source;
+    }
+
+    @Override
     public String getResumeId() {
         return resumeId;
     }
 
-    public String getUserId() {
-        return userId;
-    }
-
-    public String getLinkedinUrl() {
-        return linkedinUrl;
-    }
-
+    @Override
     public Instant getTimestamp() {
         return timestamp;
     }
 
+    public Principal getPrincipal() {
+        return principal;
+    }
+
     public static final class Builder {
         private String resumeId;
-        private String userId;
-        private String linkedinUrl;
+        private String source;
         private Instant timestamp;
+        private Principal principal;
 
         private Builder() {
         }
@@ -49,18 +52,18 @@ public class CreateResumeCommand implements Command {
             return this;
         }
 
-        public Builder userId(String userId) {
-            this.userId = userId;
-            return this;
-        }
-
-        public Builder linkedinUrl(String linkedinUrl) {
-            this.linkedinUrl = linkedinUrl;
+        public Builder source(String source) {
+            this.source = source;
             return this;
         }
 
         public Builder timestamp(Instant timestamp) {
             this.timestamp = timestamp;
+            return this;
+        }
+
+        public Builder principal(Principal principal) {
+            this.principal = principal;
             return this;
         }
 
