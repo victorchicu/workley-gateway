@@ -1,5 +1,6 @@
 package app.awaytogo.gateway.resume.infrastructure.eventstore.impl;
 
+import app.awaytogo.gateway.resume.domain.aggregate.ResumeAggregate;
 import app.awaytogo.gateway.resume.domain.event.DomainEvent;
 import app.awaytogo.gateway.resume.infrastructure.exception.InfrastructureException;
 import app.awaytogo.gateway.resume.infrastructure.eventstore.*;
@@ -35,22 +36,22 @@ public class MongoResumeEventStore implements ResumeEventStore {
     }
 
     @Override
-    public Mono<Void> saveEvents(String resumeId, List<DomainEvent> events, Long version) {
+    public Mono<Void> saveEvents(ResumeAggregate aggregate, List<DomainEvent> events) {
         if (events.isEmpty()) {
             return Mono.empty();
         }
-        return checkOptimisticLock(resumeId, version)
+        return checkOptimisticLock(aggregate.getResumeId(), aggregate.getVersion())
                 .then(Mono.defer(() -> {
                     List<EventDocument> eventDocuments = new ArrayList<>();
-                    long nextVersion = version != null ? version : 0L;
+                    long version = aggregate.getVersion() != null ? aggregate.getVersion() : 0L;
                     for (DomainEvent event : events) {
-                        nextVersion++;
+                        version++;
                         eventDocuments.add(
                                 EventDocument.builder()
                                         .type(event.getClass().getSimpleName())
                                         .data(eventSerializer.serialize(event))
-                                        .version(nextVersion)
-                                        .resumeId(resumeId)
+                                        .version(version)
+                                        .resumeId(aggregate.getResumeId())
                                         .build()
                         );
                     }
@@ -62,10 +63,10 @@ public class MongoResumeEventStore implements ResumeEventStore {
                             .then();
                 }))
                 .doOnSuccess(v -> {
-                    log.debug("Saved {} events for aggregate {}", events.size(), resumeId);
+                    log.debug("Saved {} events for aggregate {}", events.size(), aggregate.getResumeId());
                 })
                 .doOnError(error -> {
-                    log.error("Failed to save events for aggregate {}: {}", resumeId, error.getMessage());
+                    log.error("Failed to save events for aggregate {}: {}", aggregate.getResumeId(), error.getMessage());
                 });
     }
 
@@ -97,10 +98,10 @@ public class MongoResumeEventStore implements ResumeEventStore {
         return reactiveMongoTemplate.findOne(query, SnapshotDocument.class, SNAPSHOT_COLLECTION)
                 .map(snapshotDocument ->
                         ResumeAggregateSnapshot.builder()
-                                .data(snapshotDocument.getData())
+                                .payload(snapshotDocument.getPayload())
                                 .version(snapshotDocument.getVersion())
                                 .resumeId(snapshotDocument.getResumeId())
-                                .timestamp(snapshotDocument.getCreatedDate())
+                                .createdOn(snapshotDocument.getCreatedOn())
                                 .build()
                 )
                 .doOnSuccess(snapshot -> {
@@ -114,7 +115,7 @@ public class MongoResumeEventStore implements ResumeEventStore {
     public Mono<Void> saveSnapshot(ResumeAggregateSnapshot snapshot) {
         SnapshotDocument document = SnapshotDocument.builder()
                 .type("ResumeAggregate")
-                .data(snapshot.getData())
+                .payload(snapshot.getPayload())
                 .version(snapshot.getVersion())
                 .resumeId(snapshot.getResumeId())
                 .build();

@@ -27,14 +27,14 @@ public class ResumeAggregateService {
 
     private static final int SNAPSHOT_FREQUENCY = 10;
 
-    public Mono<Void> save(ResumeAggregate resumeAggregate, List<DomainEvent> newEvents) {
-        String resumeId = resumeAggregate.getResumeId();
-        Long version = resumeAggregate.getVersion();
-        return resumeEventStore.saveEvents(resumeId, newEvents, version)
+    public Mono<Void> save(ResumeAggregate aggregate, List<DomainEvent> newEvents) {
+        String resumeId = aggregate.getResumeId();
+        Long version = aggregate.getVersion();
+        return resumeEventStore.saveEvents(aggregate, newEvents)
                 .then(Mono.defer(() -> {
-                    resumeAggregate.setVersion(version + newEvents.size());
-                    if (shouldTakeSnapshot(resumeAggregate)) {
-                        return takeSnapshot(resumeAggregate);
+                    aggregate.setVersion(version + newEvents.size());
+                    if (shouldTakeSnapshot(aggregate)) {
+                        return takeSnapshot(aggregate);
                     }
                     return Mono.empty();
                 }))
@@ -56,7 +56,7 @@ public class ResumeAggregateService {
 
 
     private Mono<ResumeAggregate> loadFromSnapshot(String resumeId, ResumeAggregateSnapshot resumeAggregateSnapshot) {
-        ResumeAggregate resumeAggregate = snapshotStrategy.deserialize(resumeAggregateSnapshot.getData());
+        ResumeAggregate resumeAggregate = snapshotStrategy.deserialize(resumeAggregateSnapshot.getPayload());
         resumeAggregate.setVersion(resumeAggregateSnapshot.getVersion());
         return resumeEventStore.getEvents(resumeId, resumeAggregateSnapshot.getVersion())
                 .collectList()
@@ -83,10 +83,10 @@ public class ResumeAggregateService {
 
     private Mono<Void> takeSnapshot(ResumeAggregate resumeAggregate) {
         ResumeAggregateSnapshot snapshot = ResumeAggregateSnapshot.builder()
-                .data(snapshotStrategy.serialize(resumeAggregate))
+                .payload(snapshotStrategy.serialize(resumeAggregate))
                 .version(resumeAggregate.getVersion())
                 .resumeId(resumeAggregate.getResumeId())
-                .timestamp(Instant.now())
+                .createdOn(Instant.now())
                 .build();
 
         return resumeEventStore.saveSnapshot(snapshot)

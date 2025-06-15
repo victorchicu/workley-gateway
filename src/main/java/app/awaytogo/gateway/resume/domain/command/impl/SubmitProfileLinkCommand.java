@@ -7,11 +7,11 @@ import java.time.Instant;
 public class SubmitProfileLinkCommand implements Command {
 
     String resumeId;
-    Instant timestamp;
+    Instant createdOn;
 
     private SubmitProfileLinkCommand(Builder builder) {
         resumeId = builder.resumeId;
-        timestamp = builder.timestamp;
+        createdOn = builder.createdOn;
     }
 
     public static Builder builder() {
@@ -24,13 +24,13 @@ public class SubmitProfileLinkCommand implements Command {
         return resumeId;
     }
 
-    public Instant getTimestamp() {
-        return timestamp;
+    public Instant getCreatedOn() {
+        return createdOn;
     }
 
     public static final class Builder {
         private String resumeId;
-        private Instant timestamp;
+        private Instant createdOn;
 
         private Builder() {
         }
@@ -40,8 +40,8 @@ public class SubmitProfileLinkCommand implements Command {
             return this;
         }
 
-        public Builder timestamp(Instant timestamp) {
-            this.timestamp = timestamp;
+        public Builder createdOn(Instant createdOn) {
+            this.createdOn = createdOn;
             return this;
         }
 

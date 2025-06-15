@@ -32,7 +32,7 @@ public class SubmitProfileLinkCommandHandler implements CommandHandler<SubmitPro
                 )
                 .flatMap(resumeAggregate -> {
                     List<DomainEvent> events = resumeAggregate.handle(command);
-                    return resumeEventStore.saveEvents(resumeAggregate.getResumeId(), events, resumeAggregate.getVersion())
+                    return resumeEventStore.saveEvents(resumeAggregate, events)
                             .thenReturn(new SubmitProfileLinkResponse());
                 });
     }

@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
         return Mono.just(ErrorResponseDto.builder()
                 .errorCode("RESUME_NOT_FOUND")
                 .message(ex.getMessage())
-                .timestamp(Instant.now())
+                .createdOn(Instant.now())
                 .build());
     }
 }

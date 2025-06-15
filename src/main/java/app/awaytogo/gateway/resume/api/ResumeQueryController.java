@@ -1,6 +1,6 @@
 package app.awaytogo.gateway.resume.api;
 
-import app.awaytogo.gateway.resume.api.dto.ResumeViewDto;
+import app.awaytogo.gateway.resume.api.dto.ResumeReadModelDto;
 import app.awaytogo.gateway.resume.application.QueryDispatcher;
 import app.awaytogo.gateway.resume.domain.model.impl.ResumeReadModel;
 import app.awaytogo.gateway.resume.api.exception.ResumeNotFoundApiException;
@@ -25,21 +25,21 @@ public class ResumeQueryController {
     private final ConversionService conversionService;
     private final QueryDispatcher queryDispatcher;
 
-    public ResumeQueryController(ConversionService conversionService, QueryDispatcher queryDispatcher) {
-        this.conversionService = conversionService;
+    public ResumeQueryController(QueryDispatcher queryDispatcher, ConversionService conversionService) {
         this.queryDispatcher = queryDispatcher;
+        this.conversionService = conversionService;
     }
 
     @GetMapping("/{resumeId}")
-    public Mono<ResumeViewDto> findResumeById(Principal principal, @PathVariable String resumeId) {
+    public Mono<ResumeReadModelDto> findResumeById(Principal principal, @PathVariable String resumeId) {
         return queryDispatcher.<ResumeReadModel>dispatch(principal, new GetResumeByIdQuery(resumeId))
-                .map(this::toResumeModelDto)
+                .map(this::toResumeReadModelDto)
                 .doOnSuccess(resume -> log.debug("Found resume: {}", resumeId))
                 .switchIfEmpty(Mono.error(new ResumeNotFoundApiException("Resume not found: " + resumeId)));
     }
 
 
-    private ResumeViewDto toResumeModelDto(ResumeReadModel resumeReadModel) {
-        return conversionService.convert(resumeReadModel, ResumeViewDto.class);
+    private ResumeReadModelDto toResumeReadModelDto(ResumeReadModel resumeReadModel) {
+        return conversionService.convert(resumeReadModel, ResumeReadModelDto.class);
     }
 }

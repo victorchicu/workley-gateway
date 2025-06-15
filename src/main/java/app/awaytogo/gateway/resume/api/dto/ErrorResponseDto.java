@@ -5,12 +5,12 @@ import java.time.Instant;
 public class ErrorResponseDto {
     private String errorCode;
     private String message;
-    private Instant timestamp;
+    private Instant createdOn;
 
     private ErrorResponseDto(Builder builder) {
         errorCode = builder.errorCode;
         message = builder.message;
-        timestamp = builder.timestamp;
+        createdOn = builder.createdOn;
     }
 
     public String getErrorCode() {
@@ -29,12 +29,12 @@ public class ErrorResponseDto {
         this.message = message;
     }
 
-    public Instant getTimestamp() {
-        return timestamp;
+    public Instant getCreatedOn() {
+        return createdOn;
     }
 
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
+    public void setCreatedOn(Instant createdOn) {
+        this.createdOn = createdOn;
     }
 
     public static Builder builder() {
@@ -45,7 +45,7 @@ public class ErrorResponseDto {
     public static final class Builder {
         private String errorCode;
         private String message;
-        private Instant timestamp;
+        private Instant createdOn;
 
         private Builder() {
         }
@@ -60,8 +60,8 @@ public class ErrorResponseDto {
             return this;
         }
 
-        public Builder timestamp(Instant timestamp) {
-            this.timestamp = timestamp;
+        public Builder createdOn(Instant createdOn) {
+            this.createdOn = createdOn;
             return this;
         }
 

@@ -7,16 +7,21 @@ import java.time.Instant;
 @Document(collection = "snapshots")
 public class SnapshotDocument extends BaseDocument {
     private String type;
-    private String data;
+    private String payload;
     private String resumeId;
 
     private SnapshotDocument(Builder builder) {
         setId(builder.id);
         setVersion(builder.version);
-        setCreatedDate(builder.timestamp);
+        setCreatedOn(builder.createdOn);
+        setUpdatedOn(builder.updatedOn);
         type = builder.type;
-        data = builder.data;
+        payload = builder.payload;
         resumeId = builder.resumeId;
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public String getType() {
@@ -27,12 +32,12 @@ public class SnapshotDocument extends BaseDocument {
         this.type = type;
     }
 
-    public String getData() {
-        return data;
+    public String getPayload() {
+        return payload;
     }
 
-    public void setData(String data) {
-        this.data = data;
+    public void setPayload(String payload) {
+        this.payload = payload;
     }
 
     public String getResumeId() {
@@ -43,17 +48,13 @@ public class SnapshotDocument extends BaseDocument {
         this.resumeId = resumeId;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
-
     public static final class Builder {
         private String id;
         private Long version;
-        private Instant timestamp;
+        private Instant createdOn;
+        private Instant updatedOn;
         private String type;
-        private String data;
+        private String payload;
         private String resumeId;
 
         private Builder() {
@@ -69,8 +70,13 @@ public class SnapshotDocument extends BaseDocument {
             return this;
         }
 
-        public Builder timestamp(Instant timestamp) {
-            this.timestamp = timestamp;
+        public Builder createdOn(Instant createdOn) {
+            this.createdOn = createdOn;
+            return this;
+        }
+
+        public Builder updatedOn(Instant updatedOn) {
+            this.updatedOn = updatedOn;
             return this;
         }
 
@@ -79,8 +85,8 @@ public class SnapshotDocument extends BaseDocument {
             return this;
         }
 
-        public Builder data(String data) {
-            this.data = data;
+        public Builder payload(String payload) {
+            this.payload = payload;
             return this;
         }
 

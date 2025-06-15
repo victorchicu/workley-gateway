@@ -5,11 +5,11 @@ import java.time.Instant;
 public class ResumeCreationInitiated implements DomainEvent {
 
     String resumeId;
-    Instant timestamp;
+    Instant createdOn;
 
-    public ResumeCreationInitiated(String resumeId, Instant timestamp) {
+    public ResumeCreationInitiated(String resumeId, Instant createdOn) {
         this.resumeId = resumeId;
-        this.timestamp = timestamp;
+        this.createdOn = createdOn;
     }
 
     public String getResumeId() {
@@ -20,11 +20,11 @@ public class ResumeCreationInitiated implements DomainEvent {
         this.resumeId = resumeId;
     }
 
-    public Instant getTimestamp() {
-        return timestamp;
+    public Instant getCreatedOn() {
+        return createdOn;
     }
 
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
+    public void setCreatedOn(Instant createdOn) {
+        this.createdOn = createdOn;
     }
 }

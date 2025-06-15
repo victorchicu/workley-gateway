@@ -12,7 +12,6 @@ public class SubmitProfileLinkResponseToDtoConverter implements Converter<Submit
     public SubmitProfileLinkResponseDto convert(SubmitProfileLinkResponse source) {
         return SubmitProfileLinkResponseDto
                 .builder()
-
                 .build();
     }
 }

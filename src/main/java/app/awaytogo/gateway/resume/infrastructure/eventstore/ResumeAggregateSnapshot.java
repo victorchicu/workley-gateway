@@ -4,15 +4,15 @@ import java.time.Instant;
 
 public class ResumeAggregateSnapshot {
     private Long version;
-    private String data;
+    private String payload;
     private String resumeId;
-    private Instant timestamp;
+    private Instant createdOn;
 
     private ResumeAggregateSnapshot(Builder builder) {
         version = builder.version;
-        data = builder.data;
+        payload = builder.payload;
         resumeId = builder.resumeId;
-        timestamp = builder.timestamp;
+        createdOn = builder.createdOn;
     }
 
     public Long getVersion() {
@@ -23,12 +23,12 @@ public class ResumeAggregateSnapshot {
         this.version = version;
     }
 
-    public String getData() {
-        return data;
+    public String getPayload() {
+        return payload;
     }
 
-    public void setData(String data) {
-        this.data = data;
+    public void setPayload(String payload) {
+        this.payload = payload;
     }
 
     public String getResumeId() {
@@ -39,12 +39,12 @@ public class ResumeAggregateSnapshot {
         this.resumeId = resumeId;
     }
 
-    public Instant getTimestamp() {
-        return timestamp;
+    public Instant getCreatedOn() {
+        return createdOn;
     }
 
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
+    public void setCreatedOn(Instant createdOn) {
+        this.createdOn = createdOn;
     }
 
     public static Builder builder() {
@@ -54,9 +54,9 @@ public class ResumeAggregateSnapshot {
 
     public static final class Builder {
         private Long version;
-        private String data;
+        private String payload;
         private String resumeId;
-        private Instant timestamp;
+        private Instant createdOn;
 
         private Builder() {
         }
@@ -66,8 +66,8 @@ public class ResumeAggregateSnapshot {
             return this;
         }
 
-        public Builder data(String data) {
-            this.data = data;
+        public Builder payload(String data) {
+            this.payload = data;
             return this;
         }
 
@@ -76,8 +76,8 @@ public class ResumeAggregateSnapshot {
             return this;
         }
 
-        public Builder timestamp(Instant timestamp) {
-            this.timestamp = timestamp;
+        public Builder createdOn(Instant createdOn) {
+            this.createdOn = createdOn;
             return this;
         }
 

@@ -13,9 +13,9 @@ public class BaseDocument {
     @Version
     private Long version;
     @CreatedDate
-    private Instant createdDate;
+    private Instant createdOn;
     @LastModifiedDate
-    private Instant lastModified;
+    private Instant updatedOn;
 
     public String getId() {
         return id;
@@ -33,19 +33,19 @@ public class BaseDocument {
         this.version = version;
     }
 
-    public Instant getCreatedDate() {
-        return createdDate;
+    public Instant getCreatedOn() {
+        return createdOn;
     }
 
-    public void setCreatedDate(Instant createdDate) {
-        this.createdDate = createdDate;
+    public void setCreatedOn(Instant createdOn) {
+        this.createdOn = createdOn;
     }
 
-    public Instant getLastModified() {
-        return lastModified;
+    public Instant getUpdatedOn() {
+        return updatedOn;
     }
 
-    public void setLastModified(Instant lastModified) {
-        this.lastModified = lastModified;
+    public void setUpdatedOn(Instant updatedOn) {
+        this.updatedOn = updatedOn;
     }
 }

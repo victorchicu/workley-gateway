@@ -11,14 +11,14 @@ import java.util.Map;
 public class SubmitProfileLinkResponseDto {
     private final String resumeId;
     private final String message;
-    private final Instant timestamp;
+    private final Instant createdOn;
     private final Map<String, Object> metadata;
     private final ResumeAggregate.State state;
 
     private SubmitProfileLinkResponseDto(Builder builder) {
         resumeId = builder.resumeId;
         message = builder.message;
-        timestamp = builder.timestamp;
+        createdOn = builder.createdOn;
         metadata = builder.metadata;
         state = builder.state;
     }
@@ -31,8 +31,8 @@ public class SubmitProfileLinkResponseDto {
         return message;
     }
 
-    public Instant getTimestamp() {
-        return timestamp;
+    public Instant getCreatedOn() {
+        return createdOn;
     }
 
     public Map<String, Object> getMetadata() {
@@ -52,7 +52,7 @@ public class SubmitProfileLinkResponseDto {
     public static final class Builder {
         private String resumeId;
         private String message;
-        private Instant timestamp;
+        private Instant createdOn;
         private Map<String, Object> metadata;
         private ResumeAggregate.State state;
 
@@ -69,8 +69,8 @@ public class SubmitProfileLinkResponseDto {
             return this;
         }
 
-        public Builder timestamp(Instant timestamp) {
-            this.timestamp = timestamp;
+        public Builder createdOn(Instant createdOn) {
+            this.createdOn = createdOn;
             return this;
         }
 

@@ -58,13 +58,9 @@ public class ResumeAggregate implements AggregateRoot {
 
     public List<DomainEvent> handle(SubmitProfileLinkCommand command) {
         if (this.resumeId != null) {
-            throw new DomainException("You’ve already completed this step.");
+            throw new DomainException("LinkedIn profile link has already been submitted");
         }
-        return List.of(
-                new ResumeCreationInitiated(
-                        command.getResumeId(),
-                        Instant.now()
-                ));
+        return List.of(new ResumeCreationInitiated(command.getResumeId(), Instant.now()));
     }
 
     public enum State {

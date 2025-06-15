@@ -1,5 +1,6 @@
 package app.awaytogo.gateway.resume.infrastructure.eventstore;
 
+import app.awaytogo.gateway.resume.domain.aggregate.ResumeAggregate;
 import app.awaytogo.gateway.resume.domain.event.DomainEvent;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -7,7 +8,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface ResumeEventStore {
-    Mono<Void> saveEvents(String resumeId, List<DomainEvent> events, Long version);
+    Mono<Void> saveEvents(ResumeAggregate aggregate, List<DomainEvent> events);
 
     Flux<DomainEvent> getEvents(String resumeId);
 
