@@ -1,88 +1,56 @@
 package app.awaytogo.gateway.resume.infrastructure.eventstore;
 
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
-
 @Document(collection = "events")
-public class EventDocument {
-    @Id
-    private String id;
-    private String aggregateId;
-    private String eventType;
-    private String eventData;
-    private Long eventVersion;
-    private Instant timestamp;
+public class EventDocument extends BaseDocument {
+    private String type;
+    private String data;
+    private String resumeId;
 
     private EventDocument(Builder builder) {
-        id = builder.id;
-        aggregateId = builder.aggregateId;
-        eventType = builder.eventType;
-        eventData = builder.eventData;
-        eventVersion = builder.eventVersion;
-        timestamp = builder.timestamp;
+        setId(builder.id);
+        setVersion(builder.version);
+        type = builder.type;
+        data = builder.data;
+        resumeId = builder.resumeId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getData() {
+        return data;
+    }
+
+    public void setData(String data) {
+        this.data = data;
+    }
+
+    public String getResumeId() {
+        return resumeId;
+    }
+
+    public void setResumeId(String resumeId) {
+        this.resumeId = resumeId;
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getAggregateId() {
-        return aggregateId;
-    }
-
-    public void setAggregateId(String aggregateId) {
-        this.aggregateId = aggregateId;
-    }
-
-    public String getEventType() {
-        return eventType;
-    }
-
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
-    }
-
-    public String getEventData() {
-        return eventData;
-    }
-
-    public void setEventData(String eventData) {
-        this.eventData = eventData;
-    }
-
-    public Long getEventVersion() {
-        return eventVersion;
-    }
-
-    public void setEventVersion(Long eventVersion) {
-        this.eventVersion = eventVersion;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
-    }
 
     public static final class Builder {
         private String id;
-        private String aggregateId;
-        private String eventType;
-        private String eventData;
-        private Long eventVersion;
-        private Instant timestamp;
+        private Long version;
+        private String type;
+        private String data;
+        private String resumeId;
 
         private Builder() {
         }
@@ -92,28 +60,23 @@ public class EventDocument {
             return this;
         }
 
-        public Builder aggregateId(String aggregateId) {
-            this.aggregateId = aggregateId;
+        public Builder version(Long version) {
+            this.version = version;
             return this;
         }
 
-        public Builder eventType(String eventType) {
-            this.eventType = eventType;
+        public Builder type(String type) {
+            this.type = type;
             return this;
         }
 
-        public Builder eventData(String eventData) {
-            this.eventData = eventData;
+        public Builder data(String data) {
+            this.data = data;
             return this;
         }
 
-        public Builder eventVersion(Long eventVersion) {
-            this.eventVersion = eventVersion;
-            return this;
-        }
-
-        public Builder timestamp(Instant timestamp) {
-            this.timestamp = timestamp;
+        public Builder resumeId(String resumeId) {
+            this.resumeId = resumeId;
             return this;
         }
 

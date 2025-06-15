@@ -1,30 +1,26 @@
 package app.awaytogo.gateway.resume.infrastructure.eventstore;
 
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.time.Instant;
 
-@Document(collection = "snapshots")
-public class SnapshotDocument extends BaseDocument {
-    private String type;
+public class ResumeAggregateSnapshot {
+    private Long version;
     private String data;
     private String resumeId;
+    private Instant timestamp;
 
-    private SnapshotDocument(Builder builder) {
-        setId(builder.id);
-        setVersion(builder.version);
-        setCreatedDate(builder.timestamp);
-        type = builder.type;
+    private ResumeAggregateSnapshot(Builder builder) {
+        version = builder.version;
         data = builder.data;
         resumeId = builder.resumeId;
+        timestamp = builder.timestamp;
     }
 
-    public String getType() {
-        return type;
+    public Long getVersion() {
+        return version;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public String getData() {
@@ -43,39 +39,30 @@ public class SnapshotDocument extends BaseDocument {
         this.resumeId = resumeId;
     }
 
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
 
 
     public static final class Builder {
-        private String id;
         private Long version;
-        private Instant timestamp;
-        private String type;
         private String data;
         private String resumeId;
+        private Instant timestamp;
 
         private Builder() {
         }
 
-        public Builder id(String id) {
-            this.id = id;
-            return this;
-        }
-
         public Builder version(Long version) {
             this.version = version;
-            return this;
-        }
-
-        public Builder timestamp(Instant timestamp) {
-            this.timestamp = timestamp;
-            return this;
-        }
-
-        public Builder type(String type) {
-            this.type = type;
             return this;
         }
 
@@ -89,8 +76,13 @@ public class SnapshotDocument extends BaseDocument {
             return this;
         }
 
-        public SnapshotDocument build() {
-            return new SnapshotDocument(this);
+        public Builder timestamp(Instant timestamp) {
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        public ResumeAggregateSnapshot build() {
+            return new ResumeAggregateSnapshot(this);
         }
     }
 }

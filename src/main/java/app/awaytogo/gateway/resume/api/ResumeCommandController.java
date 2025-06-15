@@ -1,57 +1,63 @@
 package app.awaytogo.gateway.resume.api;
 
-import app.awaytogo.gateway.resume.api.dto.CommandResponse;
-import app.awaytogo.gateway.resume.api.dto.CreateResumeRequest;
-import app.awaytogo.gateway.resume.api.mapper.CommandMapper;
-import app.awaytogo.gateway.resume.application.service.CommandDispatcher;
-import app.awaytogo.gateway.resume.domain.command.CreateResumeCommand;
-import app.awaytogo.gateway.resume.domain.enums.ProcessingState;
+import app.awaytogo.gateway.resume.application.CommandDispatcher;
+import app.awaytogo.gateway.resume.domain.command.Response;
+import app.awaytogo.gateway.resume.domain.command.impl.SubmitProfileLinkCommand;
+import app.awaytogo.gateway.resume.api.dto.SubmitProfileLinkCommandDto;
+import app.awaytogo.gateway.resume.api.dto.SubmitProfileLinkResponseDto;
+import app.awaytogo.gateway.resume.domain.command.impl.SubmitProfileLinkResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.security.Principal;
-import java.time.Instant;
 
 @RestController
-@RequestMapping("/api/v1/resumes")
+@RequestMapping("/api/v1/command/resumes")
 public class ResumeCommandController {
+
     private static final Logger log = LoggerFactory.getLogger(ResumeCommandController.class);
 
-    private final CommandMapper commandMapper;
+    private final ConversionService conversionService;
     private final CommandDispatcher commandDispatcher;
 
-    public ResumeCommandController(CommandMapper commandMapper, CommandDispatcher commandDispatcher) {
-        this.commandMapper = commandMapper;
+    public ResumeCommandController(ConversionService conversionService, CommandDispatcher commandDispatcher) {
+        this.conversionService = conversionService;
         this.commandDispatcher = commandDispatcher;
     }
 
     @PostMapping
-    public Mono<ResponseEntity<CommandResponse>> createResume(Principal principal, @Valid @RequestBody CreateResumeRequest request) {
-        log.info("Received create resume request for LinkedIn URL: {}", request.source());
-        CreateResumeCommand command = commandMapper.toCreateResumeCommand(principal, request);
-        return commandDispatcher.dispatch(command)
-                .map(aggregateId ->
-                        //TODO: Provide host details from configuration and env variables
-                        ResponseEntity.created(URI.create("http://localhost:4200/resumes/" + aggregateId))
-                                .body(CommandResponse.builder()
-                                        .resumeId(command.getResumeId())
-                                        .aggregateId(aggregateId)
-                                        .processingState(ProcessingState.INITIATED.name())
-                                        .message("Resume creation initiated")
-                                        .timestamp(Instant.now())
-                                        .build())
-                )
-                .doOnError(error ->
-                        log.error("Failed to create resume: {}",
-                                error.getMessage())
-                )
+    public Mono<ResponseEntity<SubmitProfileLinkResponseDto>> submit(
+            Principal principal,
+            @Valid @RequestBody SubmitProfileLinkCommandDto submitProfileLinkCommandDto) {
+        log.info("Handle command: {}", submitProfileLinkCommandDto);
+        SubmitProfileLinkCommand submitProfileLinkCommand = toSubmitProfileLinkCommand(submitProfileLinkCommandDto);
+        return commandDispatcher.dispatch(principal, submitProfileLinkCommand)
+                .mapNotNull(response -> {
+                    return ResponseEntity.created(URI.create(""))
+                            .body(toSubmitProfileLinkResponseDto(response));
+                })
+                .doOnError(error -> {
+                    log.error("Failed to submit LinkedIn profile link command: {}",
+                            error.getMessage());
+                })
                 .doOnSuccess(response -> {
-                    log.info("Resume created: {}", response.getStatusCode());
+                    log.info("LinkedIn profile link submission status code: {}", response.getStatusCode());
                 });
+    }
+
+
+    private SubmitProfileLinkCommand toSubmitProfileLinkCommand(
+            SubmitProfileLinkCommandDto submitProfileLinkCommandDto) {
+        return conversionService.convert(submitProfileLinkCommandDto, SubmitProfileLinkCommand.class);
+    }
+
+    private <T extends Response> SubmitProfileLinkResponseDto toSubmitProfileLinkResponseDto(T source) {
+        return conversionService.convert(source, SubmitProfileLinkResponseDto.class);
     }
 }

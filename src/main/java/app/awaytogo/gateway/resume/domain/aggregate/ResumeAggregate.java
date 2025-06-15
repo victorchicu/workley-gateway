@@ -1,7 +1,6 @@
 package app.awaytogo.gateway.resume.domain.aggregate;
 
-import app.awaytogo.gateway.resume.domain.command.CreateResumeCommand;
-import app.awaytogo.gateway.resume.domain.enums.ProcessingState;
+import app.awaytogo.gateway.resume.domain.command.impl.SubmitProfileLinkCommand;
 import app.awaytogo.gateway.resume.domain.event.DomainEvent;
 import app.awaytogo.gateway.resume.domain.event.ResumeCreationInitiated;
 import app.awaytogo.gateway.resume.domain.exception.DomainException;
@@ -10,42 +9,14 @@ import java.time.Instant;
 import java.util.List;
 
 public class ResumeAggregate implements AggregateRoot {
-    private String resumeId;
-    private String aggregateId;
-    private ProcessingState processingState;
     private Long version;
+    private State state;
+    private String resumeId;
 
     public static ResumeAggregate fromEvents(List<DomainEvent> events) {
         ResumeAggregate aggregate = new ResumeAggregate();
         events.forEach(aggregate::apply);
         return aggregate;
-    }
-
-    public String getResumeId() {
-        return resumeId;
-    }
-
-    public ResumeAggregate setResumeId(String resumeId) {
-        this.resumeId = resumeId;
-        return this;
-    }
-
-    public String getAggregateId() {
-        return aggregateId;
-    }
-
-    public ResumeAggregate setAggregateId(String aggregateId) {
-        this.aggregateId = aggregateId;
-        return this;
-    }
-
-    public ProcessingState getResumeState() {
-        return processingState;
-    }
-
-    public ResumeAggregate setResumeState(ProcessingState processingState) {
-        this.processingState = processingState;
-        return this;
     }
 
     public Long getVersion() {
@@ -57,26 +28,50 @@ public class ResumeAggregate implements AggregateRoot {
         return this;
     }
 
+    public State getState() {
+        return state;
+    }
+
+    public ResumeAggregate setState(State state) {
+        this.state = state;
+        return this;
+    }
+
+    public String getResumeId() {
+        return resumeId;
+    }
+
+    public ResumeAggregate setResumeId(String resumeId) {
+        this.resumeId = resumeId;
+        return this;
+    }
+
     public void apply(DomainEvent event) {
         switch (event) {
             case ResumeCreationInitiated e -> {
                 this.resumeId = e.getResumeId();
-                this.processingState = ProcessingState.INITIATED;
+                this.state = State.INITIATED;
             }
-            default -> this.processingState = ProcessingState.UNKNOWN;
+            default -> this.state = State.UNKNOWN;
         }
     }
 
-    public List<DomainEvent> handle(CreateResumeCommand command) {
-        if (this.aggregateId != null) {
+    public List<DomainEvent> handle(SubmitProfileLinkCommand command) {
+        if (this.resumeId != null) {
             throw new DomainException("You’ve already completed this step.");
         }
         return List.of(
                 new ResumeCreationInitiated(
                         command.getResumeId(),
-                        command.getPrincipal().getName(),
-                        command.getSource(),
                         Instant.now()
                 ));
+    }
+
+    public enum State {
+        UNKNOWN,
+        INITIATED,
+        PROFILE_FETCHING,
+        PROFILE_FETCHED,
+        PROFILE_FETCH_FAILED,
     }
 }
