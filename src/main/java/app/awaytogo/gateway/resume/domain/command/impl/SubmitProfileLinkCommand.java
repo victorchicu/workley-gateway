@@ -24,11 +24,9 @@ public class SubmitProfileLinkCommand implements Command {
         return resumeId;
     }
 
-    @Override
     public Instant getTimestamp() {
         return timestamp;
     }
-
 
     public static final class Builder {
         private String resumeId;

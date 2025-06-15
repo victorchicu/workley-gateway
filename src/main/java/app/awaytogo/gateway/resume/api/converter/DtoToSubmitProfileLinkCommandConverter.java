@@ -13,16 +13,16 @@ import java.util.regex.Pattern;
 @Component
 public class DtoToSubmitProfileLinkCommandConverter
         implements Converter<SubmitProfileLinkCommandDto, SubmitProfileLinkCommand> {
-    private static final Pattern PATTERN = Pattern.compile("linkedin\\.com/in/([^/]+)/?");
+    private static final Pattern PROFILE_ID_PATTERN = Pattern.compile("linkedin\\.com/in/([^/]+)/?");
 
     @Override
     public SubmitProfileLinkCommand convert(SubmitProfileLinkCommandDto source) {
-        Matcher matcher = PATTERN.matcher(source.url());
+        Matcher matcher = PROFILE_ID_PATTERN.matcher(source.url());
         if (matcher.find()) {
-            String id = matcher.group(1);
-            if (StringUtils.isNotBlank(id)) {
+            String pathValue = matcher.group(1);
+            if (StringUtils.isNotBlank(pathValue)) {
                 return SubmitProfileLinkCommand.builder()
-                        .resumeId(id)
+                        .resumeId(pathValue)
                         .build();
             }
         }
