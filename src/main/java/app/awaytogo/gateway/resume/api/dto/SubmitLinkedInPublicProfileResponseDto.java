@@ -7,15 +7,15 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import java.time.Instant;
 import java.util.Map;
 
-@JsonDeserialize(builder = SubmitProfileLinkResponseDto.Builder.class)
-public class SubmitProfileLinkResponseDto {
+@JsonDeserialize(builder = SubmitLinkedInPublicProfileResponseDto.Builder.class)
+public class SubmitLinkedInPublicProfileResponseDto {
     private final String resumeId;
     private final String message;
     private final Instant createdOn;
     private final Map<String, Object> metadata;
     private final ResumeAggregate.State state;
 
-    private SubmitProfileLinkResponseDto(Builder builder) {
+    private SubmitLinkedInPublicProfileResponseDto(Builder builder) {
         resumeId = builder.resumeId;
         message = builder.message;
         createdOn = builder.createdOn;
@@ -84,8 +84,8 @@ public class SubmitProfileLinkResponseDto {
             return this;
         }
 
-        public SubmitProfileLinkResponseDto build() {
-            return new SubmitProfileLinkResponseDto(this);
+        public SubmitLinkedInPublicProfileResponseDto build() {
+            return new SubmitLinkedInPublicProfileResponseDto(this);
         }
     }
 }

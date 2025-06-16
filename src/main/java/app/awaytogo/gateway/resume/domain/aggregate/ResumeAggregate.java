@@ -1,6 +1,6 @@
 package app.awaytogo.gateway.resume.domain.aggregate;
 
-import app.awaytogo.gateway.resume.domain.command.impl.SubmitProfileLinkCommand;
+import app.awaytogo.gateway.resume.domain.command.impl.SubmitLinkedInPublicProfileCommand;
 import app.awaytogo.gateway.resume.domain.event.DomainEvent;
 import app.awaytogo.gateway.resume.domain.event.ResumeCreationInitiated;
 import app.awaytogo.gateway.resume.domain.exception.DomainException;
@@ -56,9 +56,9 @@ public class ResumeAggregate implements AggregateRoot {
         }
     }
 
-    public List<DomainEvent> handle(SubmitProfileLinkCommand command) {
+    public List<DomainEvent> handle(SubmitLinkedInPublicProfileCommand command) {
         if (this.resumeId != null) {
-            throw new DomainException("LinkedIn profile link has already been submitted");
+            throw new DomainException("LinkedIn public profile has already been submitted");
         }
         return List.of(new ResumeCreationInitiated(command.getResumeId(), Instant.now()));
     }

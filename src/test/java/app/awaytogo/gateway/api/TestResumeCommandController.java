@@ -2,8 +2,8 @@ package app.awaytogo.gateway.api;
 
 import app.awaytogo.gateway.TestRunner;
 import app.awaytogo.gateway.resume.domain.aggregate.ResumeAggregate;
-import app.awaytogo.gateway.resume.api.dto.SubmitProfileLinkCommandDto;
-import app.awaytogo.gateway.resume.api.dto.SubmitProfileLinkResponseDto;
+import app.awaytogo.gateway.resume.api.dto.SubmitLinkedInPublicProfileCommandDto;
+import app.awaytogo.gateway.resume.api.dto.SubmitLinkedInPublicProfileResponseDto;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -28,12 +28,12 @@ public class TestResumeCommandController extends TestRunner {
     }
 
     @Test
-    public void submit() {
+    public void submitLinkedPublicProfile() {
         String linkedin = "https://linkedin.com/in/", profileId = "victorchicu";
-        SubmitProfileLinkResponseDto actual = post("/api/v1/command/resumes", new SubmitProfileLinkCommandDto(linkedin.concat(profileId)), Collections.emptyList())
+        SubmitLinkedInPublicProfileResponseDto actual = post("/api/v1/command/resumes", new SubmitLinkedInPublicProfileCommandDto(linkedin.concat(profileId)), Collections.emptyList())
                 .expectStatus().isCreated()
                 // @formatter:off
-                .expectBody(SubmitProfileLinkResponseDto.class)
+                .expectBody(SubmitLinkedInPublicProfileResponseDto.class)
                 // @formatter:on
                 .returnResult()
                 .getResponseBody();

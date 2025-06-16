@@ -1,6 +1,6 @@
 package app.awaytogo.gateway.resume.api.dto;
 
-public record SubmitProfileLinkCommandDto(String url) {
+public record SubmitLinkedInPublicProfileCommandDto(String url) {
 
     @Override
     public String toString() {

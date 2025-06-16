@@ -2,10 +2,9 @@ package app.awaytogo.gateway.resume.api;
 
 import app.awaytogo.gateway.resume.application.CommandDispatcher;
 import app.awaytogo.gateway.resume.domain.command.Response;
-import app.awaytogo.gateway.resume.domain.command.impl.SubmitProfileLinkCommand;
-import app.awaytogo.gateway.resume.api.dto.SubmitProfileLinkCommandDto;
-import app.awaytogo.gateway.resume.api.dto.SubmitProfileLinkResponseDto;
-import app.awaytogo.gateway.resume.domain.command.impl.SubmitProfileLinkResponse;
+import app.awaytogo.gateway.resume.domain.command.impl.SubmitLinkedInPublicProfileCommand;
+import app.awaytogo.gateway.resume.api.dto.SubmitLinkedInPublicProfileCommandDto;
+import app.awaytogo.gateway.resume.api.dto.SubmitLinkedInPublicProfileResponseDto;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,15 +31,18 @@ public class ResumeCommandController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<SubmitProfileLinkResponseDto>> submit(
+    public Mono<ResponseEntity<SubmitLinkedInPublicProfileResponseDto>> submitLinkedPublicProfile(
             Principal principal,
-            @Valid @RequestBody SubmitProfileLinkCommandDto submitProfileLinkCommandDto) {
-        log.info("Handle command: {}", submitProfileLinkCommandDto);
-        SubmitProfileLinkCommand submitProfileLinkCommand = toSubmitProfileLinkCommand(submitProfileLinkCommandDto);
-        return commandDispatcher.dispatch(principal, submitProfileLinkCommand)
+            @Valid @RequestBody SubmitLinkedInPublicProfileCommandDto submitLinkedInPublicProfileCommandDto) {
+        log.info("Handle command: {}", submitLinkedInPublicProfileCommandDto);
+
+        SubmitLinkedInPublicProfileCommand submitLinkedInPublicProfileCommand
+                = toSubmitLinkedInPublicProfileCommand(submitLinkedInPublicProfileCommandDto);
+
+        return commandDispatcher.dispatch(principal, submitLinkedInPublicProfileCommand)
                 .mapNotNull(response -> {
                     return ResponseEntity.created(URI.create(""))
-                            .body(toSubmitProfileLinkResponseDto(response));
+                            .body(toSubmitLinkedInPublicProfileResponseDto(response));
                 })
                 .doOnError(error -> {
                     log.error("Failed to submit LinkedIn profile link command: {}",
@@ -52,12 +54,12 @@ public class ResumeCommandController {
     }
 
 
-    private SubmitProfileLinkCommand toSubmitProfileLinkCommand(
-            SubmitProfileLinkCommandDto submitProfileLinkCommandDto) {
-        return conversionService.convert(submitProfileLinkCommandDto, SubmitProfileLinkCommand.class);
+    private SubmitLinkedInPublicProfileCommand toSubmitLinkedInPublicProfileCommand(
+            SubmitLinkedInPublicProfileCommandDto submitLinkedInPublicProfileCommandDto) {
+        return conversionService.convert(submitLinkedInPublicProfileCommandDto, SubmitLinkedInPublicProfileCommand.class);
     }
 
-    private <T extends Response> SubmitProfileLinkResponseDto toSubmitProfileLinkResponseDto(T source) {
-        return conversionService.convert(source, SubmitProfileLinkResponseDto.class);
+    private <T extends Response> SubmitLinkedInPublicProfileResponseDto toSubmitLinkedInPublicProfileResponseDto(T source) {
+        return conversionService.convert(source, SubmitLinkedInPublicProfileResponseDto.class);
     }
 }

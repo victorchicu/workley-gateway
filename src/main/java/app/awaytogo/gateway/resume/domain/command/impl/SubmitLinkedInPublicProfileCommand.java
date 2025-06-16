@@ -4,12 +4,12 @@ import app.awaytogo.gateway.resume.domain.command.Command;
 
 import java.time.Instant;
 
-public class SubmitProfileLinkCommand implements Command {
+public class SubmitLinkedInPublicProfileCommand implements Command {
 
     String resumeId;
     Instant createdOn;
 
-    private SubmitProfileLinkCommand(Builder builder) {
+    private SubmitLinkedInPublicProfileCommand(Builder builder) {
         resumeId = builder.resumeId;
         createdOn = builder.createdOn;
     }
@@ -45,8 +45,8 @@ public class SubmitProfileLinkCommand implements Command {
             return this;
         }
 
-        public SubmitProfileLinkCommand build() {
-            return new SubmitProfileLinkCommand(this);
+        public SubmitLinkedInPublicProfileCommand build() {
+            return new SubmitLinkedInPublicProfileCommand(this);
         }
     }
 }

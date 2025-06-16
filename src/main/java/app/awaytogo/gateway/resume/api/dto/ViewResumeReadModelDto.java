@@ -1,6 +1,6 @@
 package app.awaytogo.gateway.resume.api.dto;
 
-public record ResumeReadModelDto(String resumeId) {
+public record ViewResumeReadModelDto(String resumeId) {
 
     @Override
     public String toString() {
