@@ -5,7 +5,6 @@ import app.awaytogo.gateway.resume.domain.aggregate.ResumeAggregate;
 import app.awaytogo.gateway.resume.domain.command.impl.SubmitLinkedInPublicProfileCommand;
 import app.awaytogo.gateway.resume.domain.command.impl.SubmitLinkedInPublicProfileResponse;
 import app.awaytogo.gateway.resume.domain.event.DomainEvent;
-import app.awaytogo.gateway.resume.infrastructure.eventstore.ResumeEventStore;
 import app.awaytogo.gateway.resume.domain.service.ResumeAggregateService;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -14,11 +13,11 @@ import java.security.Principal;
 import java.util.List;
 
 @Component
-public class SubmitProfileLinkCommandHandler
+public class SubmitLinkedInPublicProfileCommandHandler
         implements CommandHandler<SubmitLinkedInPublicProfileCommand, SubmitLinkedInPublicProfileResponse> {
     private final ResumeAggregateService resumeAggregateService;
 
-    public SubmitProfileLinkCommandHandler(ResumeAggregateService resumeAggregateService) {
+    public SubmitLinkedInPublicProfileCommandHandler(ResumeAggregateService resumeAggregateService) {
         this.resumeAggregateService = resumeAggregateService;
     }
 

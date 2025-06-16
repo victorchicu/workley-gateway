@@ -115,9 +115,9 @@ public class MongoResumeEventStore implements ResumeEventStore {
     public Mono<Void> saveSnapshot(ResumeAggregateSnapshot snapshot) {
         SnapshotDocument document = SnapshotDocument.builder()
                 .type("ResumeAggregate")
+                .resumeId(snapshot.getResumeId())
                 .payload(snapshot.getPayload())
                 .version(snapshot.getVersion())
-                .resumeId(snapshot.getResumeId())
                 .build();
 
         return reactiveMongoTemplate.save(document, SNAPSHOT_COLLECTION)

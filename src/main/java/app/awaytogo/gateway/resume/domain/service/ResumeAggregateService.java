@@ -28,7 +28,6 @@ public class ResumeAggregateService {
     private static final int SNAPSHOT_FREQUENCY = 10;
 
     public Mono<Void> save(ResumeAggregate aggregate, List<DomainEvent> newEvents) {
-        String resumeId = aggregate.getResumeId();
         Long version = aggregate.getVersion();
         return resumeEventStore.saveEvents(aggregate, newEvents)
                 .then(Mono.defer(() -> {
@@ -38,7 +37,7 @@ public class ResumeAggregateService {
                     }
                     return Mono.empty();
                 }))
-                .doOnSuccess(v -> log.debug("Saved resume aggregate {} with {} new events", resumeId, newEvents.size()));
+                .doOnSuccess(v -> log.debug("Saved resume aggregate {} with {} new events", aggregate.getResumeId(), newEvents.size()));
     }
 
     public Mono<ResumeAggregate> load(String resumeId) {
@@ -78,7 +77,7 @@ public class ResumeAggregateService {
     }
 
     private boolean shouldTakeSnapshot(ResumeAggregate aggregate) {
-        return aggregate.getVersion() %SNAPSHOT_FREQUENCY == 0;
+        return aggregate.getVersion() % SNAPSHOT_FREQUENCY == 0;
     }
 
     private Mono<Void> takeSnapshot(ResumeAggregate resumeAggregate) {

@@ -9,32 +9,13 @@ import java.time.Instant;
 import java.util.List;
 
 public class ResumeAggregate implements AggregateRoot {
-    private Long version;
-    private State state;
     private String resumeId;
+    private Long version;
 
     public static ResumeAggregate fromEvents(List<DomainEvent> events) {
         ResumeAggregate aggregate = new ResumeAggregate();
         events.forEach(aggregate::apply);
         return aggregate;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public ResumeAggregate setVersion(Long version) {
-        this.version = version;
-        return this;
-    }
-
-    public State getState() {
-        return state;
-    }
-
-    public ResumeAggregate setState(State state) {
-        this.state = state;
-        return this;
     }
 
     public String getResumeId() {
@@ -46,13 +27,21 @@ public class ResumeAggregate implements AggregateRoot {
         return this;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public ResumeAggregate setVersion(Long version) {
+        this.version = version;
+        return this;
+    }
+
     public void apply(DomainEvent event) {
         switch (event) {
             case ResumeCreationInitiated e -> {
                 this.resumeId = e.getResumeId();
-                this.state = State.INITIATED;
             }
-            default -> this.state = State.UNKNOWN;
+            default -> throw new IllegalStateException("Unexpected value: " + event);
         }
     }
 
