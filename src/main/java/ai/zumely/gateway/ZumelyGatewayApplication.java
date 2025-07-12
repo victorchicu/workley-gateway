@@ -12,10 +12,10 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 @EnableReactiveMongoAuditing
 @EnableReactiveMongoRepositories
 @SpringBootApplication
-public class AwaytogoGatewayApplication {
+public class ZumelyGatewayApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AwaytogoGatewayApplication.class, args);
+        SpringApplication.run(ZumelyGatewayApplication.class, args);
     }
 
 }
