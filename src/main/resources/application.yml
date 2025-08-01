@@ -13,6 +13,9 @@ server:
 spring:
   kafka:
     bootstrap-servers: ${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS}
+  graphql:
+    graphiql:
+      enabled: true
   cloud:
     stream:
       bindings:
