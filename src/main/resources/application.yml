@@ -11,79 +11,23 @@ server:
         max-age: 30d
   forward-headers-strategy: framework
 spring:
-  mail:
-    host: smtp-relay.brevo.com
-    port: 587
-    username: 82431b001@smtp-brevo.com
-    password: IQN7YF4wgh5rRB2P
-    protocol: smtp
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
   kafka:
-    bootstrap-servers: ${GATEWAY_KAFKA_BOOTSTRAP_SERVERS}
+    bootstrap-servers: ${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS}
   cloud:
     stream:
       bindings:
-        # 1. Producer for all Domain Events (used by DomainEventPublisher via StreamBridge)
-        # This is an output binding. The actual "producer" is your application code using StreamBridge.
-        # The function definition below is for consumers.
-        domainEventsProducer-out-0:
-          destination: resume.events # Central topic for all resume-related domain events
-          # producer: # Optional: specific producer properties
-          # partition-count: 3
-
-        # 2. Consumer for LinkedIn Profile Processing Task
-        # Consumes ResumeCreationInitiatedEvent from 'resume.events'
-        processLinkedInProfileRequest-in-0:
-          destination: resume.events
-          group: linkedin-profile-processor-group # Consumer group
+        handlePrompt-in-0:
+          destination: prompt.events
+          group: gateway
           consumer:
             # max-attempts: 3 # Example: retry configuration
             # back-off-initial-interval: 1000
             # back-off-max-interval: 10000
             # back-off-multiplier: 2.0
             concurrency: 1 # Adjust based on expected load and processing time
-
-        # 3. Consumer for PDF Generation Task
-        # Consumes ResumeTemplateSelectedEvent (or a dedicated PdfGenerationRequestedEvent) from 'resume.events'
-        generateResumePdfRequest-in-0:
-          destination: resume.events # Could also be a separate "tasks.pdf-generation" topic
-          group: pdf-generator-group
-          consumer:
-            concurrency: 1
-
-        # 4. Consumer for Read Model Projections
-        # Consumes various events from 'resume.events' to update read models
-        updateResumeReadModel-in-0:
-          destination: resume.events
-          group: read-model-projector-group
-          consumer:
-            concurrency: 1 # Usually, read model updates for the same aggregate should be sequential
-
-        # 5. Consumer for Preparing WebSocket Notifications
-        # Consumes various events from 'resume.events'
-        prepareWebSocketNotification-in-0:
-          destination: resume.events
-          group: websocket-notification-preparer-group
-          consumer:
-            concurrency: 1
-
-        # 6. Producer for Processed WebSocket Notifications (output of prepareWebSocketNotification function)
-        # This is where the formatted notification for the client is sent.
-        prepareWebSocketNotification-out-0: # This matches the output of the 'prepareWebSocketNotification' function
-          destination: websocket.resume.notifications # Topic for messages ready to be sent to clients
-
-        # Function definitions for your consumers/processors
     function:
       definition: >
-        processLinkedInProfileRequest;
-        generateResumePdfRequest;
-        updateResumeReadModel;
-        prepareWebSocketNotification
+        handlePrompt;
     gateway:
       globalcors:
         cors-configurations:
@@ -91,20 +35,13 @@ spring:
             allowed-methods: GET, POST, PUT, DELETE, OPTIONS
             allowed-headers: "*"
             allow-credentials: true
-            allowed-origin-patterns: "https://*.zumely.app"
+            allowed-origin-patterns: "https://*.zumely.io"
         add-to-simple-url-handler-mapping: true
       routes:
-        - id: zumely-websocket
-          uri: http://websocket:1613
+        - id: zumely-gateway
+          uri: http://localhost:8443
           predicates:
-            - Path=/api/websocket/**
-          filters:
-            - StripPrefix=2
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${GATEWAY_KEYCLOAK_ISSUER_URI}
+            - Path=/api/resumes/**
   application:
     name: zumely-gateway
 #management:
