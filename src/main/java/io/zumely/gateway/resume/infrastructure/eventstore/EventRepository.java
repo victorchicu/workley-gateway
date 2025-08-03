@@ -1,0 +1,12 @@
+package io.zumely.gateway.resume.infrastructure.eventstore;
+
+import io.zumely.gateway.resume.infrastructure.eventstore.objects.StoredEvent;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+
+@Repository
+public interface EventRepository extends ReactiveMongoRepository<StoredEvent, String> {
+
+    Flux<StoredEvent> findByAggregateId(String aggregateId);
+}

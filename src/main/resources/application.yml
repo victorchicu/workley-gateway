@@ -13,9 +13,6 @@ server:
 spring:
   kafka:
     bootstrap-servers: ${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS}
-  graphql:
-    graphiql:
-      enabled: true
   cloud:
     stream:
       bindings:
@@ -44,7 +41,7 @@ spring:
         - id: zumely-gateway
           uri: http://localhost:8443
           predicates:
-            - Path=/api/resumes/**
+            - Path=/api/prompt/**
   application:
     name: zumely-gateway
 #management:

@@ -27,7 +27,7 @@ spring:
         - id: zumely-gateway
           uri: http://localhost:8443
           predicates:
-            - Path=/api/resumes/**
+            - Path=/api/prompt/**
   security:
     oauth2:
       resourceserver:
