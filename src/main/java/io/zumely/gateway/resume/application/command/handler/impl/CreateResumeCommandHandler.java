@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CreateResumeCommandHandler implements CommandHandler<CreateResumeCommand, CreateResumeResult> {
-    private final AggregateIdGenerator aggregateIdGenerator;;
+    private final AggregateIdGenerator aggregateIdGenerator;
+    ;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public CreateResumeCommandHandler(
@@ -24,11 +25,13 @@ public class CreateResumeCommandHandler implements CommandHandler<CreateResumeCo
     @Override
     public CreateResumeResult handle(CreateResumeCommand command) {
 
-        String aggregateId = aggregateIdGenerator.generate();
+        CreateResumeEvent createResumeEvent =
+                new CreateResumeEvent(command.prompt(),
+                        aggregateIdGenerator.generate());
 
-        applicationEventPublisher.publishEvent(new CreateResumeEvent(aggregateId, command.prompt()));
+        applicationEventPublisher.publishEvent(createResumeEvent);
 
-        return new CreateResumeResult(aggregateId);
+        return CreateResumeResult.asDraft(createResumeEvent);
     }
 
     @Override

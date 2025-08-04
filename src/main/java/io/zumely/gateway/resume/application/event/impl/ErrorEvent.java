@@ -3,14 +3,14 @@ package io.zumely.gateway.resume.application.event.impl;
 import io.zumely.gateway.resume.application.event.Event;
 
 public class ErrorEvent extends Event {
-    private final String error;
+    private final String cause;
 
-    public ErrorEvent(String aggregateId, String error) {
+    public ErrorEvent(String aggregateId, String cause) {
         super(aggregateId);
-        this.error = error;
+        this.cause = cause;
     }
 
-    public String getError() {
-        return error;
+    public String getCause() {
+        return cause;
     }
 }

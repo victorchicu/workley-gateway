@@ -5,7 +5,7 @@ import io.zumely.gateway.resume.application.event.Event;
 public class CreateResumeEvent extends Event {
     private final String prompt;
 
-    public CreateResumeEvent(String aggregateId, String prompt) {
+    public CreateResumeEvent(String prompt, String aggregateId) {
         super(aggregateId);
         this.prompt = prompt;
     }

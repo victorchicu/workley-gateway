@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 
 public interface EventStore {
 
-    Mono<Void> save(Event event);
+    Mono<StoredEvent> save(Event event);
 
     Flux<StoredEvent> findEventsByAggregateId(String aggregateId);
 }

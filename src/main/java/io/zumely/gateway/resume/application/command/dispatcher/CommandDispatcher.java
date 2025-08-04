@@ -27,7 +27,7 @@ public class CommandDispatcher {
 
         if (handler == null) {
             throw new ApplicationException(
-                    "No handler found for command type: " + command.getClass().getSimpleName()
+                    "No handler found for command type " + command.getClass().getSimpleName()
             );
         }
 

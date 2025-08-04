@@ -30,7 +30,7 @@ public class PromptController {
 
     @PostMapping
     public Mono<ResponseEntity<Result>> handlePrompt(@Valid @RequestBody Prompt prompt) {
-        log.info("Handle prompt: {}", prompt);
+        log.info("Handle {}", prompt);
 
         Result result = commandDispatcher.dispatch(promptHandler.handle(prompt));
 
