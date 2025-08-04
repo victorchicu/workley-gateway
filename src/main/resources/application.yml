@@ -11,6 +11,10 @@ server:
         max-age: 30d
   forward-headers-strategy: framework
 spring:
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/zumely?authSource=admin
+      database: zumely
   kafka:
     bootstrap-servers: ${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS}
   cloud:
@@ -44,12 +48,3 @@ spring:
             - Path=/api/prompt/**
   application:
     name: zumely-gateway
-#management:
-#  endpoint:
-#    health:
-#      probes:
-#        enabled: true
-#  endpoints:
-#    web:
-#      exposure:
-#        include: health
