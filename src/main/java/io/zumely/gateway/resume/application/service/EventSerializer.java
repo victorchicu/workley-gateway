@@ -1,4 +1,4 @@
-package io.zumely.gateway.core.service;
+package io.zumely.gateway.resume.application.service;
 
 import io.zumely.gateway.resume.application.event.Event;
 

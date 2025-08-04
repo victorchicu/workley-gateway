@@ -1,6 +1,6 @@
-package io.zumely.gateway.core.service.impl;
+package io.zumely.gateway.resume.application.service.impl;
 
-import io.zumely.gateway.core.service.AggregateIdGenerator;
+import io.zumely.gateway.resume.application.service.AggregateIdGenerator;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;

@@ -1,9 +1,9 @@
-package io.zumely.gateway.resume.application.prompt.impl;
+package io.zumely.gateway.resume.application.service.impl;
 
 import io.zumely.gateway.resume.application.command.Command;
-import io.zumely.gateway.resume.application.prompt.command.Prompt;
+import io.zumely.gateway.resume.application.command.prompt.Prompt;
 import io.zumely.gateway.resume.application.command.impl.CreateResumeCommand;
-import io.zumely.gateway.resume.application.prompt.PromptHandler;
+import io.zumely.gateway.resume.application.service.PromptHandler;
 import org.springframework.stereotype.Component;
 
 @Component

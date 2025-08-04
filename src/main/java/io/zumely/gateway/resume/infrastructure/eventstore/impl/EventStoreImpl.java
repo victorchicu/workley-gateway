@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.infrastructure.eventstore.impl;
 
-import io.zumely.gateway.core.service.EventSerializer;
+import io.zumely.gateway.resume.application.service.EventSerializer;
 import io.zumely.gateway.resume.application.event.Event;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventRepository;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventStore;
@@ -31,7 +31,7 @@ public class EventStoreImpl implements EventStore {
                 event.getClass().getSimpleName(), event.getAggregateId());
 
         StoredEvent storedEvent =
-                new StoredEvent(event).setEventData(eventSerializer.serialize(event));
+                new StoredEvent(event).setData(eventSerializer.serialize(event));
 
         return eventRepository.save(storedEvent);
     }

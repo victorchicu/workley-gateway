@@ -1,9 +1,9 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
-import io.zumely.gateway.resume.application.prompt.command.Prompt;
+import io.zumely.gateway.resume.application.command.prompt.Prompt;
 import io.zumely.gateway.resume.application.command.dispatcher.CommandDispatcher;
 import io.zumely.gateway.resume.application.command.result.Result;
-import io.zumely.gateway.resume.application.prompt.PromptHandler;
+import io.zumely.gateway.resume.application.service.PromptHandler;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -13,7 +13,7 @@ public class StoredEvent {
 
     @Id
     private String id;
-    private String eventData;
+    private String data;
     @Indexed(unique = true)
     private String aggregateId;
     @CreatedDate
@@ -41,12 +41,12 @@ public class StoredEvent {
         return this;
     }
 
-    public String getEventData() {
-        return eventData;
+    public String getData() {
+        return data;
     }
 
-    public StoredEvent setEventData(String eventData) {
-        this.eventData = eventData;
+    public StoredEvent setData(String data) {
+        this.data = data;
         return this;
     }
 

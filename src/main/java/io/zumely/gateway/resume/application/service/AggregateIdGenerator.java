@@ -1,4 +1,4 @@
-package io.zumely.gateway.core.service;
+package io.zumely.gateway.resume.application.service;
 
 public interface AggregateIdGenerator {
 

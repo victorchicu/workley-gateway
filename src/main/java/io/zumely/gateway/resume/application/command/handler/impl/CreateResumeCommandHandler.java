@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.application.command.handler.impl;
 
-import io.zumely.gateway.core.service.AggregateIdGenerator;
+import io.zumely.gateway.resume.application.service.AggregateIdGenerator;
 import io.zumely.gateway.resume.application.command.handler.CommandHandler;
 import io.zumely.gateway.resume.application.command.impl.CreateResumeCommand;
 import io.zumely.gateway.resume.application.command.result.impl.CreateResumeResult;

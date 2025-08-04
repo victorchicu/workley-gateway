@@ -1,7 +1,7 @@
-package io.zumely.gateway.core.service.impl;
+package io.zumely.gateway.resume.application.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.zumely.gateway.core.service.EventSerializer;
+import io.zumely.gateway.resume.application.service.EventSerializer;
 import io.zumely.gateway.resume.application.event.Event;
 import org.springframework.stereotype.Component;
 
