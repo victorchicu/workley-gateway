@@ -52,3 +52,7 @@ spring:
             - Path=/api/prompt/**
   application:
     name: zumely-gateway
+security:
+  anonymous:
+    jwt:
+      secret: MfmYtis5Qqz97wl8MrRuqKzQvDd8PzDC
