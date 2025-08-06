@@ -1,9 +1,9 @@
-package io.zumely.gateway.core.anonymous;
+package io.zumely.gateway.core.security.anonymous;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.zumely.gateway.core.anonymous.jwt.JwtSecret;
+import io.zumely.gateway.core.security.anonymous.jwt.JwtSecret;
 import org.springframework.boot.web.server.Cookie;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.ResponseCookie;

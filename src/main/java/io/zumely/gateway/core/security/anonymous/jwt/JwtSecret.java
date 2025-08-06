@@ -1,4 +1,4 @@
-package io.zumely.gateway.core.anonymous.jwt;
+package io.zumely.gateway.core.security.anonymous.jwt;
 
 import com.auth0.jwt.algorithms.Algorithm;
 import org.springframework.beans.factory.annotation.Value;

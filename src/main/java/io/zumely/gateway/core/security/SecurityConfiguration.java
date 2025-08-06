@@ -1,7 +1,7 @@
-package io.zumely.gateway.core;
+package io.zumely.gateway.core.security;
 
-import io.zumely.gateway.core.anonymous.CookieAnonymousAuthenticationWebFilter;
-import io.zumely.gateway.core.anonymous.jwt.JwtSecret;
+import io.zumely.gateway.core.security.anonymous.CookieAnonymousAuthenticationWebFilter;
+import io.zumely.gateway.core.security.anonymous.jwt.JwtSecret;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
