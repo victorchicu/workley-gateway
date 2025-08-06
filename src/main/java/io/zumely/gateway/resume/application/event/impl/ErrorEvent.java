@@ -2,15 +2,17 @@ package io.zumely.gateway.resume.application.event.impl;
 
 import io.zumely.gateway.resume.application.event.Event;
 
-public class ErrorEvent extends Event {
-    private final String cause;
+import java.security.Principal;
 
-    public ErrorEvent(String aggregateId, String cause) {
-        super(aggregateId);
-        this.cause = cause;
+public class ErrorEvent extends Event {
+    private final String message;
+
+    public ErrorEvent(Principal principal, String chatId, String message) {
+        super(principal, chatId);
+        this.message = message;
     }
 
-    public String getCause() {
-        return cause;
+    public String getMessage() {
+        return message;
     }
 }

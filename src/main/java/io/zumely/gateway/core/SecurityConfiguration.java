@@ -1,10 +1,11 @@
 package io.zumely.gateway.core;
 
+import io.zumely.gateway.core.anonymous.CookieAnonymousAuthenticationWebFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 
 @Configuration
 public class SecurityConfiguration {
@@ -16,9 +17,20 @@ public class SecurityConfiguration {
                 .cors(ServerHttpSecurity.CorsSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-                .requestCache(ServerHttpSecurity.RequestCacheSpec::disable)
-                .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.anyExchange().permitAll())
-                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
+                .anonymous((ServerHttpSecurity.AnonymousSpec anonymousSpec) ->
+                        anonymousSpec.authenticationFilter(
+                                new CookieAnonymousAuthenticationWebFilter())
+                )
+                .authorizeExchange(withAuthorizeExchange())
                 .build();
+    }
+
+    private static Customizer<ServerHttpSecurity.AuthorizeExchangeSpec> withAuthorizeExchange() {
+        return (ServerHttpSecurity.AuthorizeExchangeSpec authorizeExchangeSpec) ->
+                authorizeExchangeSpec
+                        .pathMatchers("/api/agent/**")
+                        .permitAll()
+                        .anyExchange()
+                        .authenticated();
     }
 }

@@ -1,41 +1,45 @@
 package io.zumely.gateway.resume.application.command.handler.impl;
 
-import io.zumely.gateway.resume.application.service.AggregateIdGenerator;
+import io.zumely.gateway.resume.application.service.ChatIdGenerator;
 import io.zumely.gateway.resume.application.command.handler.CommandHandler;
-import io.zumely.gateway.resume.application.command.impl.CreateResumeCommand;
-import io.zumely.gateway.resume.application.command.result.impl.CreateResumeResult;
-import io.zumely.gateway.resume.application.event.impl.CreateResumeEvent;
+import io.zumely.gateway.resume.application.command.impl.CreateChatCommand;
+import io.zumely.gateway.resume.application.command.result.impl.CreateChatResult;
+import io.zumely.gateway.resume.application.event.impl.CreateChatEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.security.Principal;
+
 @Component
-public class CreateResumeCommandHandler implements CommandHandler<CreateResumeCommand, CreateResumeResult> {
-    private final AggregateIdGenerator aggregateIdGenerator;
-    ;
+public class CreateResumeCommandHandler implements CommandHandler<CreateChatCommand, CreateChatResult> {
+    private final ChatIdGenerator chatIdGenerator;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public CreateResumeCommandHandler(
-            AggregateIdGenerator aggregateIdGenerator,
+            ChatIdGenerator chatIdGenerator,
             ApplicationEventPublisher applicationEventPublisher
     ) {
-        this.aggregateIdGenerator = aggregateIdGenerator;
+        this.chatIdGenerator = chatIdGenerator;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
-    public CreateResumeResult handle(CreateResumeCommand command) {
+    public CreateChatResult handle(Principal principal, CreateChatCommand command) {
 
-        CreateResumeEvent createResumeEvent =
-                new CreateResumeEvent(command.prompt(),
-                        aggregateIdGenerator.generate());
+        CreateChatEvent createChatEvent =
+                new CreateChatEvent(
+                        principal,
+                        chatIdGenerator.generate(),
+                        command.prompt()
+                );
 
-        applicationEventPublisher.publishEvent(createResumeEvent);
+        applicationEventPublisher.publishEvent(createChatEvent);
 
-        return CreateResumeResult.asDraft(createResumeEvent);
+        return CreateChatResult.firstReply(createChatEvent);
     }
 
     @Override
-    public Class<CreateResumeCommand> supported() {
-        return CreateResumeCommand.class;
+    public Class<CreateChatCommand> supported() {
+        return CreateChatCommand.class;
     }
 }

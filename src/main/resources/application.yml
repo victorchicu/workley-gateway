@@ -8,7 +8,11 @@ server:
     session:
       timeout: 30d
       cookie:
+        name: SESSION
+        secure: false
         max-age: 30d
+        http-only: true
+        same-site: lax
   forward-headers-strategy: framework
 spring:
   data:
@@ -16,7 +20,7 @@ spring:
       uri: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/zumely?authSource=admin
       database: zumely
   kafka:
-    bootstrap-servers: ${KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS}
+    bootstrap-servers: ${GATEWAY_SPRING_KAFKA_BOOTSTRAP_SERVERS}
   cloud:
     stream:
       bindings:

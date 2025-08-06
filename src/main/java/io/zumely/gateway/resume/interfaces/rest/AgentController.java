@@ -15,25 +15,27 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
-@RequestMapping("/api/prompts")
-@RestController
-public class PromptController {
+import java.security.Principal;
 
-    private static final Logger log = LoggerFactory.getLogger(PromptController.class);
+@RequestMapping("/api/agent")
+@RestController
+public class AgentController {
+
+    private static final Logger log = LoggerFactory.getLogger(AgentController.class);
 
     private final PromptHandler promptHandler;
     private final CommandDispatcher commandDispatcher;
 
-    public PromptController(PromptHandler promptHandler, CommandDispatcher commandDispatcher) {
+    public AgentController(PromptHandler promptHandler, CommandDispatcher commandDispatcher) {
         this.promptHandler = promptHandler;
         this.commandDispatcher = commandDispatcher;
     }
 
-    @PostMapping
-    public Mono<ResponseEntity<Result>> handlePrompt(@Valid @RequestBody Prompt prompt) {
+    @PostMapping("/prompt")
+    public Mono<ResponseEntity<Result>> handlePrompt(Principal principal, @Valid @RequestBody Prompt prompt) {
         log.info("Handle {}", prompt);
 
-        Result result = commandDispatcher.dispatch(promptHandler.handle(prompt));
+        Result result = commandDispatcher.dispatch(principal, promptHandler.handle(prompt));
 
         return Mono.just(
                 ResponseEntity.ok()

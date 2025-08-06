@@ -8,5 +8,5 @@ import reactor.core.publisher.Flux;
 @Repository
 public interface EventRepository extends ReactiveMongoRepository<StoredEvent, String> {
 
-    Flux<StoredEvent> findAllByAggregateId(String aggregateId);
+    Flux<StoredEvent> findAllByPrincipalAndChatId(String chatId);
 }

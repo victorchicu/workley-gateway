@@ -1,12 +1,12 @@
 package io.zumely.gateway.resume.application.service.impl;
 
-import io.zumely.gateway.resume.application.service.AggregateIdGenerator;
+import io.zumely.gateway.resume.application.service.ChatIdGenerator;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
-public class AggregateIdGeneratorImpl implements AggregateIdGenerator {
+public class ChatIdGeneratorImpl implements ChatIdGenerator {
 
     @Override
     public String generate() {

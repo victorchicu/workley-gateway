@@ -14,13 +14,16 @@ public class StoredEvent {
     @Id
     private String id;
     private String data;
+    @Indexed
+    private String principal;
     @Indexed(unique = true)
-    private String aggregateId;
+    private String chatId;
     @CreatedDate
     private Instant createdOn;
 
     public StoredEvent(Event event) {
-        this.aggregateId = event.getAggregateId();
+        this.principal = event.getPrincipal().getName();
+        this.chatId = event.getChatId();
     }
 
     public String getId() {
@@ -32,12 +35,20 @@ public class StoredEvent {
         return this;
     }
 
-    public String getAggregateId() {
-        return aggregateId;
+    public String getPrincipal() {
+        return principal;
     }
 
-    public StoredEvent setAggregateId(String aggregateId) {
-        this.aggregateId = aggregateId;
+    public void setPrincipal(String principal) {
+        this.principal = principal;
+    }
+
+    public String getChatId() {
+        return chatId;
+    }
+
+    public StoredEvent setChatId(String chatId) {
+        this.chatId = chatId;
         return this;
     }
 

@@ -6,6 +6,7 @@ import io.zumely.gateway.resume.application.command.result.Result;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import org.springframework.stereotype.Component;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -22,7 +23,7 @@ public class CommandDispatcher {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Command, R extends Result> R dispatch(T command) {
+    public <T extends Command, R extends Result> R dispatch(Principal principal, T command) {
         CommandHandler<T, R> handler = (CommandHandler<T, R>) handlers.get(command.getClass());
 
         if (handler == null) {
@@ -31,6 +32,6 @@ public class CommandDispatcher {
             );
         }
 
-        return handler.handle(command);
+        return handler.handle(principal, command);
     }
 }

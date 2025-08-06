@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.security.Principal;
+
 @Service
 public class EventStoreImpl implements EventStore {
     private static final Logger log = LoggerFactory.getLogger(EventStoreImpl.class);
@@ -27,17 +29,14 @@ public class EventStoreImpl implements EventStore {
     }
 
     public Mono<StoredEvent> save(Event event) {
-        log.info("Saving event {} for aggregate {}",
-                event.getClass().getSimpleName(), event.getAggregateId());
-
         StoredEvent storedEvent =
                 new StoredEvent(event).setData(eventSerializer.serialize(event));
 
         return eventRepository.save(storedEvent);
     }
 
-    public Flux<StoredEvent> findEventsByAggregateId(String aggregateId) {
-        log.info("Finding events by aggregate: {}", aggregateId);
-        return eventRepository.findAllByAggregateId(aggregateId);
+    public Flux<StoredEvent> findEvents(Principal principal, String chatId) {
+        log.info("Finding events by chat ID: {}", chatId);
+        return eventRepository.findAllByPrincipalAndChatId(chatId);
     }
 }
