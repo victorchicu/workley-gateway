@@ -1,11 +1,12 @@
 package io.zumely.gateway.resume.application.command.handler.impl;
 
+import io.zumely.gateway.resume.application.event.context.ActorApplicationEventPublisher;
 import io.zumely.gateway.resume.application.service.ChatIdGenerator;
 import io.zumely.gateway.resume.application.command.handler.CommandHandler;
 import io.zumely.gateway.resume.application.command.impl.CreateChatCommand;
 import io.zumely.gateway.resume.application.command.result.impl.CreateChatResult;
-import io.zumely.gateway.resume.application.event.impl.CreateChatEvent;
-import org.springframework.context.ApplicationEventPublisher;
+import io.zumely.gateway.resume.application.event.CreateChatApplicationEvent;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
@@ -13,33 +14,36 @@ import java.security.Principal;
 @Component
 public class CreateResumeCommandHandler implements CommandHandler<CreateChatCommand, CreateChatResult> {
     private final ChatIdGenerator chatIdGenerator;
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final ConversionService conversionService;
+    private final ActorApplicationEventPublisher eventPublisher;
 
     public CreateResumeCommandHandler(
             ChatIdGenerator chatIdGenerator,
-            ApplicationEventPublisher applicationEventPublisher
+            ConversionService conversionService,
+            ActorApplicationEventPublisher eventPublisher
     ) {
         this.chatIdGenerator = chatIdGenerator;
-        this.applicationEventPublisher = applicationEventPublisher;
+        this.conversionService = conversionService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
     public CreateChatResult handle(Principal principal, CreateChatCommand command) {
 
-        CreateChatEvent createChatEvent =
-                new CreateChatEvent(
-                        principal,
-                        chatIdGenerator.generate(),
-                        command.prompt()
-                );
+        CreateChatApplicationEvent createChatApplicationEvent =
+                new CreateChatApplicationEvent(chatIdGenerator.generate(), command.prompt());
 
-        applicationEventPublisher.publishEvent(createChatEvent);
+        eventPublisher.publishEvent(principal, createChatApplicationEvent);
 
-        return CreateChatResult.firstReply(createChatEvent);
+        return toCreateChatResult(createChatApplicationEvent);
     }
 
     @Override
     public Class<CreateChatCommand> supported() {
         return CreateChatCommand.class;
+    }
+
+    private CreateChatResult toCreateChatResult(CreateChatApplicationEvent event) {
+        return conversionService.convert(event, CreateChatResult.class);
     }
 }

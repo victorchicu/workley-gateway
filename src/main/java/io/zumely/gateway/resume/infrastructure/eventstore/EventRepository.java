@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
 @Repository
-public interface EventRepository extends ReactiveMongoRepository<StoredEvent, String> {
+public interface EventRepository extends ReactiveMongoRepository<StoredEvent<?>, String> {
 
-    Flux<StoredEvent> findAllByPrincipalAndChatId(String chatId);
+    Flux<StoredEvent<?>> findAllByActor(String actorId);
 }

@@ -1,9 +1,9 @@
 package io.zumely.gateway.core.security.anonymous;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.zumely.gateway.core.security.anonymous.jwt.JwtSecret;
 import org.springframework.boot.web.server.Cookie;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.ResponseCookie;
@@ -19,7 +19,6 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -33,9 +32,9 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     private static final Duration TOKEN_MAX_AGE = Duration.ofMinutes(5);
     private static final Duration COOKIE_MAX_AGE = Duration.ofDays(30);
 
-    private final JwtSecret jwtSecret;
+    private final AnonymousJwtSecret jwtSecret;
 
-    public CookieAnonymousAuthenticationWebFilter(JwtSecret jwtSecret) {
+    public CookieAnonymousAuthenticationWebFilter(AnonymousJwtSecret jwtSecret) {
         super(UUID.randomUUID().toString());
         this.jwtSecret = jwtSecret;
     }
@@ -43,23 +42,14 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         return ReactiveSecurityContextHolder.getContext()
-                .switchIfEmpty(Mono.defer(() -> {
-                    Authentication authentication =
-                            createAnonymousAuthentication(exchange);
-
-                    SecurityContext securityContext =
-                            new SecurityContextImpl(authentication);
-
-                    return chain.filter(exchange)
-                            .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)))
-                            .then(Mono.empty());
-                }))
+                .switchIfEmpty(Mono.defer(() ->
+                        applyAnonymousSecurityContext(exchange, chain)))
                 .flatMap((securityContext) -> chain.filter(exchange));
     }
 
 
-    private void addAnonymousCookie(ServerWebExchange exchange, String anonymousId) {
-        ResponseCookie cookie = ResponseCookie.from(ANONYMOUS_TOKEN_COOKIE_KEY, anonymousId)
+    private void addAnonymousTokenCookie(ServerWebExchange exchange, String token) {
+        ResponseCookie cookie = ResponseCookie.from(ANONYMOUS_TOKEN_COOKIE_KEY, token)
                 .path("/")
                 .secure(true)
                 .maxAge(COOKIE_MAX_AGE)
@@ -69,60 +59,57 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
         exchange.getResponse().addCookie(cookie);
     }
 
-    private String extractAnonymousToken(ServerWebExchange exchange) {
+    private String extractAnonymousTokenFromCookie(ServerWebExchange exchange) {
         HttpCookie cookie = exchange.getRequest().getCookies().getFirst(ANONYMOUS_TOKEN_COOKIE_KEY);
         return Optional.ofNullable(cookie)
                 .map(HttpCookie::getValue)
                 .orElse(null);
     }
 
-    private Authentication createAnonymousAuthentication(ServerWebExchange exchange) {
-        String token = extractAnonymousToken(exchange);
-        DecodedJWT jwt;
-        if (token == null) {
-            token = JWT.create()
-                    .withSubject(UUID.randomUUID().toString())
-                    .withExpiresAt(Instant.now().plus(TOKEN_MAX_AGE))
-                    .sign(jwtSecret.getAlgorithm());
+    private DecodedJWT createAnonymousJwtToken(ServerWebExchange exchange) {
+        String token = JWT.create()
+                .withSubject(UUID.randomUUID().toString())
+                .withExpiresAt(Instant.now().plus(TOKEN_MAX_AGE))
+                .sign(jwtSecret.getAlgorithm());
 
-            addAnonymousCookie(exchange, token);
+        addAnonymousTokenCookie(exchange, token);
 
-            jwt = JWT.require(jwtSecret.getAlgorithm())
-                    .build()
-                    .verify(token);
-        } else {
-            try {
-                jwt = JWT.require(jwtSecret.getAlgorithm())
-                        .build()
-                        .verify(token);
-            } catch (TokenExpiredException e) {
-                token = JWT.create()
-                        .withSubject(UUID.randomUUID().toString())
-                        .withExpiresAt(Instant.now().plus(TOKEN_MAX_AGE))
-                        .sign(jwtSecret.getAlgorithm());
-
-                addAnonymousCookie(exchange, token);
-
-                jwt = JWT.require(jwtSecret.getAlgorithm())
-                        .build()
-                        .verify(token);
-            }
-        }
-
-        if (jwt == null) {
-            throw new InsufficientAuthenticationException("JWT token is invalid");
-        }
-
-        return new AnonymousAuthenticationToken(
-                ANONYMOUS_KEY,
-                new AnonymousPrincipal(jwt.getSubject()),
-                List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+        return JWT.require(jwtSecret.getAlgorithm()).build().verify(token);
     }
 
-    public record AnonymousPrincipal(String subject) implements Principal {
-        @Override
-            public String getName() {
-                return subject;
-            }
+    private Authentication createAnonymousAuthentication(ServerWebExchange exchange) {
+        String token = extractAnonymousTokenFromCookie(exchange);
+
+        DecodedJWT jwt = token == null
+                ? createAnonymousJwtToken(exchange)
+                : maybeRefreshAnonymousJwtToken(exchange, token);
+
+        return new AnonymousAuthenticationToken(ANONYMOUS_KEY,
+                new AnonymousPrincipal(jwt.getSubject()), List.of(
+                new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+    }
+
+    private DecodedJWT maybeRefreshAnonymousJwtToken(ServerWebExchange exchange, String token) {
+        DecodedJWT jwt;
+        try {
+            jwt = JWT.require(jwtSecret.getAlgorithm()).build().verify(token);
+        } catch (TokenExpiredException e) {
+            jwt = createAnonymousJwtToken(exchange);
+        } catch (JWTVerificationException e) {
+            throw new InsufficientAuthenticationException("Anonymous token is invalid", e);
         }
+        return jwt;
+    }
+
+    private Mono<SecurityContext> applyAnonymousSecurityContext(ServerWebExchange exchange, WebFilterChain chain) {
+        Authentication authentication =
+                createAnonymousAuthentication(exchange);
+
+        SecurityContext securityContext =
+                new SecurityContextImpl(authentication);
+
+        return chain.filter(exchange)
+                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)))
+                .then(Mono.empty());
+    }
 }

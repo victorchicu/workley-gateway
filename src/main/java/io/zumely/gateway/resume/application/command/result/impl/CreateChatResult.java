@@ -1,7 +1,7 @@
 package io.zumely.gateway.resume.application.command.result.impl;
 
 import io.zumely.gateway.resume.application.command.result.Result;
-import io.zumely.gateway.resume.application.event.Event;
+import io.zumely.gateway.resume.application.event.ApplicationEvent;
 
 import java.util.Objects;
 
@@ -11,9 +11,9 @@ public record CreateChatResult(String chatId, String firstReply) implements Resu
         this.firstReply = Objects.requireNonNull(firstReply, "firstReply must not be null");
     }
 
-    public static <T extends Event> CreateChatResult firstReply(T event) {
+    public static <T extends ApplicationEvent> CreateChatResult firstReply(String chatId) {
         return new CreateChatResult(
-                event.getChatId(),
+                chatId,
                 "Great! I'm working on your resume now..."
         );
     }

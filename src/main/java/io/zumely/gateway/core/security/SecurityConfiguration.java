@@ -1,7 +1,7 @@
 package io.zumely.gateway.core.security;
 
 import io.zumely.gateway.core.security.anonymous.CookieAnonymousAuthenticationWebFilter;
-import io.zumely.gateway.core.security.anonymous.jwt.JwtSecret;
+import io.zumely.gateway.core.security.anonymous.AnonymousJwtSecret;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -10,9 +10,9 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
 public class SecurityConfiguration {
-    private final JwtSecret jwtSecret;
+    private final AnonymousJwtSecret jwtSecret;
 
-    public SecurityConfiguration(JwtSecret jwtSecret) {
+    public SecurityConfiguration(AnonymousJwtSecret jwtSecret) {
         this.jwtSecret = jwtSecret;
     }
 

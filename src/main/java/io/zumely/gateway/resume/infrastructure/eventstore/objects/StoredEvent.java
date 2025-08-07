@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.infrastructure.eventstore.objects;
 
-import io.zumely.gateway.resume.application.event.Event;
+import io.zumely.gateway.resume.application.event.ApplicationEvent;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -9,55 +9,31 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
 
 @Document(collection = "events")
-public class StoredEvent {
-
+public class StoredEvent<T extends ApplicationEvent> {
     @Id
     private String id;
-    private String data;
     @Indexed
-    private String principal;
-    @Indexed(unique = true)
-    private String chatId;
+    private String actor;
     @CreatedDate
     private Instant createdOn;
 
-    public StoredEvent(Event event) {
-        this.principal = event.getPrincipal().getName();
-        this.chatId = event.getChatId();
-    }
+    private T event;
 
     public String getId() {
         return id;
     }
 
-    public StoredEvent setId(String id) {
+    public StoredEvent<T> setId(String id) {
         this.id = id;
         return this;
     }
 
-    public String getPrincipal() {
-        return principal;
+    public String getActor() {
+        return actor;
     }
 
-    public void setPrincipal(String principal) {
-        this.principal = principal;
-    }
-
-    public String getChatId() {
-        return chatId;
-    }
-
-    public StoredEvent setChatId(String chatId) {
-        this.chatId = chatId;
-        return this;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public StoredEvent setData(String data) {
-        this.data = data;
+    public StoredEvent<T> setActor(String actor) {
+        this.actor = actor;
         return this;
     }
 
@@ -65,8 +41,17 @@ public class StoredEvent {
         return createdOn;
     }
 
-    public StoredEvent setCreatedOn(Instant createdOn) {
+    public StoredEvent<T> setCreatedOn(Instant createdOn) {
         this.createdOn = createdOn;
+        return this;
+    }
+
+    public T getEvent() {
+        return event;
+    }
+
+    public StoredEvent<T> setEvent(T event) {
+        this.event = event;
         return this;
     }
 }

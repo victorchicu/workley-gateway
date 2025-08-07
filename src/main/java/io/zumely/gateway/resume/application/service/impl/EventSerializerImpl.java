@@ -2,7 +2,7 @@ package io.zumely.gateway.resume.application.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zumely.gateway.resume.application.service.EventSerializer;
-import io.zumely.gateway.resume.application.event.Event;
+import io.zumely.gateway.resume.application.event.ApplicationEvent;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,7 +13,7 @@ public class EventSerializerImpl implements EventSerializer {
         this.objectMapper = objectMapper;
     }
 
-    public <T extends Event> String serialize(T event) {
+    public <T extends ApplicationEvent> String serialize(T event) {
         try {
             return objectMapper.writeValueAsString(event);
         } catch (Exception e) {
@@ -23,9 +23,9 @@ public class EventSerializerImpl implements EventSerializer {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends Event> T deserialize(String json) {
+    public <T extends ApplicationEvent> T deserialize(String json) {
         try {
-            return (T) objectMapper.readValue(json, Event.class);
+            return (T) objectMapper.readValue(json, ApplicationEvent.class);
         } catch (Exception e) {
             throw new RuntimeException("Failed to deserialize event", e);
         }
