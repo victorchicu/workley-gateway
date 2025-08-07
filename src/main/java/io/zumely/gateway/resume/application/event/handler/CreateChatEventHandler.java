@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.application.event.handler;
 
-import io.zumely.gateway.resume.application.event.ActorEvent;
+import io.zumely.gateway.resume.application.event.ActorPayload;
 import io.zumely.gateway.resume.application.event.CreateChatApplicationEvent;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventStore;
@@ -26,7 +26,7 @@ public class CreateChatEventHandler {
     }
 
     @EventListener
-    public Mono<StoredEvent<CreateChatApplicationEvent>> handle(PayloadApplicationEvent<ActorEvent<CreateChatApplicationEvent>> source) {
+    public Mono<StoredEvent<CreateChatApplicationEvent>> handle(PayloadApplicationEvent<ActorPayload<CreateChatApplicationEvent>> source) {
         Principal actor = source.getPayload().actor();
         return eventStore.save(actor, source.getPayload().event())
                 .doOnSuccess(event ->

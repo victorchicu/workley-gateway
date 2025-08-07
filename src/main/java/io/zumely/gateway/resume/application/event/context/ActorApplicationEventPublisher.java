@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.application.event.context;
 
-import io.zumely.gateway.resume.application.event.ActorEvent;
+import io.zumely.gateway.resume.application.event.ActorPayload;
 import io.zumely.gateway.resume.application.event.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.PayloadApplicationEvent;
@@ -18,6 +18,8 @@ public class ActorApplicationEventPublisher {
     }
 
     public <T extends ApplicationEvent> void publishEvent(Principal actor, T event) {
-        publisher.publishEvent(new PayloadApplicationEvent<>(actor, new ActorEvent<>(actor, event)));
+        publisher.publishEvent(
+                new PayloadApplicationEvent<>(this,
+                        new ActorPayload<>(actor, event)));
     }
 }

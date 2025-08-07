@@ -23,7 +23,7 @@ public class CommandDispatcher {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Command, R extends Result> R dispatch(Principal principal, T command) {
+    public <T extends Command, R extends Result> R dispatch(Principal actor, T command) {
         CommandHandler<T, R> handler = (CommandHandler<T, R>) handlers.get(command.getClass());
 
         if (handler == null) {
@@ -32,6 +32,6 @@ public class CommandDispatcher {
             );
         }
 
-        return handler.handle(principal, command);
+        return handler.handle(actor, command);
     }
 }

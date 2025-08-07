@@ -7,7 +7,7 @@ import java.security.Principal;
 
 public interface CommandHandler<T extends Command, R extends Result> {
 
-    R handle(Principal principal, T command);
+    R handle(Principal actor, T command);
 
     Class<T> supported();
 }

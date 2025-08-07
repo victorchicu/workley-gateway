@@ -32,10 +32,10 @@ public class AgentController {
     }
 
     @PostMapping("/prompt")
-    public Mono<ResponseEntity<Result>> handlePrompt(Principal principal, @Valid @RequestBody Prompt prompt) {
+    public Mono<ResponseEntity<Result>> handlePrompt(Principal actor, @Valid @RequestBody Prompt prompt) {
         log.info("Handle {}", prompt);
 
-        Result result = commandDispatcher.dispatch(principal, promptHandler.handle(prompt));
+        Result result = commandDispatcher.dispatch(actor, promptHandler.handle(prompt));
 
         return Mono.just(
                 ResponseEntity.ok()

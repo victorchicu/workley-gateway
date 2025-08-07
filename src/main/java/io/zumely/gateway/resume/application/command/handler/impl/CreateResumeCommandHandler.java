@@ -28,12 +28,12 @@ public class CreateResumeCommandHandler implements CommandHandler<CreateChatComm
     }
 
     @Override
-    public CreateChatResult handle(Principal principal, CreateChatCommand command) {
+    public CreateChatResult handle(Principal actor, CreateChatCommand command) {
 
         CreateChatApplicationEvent createChatApplicationEvent =
-                new CreateChatApplicationEvent(chatIdGenerator.generate(), command.prompt());
+                new CreateChatApplicationEvent(command.prompt(), chatIdGenerator.generate());
 
-        eventPublisher.publishEvent(principal, createChatApplicationEvent);
+        eventPublisher.publishEvent(actor, createChatApplicationEvent);
 
         return toCreateChatResult(createChatApplicationEvent);
     }
