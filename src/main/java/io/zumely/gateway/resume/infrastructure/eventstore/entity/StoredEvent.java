@@ -1,4 +1,4 @@
-package io.zumely.gateway.resume.infrastructure.eventstore.objects;
+package io.zumely.gateway.resume.infrastructure.eventstore.entity;
 
 import io.zumely.gateway.resume.application.event.ApplicationEvent;
 import org.springframework.data.annotation.CreatedDate;

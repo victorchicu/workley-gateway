@@ -1,9 +1,8 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
-import io.zumely.gateway.resume.application.command.prompt.Prompt;
+import io.zumely.gateway.resume.application.command.Command;
 import io.zumely.gateway.resume.application.command.dispatcher.CommandDispatcher;
 import io.zumely.gateway.resume.application.command.result.Result;
-import io.zumely.gateway.resume.application.service.PromptHandler;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,19 +22,17 @@ public class AgentController {
 
     private static final Logger log = LoggerFactory.getLogger(AgentController.class);
 
-    private final PromptHandler promptHandler;
     private final CommandDispatcher commandDispatcher;
 
-    public AgentController(PromptHandler promptHandler, CommandDispatcher commandDispatcher) {
-        this.promptHandler = promptHandler;
+    public AgentController(CommandDispatcher commandDispatcher) {
         this.commandDispatcher = commandDispatcher;
     }
 
-    @PostMapping("/prompt")
-    public Mono<ResponseEntity<Result>> handlePrompt(Principal actor, @Valid @RequestBody Prompt prompt) {
-        log.info("Handle {}", prompt);
+    @PostMapping("/command")
+    public <T extends Command> Mono<ResponseEntity<Result>> handleCommand(Principal actor, @Valid @RequestBody T command) {
+        log.info("Handle {}", command);
 
-        Result result = commandDispatcher.dispatch(actor, promptHandler.handle(prompt));
+        Result result = commandDispatcher.dispatch(actor, command);
 
         return Mono.just(
                 ResponseEntity.ok()

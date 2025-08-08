@@ -24,8 +24,8 @@ spring:
   cloud:
     stream:
       bindings:
-        handlePrompt-in-0:
-          destination: prompt.events
+        handleActorEvent-in-0:
+          destination: actor.events
           group: gateway
           consumer:
             # max-attempts: 3 # Example: retry configuration
@@ -35,7 +35,7 @@ spring:
             concurrency: 1 # Adjust based on expected load and processing time
     function:
       definition: >
-        handlePrompt;
+        handleActorEvent;
     gateway:
       globalcors:
         cors-configurations:
@@ -53,6 +53,8 @@ spring:
   application:
     name: zumely-gateway
 security:
+  openai:
+    secret: ${GATEWAY_SECURITY_OPENAI_SECRET}
   anonymous:
     jwt:
-      secret: MfmYtis5Qqz97wl8MrRuqKzQvDd8PzDC
+      secret: ${GATEWAY_SECURITY_ANONYMOUS_JWT_SECRET}

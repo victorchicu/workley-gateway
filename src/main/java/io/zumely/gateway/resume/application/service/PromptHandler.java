@@ -1,7 +1,7 @@
 package io.zumely.gateway.resume.application.service;
 
 import io.zumely.gateway.resume.application.command.Command;
-import io.zumely.gateway.resume.application.command.prompt.Prompt;
+import io.zumely.gateway.resume.application.command.impl.Prompt;
 
 public interface PromptHandler {
 

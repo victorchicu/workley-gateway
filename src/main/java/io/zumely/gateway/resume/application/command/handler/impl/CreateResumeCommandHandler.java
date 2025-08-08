@@ -31,7 +31,7 @@ public class CreateResumeCommandHandler implements CommandHandler<CreateChatComm
     public CreateChatResult handle(Principal actor, CreateChatCommand command) {
 
         CreateChatApplicationEvent createChatApplicationEvent =
-                new CreateChatApplicationEvent(command.prompt(), chatIdGenerator.generate());
+                new CreateChatApplicationEvent(chatIdGenerator.generate(), command.prompt());
 
         eventPublisher.publishEvent(actor, createChatApplicationEvent);
 

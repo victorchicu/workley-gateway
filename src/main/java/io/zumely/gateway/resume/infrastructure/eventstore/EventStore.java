@@ -1,7 +1,7 @@
 package io.zumely.gateway.resume.infrastructure.eventstore;
 
 import io.zumely.gateway.resume.application.event.ApplicationEvent;
-import io.zumely.gateway.resume.infrastructure.eventstore.objects.StoredEvent;
+import io.zumely.gateway.resume.infrastructure.eventstore.entity.StoredEvent;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

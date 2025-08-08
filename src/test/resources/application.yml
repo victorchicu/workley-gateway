@@ -3,7 +3,7 @@ spring:
     stream:
       bindings:
         handlePrompt-in-0:
-          destination: prompt.events
+          destination: text.events
           group: gateway
           consumer:
             # max-attempts: 3 # Example: retry configuration

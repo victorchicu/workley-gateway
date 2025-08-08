@@ -3,7 +3,7 @@ package io.zumely.gateway.resume.infrastructure.eventstore.impl;
 import io.zumely.gateway.resume.application.event.ApplicationEvent;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventRepository;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventStore;
-import io.zumely.gateway.resume.infrastructure.eventstore.objects.StoredEvent;
+import io.zumely.gateway.resume.infrastructure.eventstore.entity.StoredEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

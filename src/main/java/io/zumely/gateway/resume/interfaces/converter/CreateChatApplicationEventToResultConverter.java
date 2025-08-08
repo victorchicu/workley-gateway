@@ -9,6 +9,6 @@ import org.springframework.stereotype.Component;
 public class CreateChatApplicationEventToResultConverter implements Converter<CreateChatApplicationEvent, CreateChatResult> {
     @Override
     public CreateChatResult convert(CreateChatApplicationEvent source) {
-        return CreateChatResult.firstReply(source.chatId());
+        return CreateChatResult.response(source.chatId(), source.prompt());
     }
 }

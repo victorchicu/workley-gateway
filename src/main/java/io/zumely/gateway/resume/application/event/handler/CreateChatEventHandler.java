@@ -4,7 +4,7 @@ import io.zumely.gateway.resume.application.event.ActorPayload;
 import io.zumely.gateway.resume.application.event.CreateChatApplicationEvent;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventStore;
-import io.zumely.gateway.resume.infrastructure.eventstore.objects.StoredEvent;
+import io.zumely.gateway.resume.infrastructure.eventstore.entity.StoredEvent;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,20 +30,16 @@ public class CreateChatEventHandler {
         Principal actor = source.getPayload().actor();
         return eventStore.save(actor, source.getPayload().event())
                 .doOnSuccess(event ->
-                        log.info("Saved {} event for aggregate {}",
-                                source.getClass().getSimpleName(), source.getPayload().event().chatId()))
+                        log.info("Saved {} event for actor {}",
+                                source.getClass().getSimpleName(), actor.getName()))
                 .onErrorResume(error -> {
-                    String str = "Failed to save event %s for aggregate %s"
-                            .formatted(source.getClass().getSimpleName(),
-                                    source.getPayload().event().chatId());
-
-                    log.error(str, error);
                     return Mono.error(
                             new ApplicationException(
                                     String.join("\n", ExceptionUtils.getStackFrames(error))));
                 })
                 .doOnError(error ->
-                        log.error("Something went wrong while saving event for aggregate: {}",
-                                source.getPayload().event().chatId(), error));
+                        log.error("Oops! Something went wrong while saving event {} for actor {}",
+                                source.getClass().getSimpleName(), actor.getName(),
+                                error));
     }
 }
