@@ -43,6 +43,7 @@ public class CreateResumeCommandHandler implements CommandHandler<CreateChatComm
         return CreateChatCommand.class;
     }
 
+
     private CreateChatResult toCreateChatResult(CreateChatApplicationEvent event) {
         return conversionService.convert(event, CreateChatResult.class);
     }

@@ -8,10 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
@@ -28,8 +25,13 @@ public class AgentController {
         this.commandDispatcher = commandDispatcher;
     }
 
+    @GetMapping("/chat/{chatId}")
+    public <T extends Command> Mono<ResponseEntity<Result>> findChatQuery(Principal actor, @PathVariable String chatId) {
+        throw new UnsupportedOperationException();
+    }
+
     @PostMapping("/command")
-    public <T extends Command> Mono<ResponseEntity<Result>> handleCommand(Principal actor, @Valid @RequestBody T command) {
+    public <T extends Command> Mono<ResponseEntity<Result>> executeCommand(Principal actor, @Valid @RequestBody T command) {
         log.info("Handle {}", command);
 
         Result result = commandDispatcher.dispatch(actor, command);
