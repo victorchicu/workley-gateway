@@ -30,7 +30,7 @@ public class EventStoreImpl implements EventStore {
 
     @SuppressWarnings("unchecked")
     public <T extends ApplicationEvent> Flux<StoredEvent<T>> findEvents(Principal actor, String chatId) {
-        return eventRepository.findAllByActor(actor.getName())
+        return eventRepository.findChat(actor.getName(), chatId)
                 .map((StoredEvent<?> event) -> (StoredEvent<T>) event);
     }
 }
