@@ -4,7 +4,7 @@ import io.zumely.gateway.resume.application.event.ActorPayload;
 import io.zumely.gateway.resume.application.event.CreateChatApplicationEvent;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventStore;
-import io.zumely.gateway.resume.infrastructure.eventstore.entity.StoredEvent;
+import io.zumely.gateway.resume.infrastructure.eventstore.data.StoredEvent;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

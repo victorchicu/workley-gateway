@@ -1,8 +1,7 @@
-package io.zumely.gateway.resume.application.command.dispatcher;
+package io.zumely.gateway.resume.application.command;
 
-import io.zumely.gateway.resume.application.command.Command;
 import io.zumely.gateway.resume.application.command.handler.CommandHandler;
-import io.zumely.gateway.resume.application.command.result.Result;
+import io.zumely.gateway.resume.application.command.data.Result;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import org.springframework.stereotype.Component;
 

@@ -1,7 +1,5 @@
-package io.zumely.gateway.resume.application.command.result.impl;
+package io.zumely.gateway.resume.application.command.data;
 
-import io.zumely.gateway.resume.application.command.impl.Prompt;
-import io.zumely.gateway.resume.application.command.result.Result;
 import io.zumely.gateway.resume.application.event.ApplicationEvent;
 
 import java.util.Objects;

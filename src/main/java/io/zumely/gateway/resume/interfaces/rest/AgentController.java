@@ -1,8 +1,8 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.application.command.Command;
-import io.zumely.gateway.resume.application.command.dispatcher.CommandDispatcher;
-import io.zumely.gateway.resume.application.command.result.Result;
+import io.zumely.gateway.resume.application.command.CommandDispatcher;
+import io.zumely.gateway.resume.application.command.data.Result;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,10 @@ public class AgentController {
     }
 
     @GetMapping("/chat/{chatId}")
-    public <T extends Command> Mono<ResponseEntity<Result>> findChatQuery(Principal actor, @PathVariable String chatId) {
+    public <T extends Command> Mono<ResponseEntity<Result>> getChatQuery(Principal actor, @PathVariable String chatId) {
+        log.info("Find chat {} query for actor {}",
+                chatId, actor.getName());
+
         throw new UnsupportedOperationException();
     }
 
