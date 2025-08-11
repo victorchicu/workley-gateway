@@ -9,6 +9,6 @@ import reactor.core.publisher.Flux;
 @Repository
 public interface EventRepository extends ReactiveMongoRepository<StoredEvent<?>, String> {
 
-    @Query("{ 'actor': ?0, 'event.chatId': ?1 }")
-    Flux<StoredEvent<?>> findChat(String actorId, String chatId);
+    @Query("{ 'actor': ?0, 'data.chatId': ?1 }")
+    Flux<StoredEvent<?>> findEventsByChatId(String actorId, String chatId);
 }

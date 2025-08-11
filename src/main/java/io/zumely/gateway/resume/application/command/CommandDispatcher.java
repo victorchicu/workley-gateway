@@ -1,7 +1,7 @@
 package io.zumely.gateway.resume.application.command;
 
 import io.zumely.gateway.resume.application.command.handler.CommandHandler;
-import io.zumely.gateway.resume.application.command.data.Result;
+import io.zumely.gateway.resume.application.command.data.CommandResult;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import org.springframework.stereotype.Component;
 
@@ -15,14 +15,14 @@ import java.util.stream.Collectors;
 public class CommandDispatcher {
     private final Map<Class<? extends Command>, CommandHandler<?, ?>> handlers;
 
-    public CommandDispatcher(List<CommandHandler<?, ?>> handlerList) {
-        this.handlers = handlerList.stream()
+    public CommandDispatcher(List<CommandHandler<?, ?>> source) {
+        this.handlers = source.stream()
                 .collect(Collectors.toMap(CommandHandler::supported,
                         Function.identity()));
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Command, R extends Result> R dispatch(Principal actor, T command) {
+    public <T extends Command, R extends CommandResult> R dispatch(Principal actor, T command) {
         CommandHandler<T, R> handler = (CommandHandler<T, R>) handlers.get(command.getClass());
 
         if (handler == null) {

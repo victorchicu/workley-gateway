@@ -9,7 +9,7 @@ import java.security.Principal;
 
 public interface EventStore {
 
-    <T extends ApplicationEvent> Mono<StoredEvent<T>> save(Principal actor, T applicationEvent);
+    <T extends ApplicationEvent> Mono<StoredEvent<T>> saveEvent(Principal actor, T applicationEvent);
 
-    <T extends ApplicationEvent> Flux<StoredEvent<T>> findEvents(Principal principal, String chatId);
+    <T extends ApplicationEvent> Flux<StoredEvent<T>> getChatHistory(Principal actor, String chatId);
 }

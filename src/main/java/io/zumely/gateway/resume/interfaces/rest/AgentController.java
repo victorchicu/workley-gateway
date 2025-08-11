@@ -2,7 +2,7 @@ package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.application.command.Command;
 import io.zumely.gateway.resume.application.command.CommandDispatcher;
-import io.zumely.gateway.resume.application.command.data.Result;
+import io.zumely.gateway.resume.application.command.data.CommandResult;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,23 +26,15 @@ public class AgentController {
     }
 
     @PostMapping("/command")
-    public <T extends Command> Mono<ResponseEntity<Result>> executeCommand(Principal actor, @Valid @RequestBody T command) {
+    public <T extends Command> Mono<ResponseEntity<CommandResult>> executeCommand(Principal actor, @Valid @RequestBody T command) {
         log.info("Handle {}", command);
 
-        Result result = commandDispatcher.dispatch(actor, command);
+        CommandResult commandResult = commandDispatcher.dispatch(actor, command);
 
         return Mono.just(
                 ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(result)
+                        .body(commandResult)
         );
-    }
-
-    @GetMapping("/chats/{chatId}")
-    public <T extends Command> Mono<ResponseEntity<Result>> getChatHistoryQuery(Principal actor, @PathVariable String chatId) {
-        log.info("Get chat history {} for actor {}",
-                chatId, actor.getName());
-
-        throw new UnsupportedOperationException();
     }
 }

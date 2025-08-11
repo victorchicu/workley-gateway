@@ -4,7 +4,7 @@ import io.zumely.gateway.resume.application.event.context.ActorApplicationEventP
 import io.zumely.gateway.resume.application.service.ChatIdGenerator;
 import io.zumely.gateway.resume.application.command.handler.CommandHandler;
 import io.zumely.gateway.resume.application.command.data.CreateChatCommand;
-import io.zumely.gateway.resume.application.command.data.CreateChatResult;
+import io.zumely.gateway.resume.application.command.data.CreateChatCommandResult;
 import io.zumely.gateway.resume.application.event.CreateChatApplicationEvent;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import java.security.Principal;
 
 @Component
-public class CreateResumeCommandHandler implements CommandHandler<CreateChatCommand, CreateChatResult> {
+public class CreateResumeCommandHandler implements CommandHandler<CreateChatCommand, CreateChatCommandResult> {
     private final ChatIdGenerator chatIdGenerator;
     private final ConversionService conversionService;
     private final ActorApplicationEventPublisher eventPublisher;
@@ -28,7 +28,7 @@ public class CreateResumeCommandHandler implements CommandHandler<CreateChatComm
     }
 
     @Override
-    public CreateChatResult handle(Principal actor, CreateChatCommand command) {
+    public CreateChatCommandResult handle(Principal actor, CreateChatCommand command) {
 
         CreateChatApplicationEvent createChatApplicationEvent =
                 new CreateChatApplicationEvent(chatIdGenerator.generate(), command.prompt());
@@ -44,7 +44,7 @@ public class CreateResumeCommandHandler implements CommandHandler<CreateChatComm
     }
 
 
-    private CreateChatResult toCreateChatResult(CreateChatApplicationEvent event) {
-        return conversionService.convert(event, CreateChatResult.class);
+    private CreateChatCommandResult toCreateChatResult(CreateChatApplicationEvent event) {
+        return conversionService.convert(event, CreateChatCommandResult.class);
     }
 }

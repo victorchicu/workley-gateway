@@ -28,7 +28,7 @@ public class CreateChatEventHandler {
     @EventListener
     public Mono<StoredEvent<CreateChatApplicationEvent>> handle(PayloadApplicationEvent<ActorPayload<CreateChatApplicationEvent>> source) {
         Principal actor = source.getPayload().actor();
-        return eventStore.save(actor, source.getPayload().event())
+        return eventStore.saveEvent(actor, source.getPayload().event())
                 .doOnSuccess(event ->
                         log.info("Saved {} event for actor {}",
                                 source.getClass().getSimpleName(), actor.getName()))

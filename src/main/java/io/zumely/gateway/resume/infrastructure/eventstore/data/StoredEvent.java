@@ -17,7 +17,7 @@ public class StoredEvent<T extends ApplicationEvent> {
     @CreatedDate
     private Instant createdOn;
 
-    private T event;
+    private T data;
 
     public String getId() {
         return id;
@@ -46,12 +46,12 @@ public class StoredEvent<T extends ApplicationEvent> {
         return this;
     }
 
-    public T getEvent() {
-        return event;
+    public T getData() {
+        return data;
     }
 
-    public StoredEvent<T> setEvent(T event) {
-        this.event = event;
+    public StoredEvent<T> setData(T data) {
+        this.data = data;
         return this;
     }
 }

@@ -19,18 +19,18 @@ public class EventStoreImpl implements EventStore {
         this.eventRepository = eventRepository;
     }
 
-    public <T extends ApplicationEvent> Mono<StoredEvent<T>> save(Principal actor, T applicationEvent) {
+    public <T extends ApplicationEvent> Mono<StoredEvent<T>> saveEvent(Principal actor, T applicationEvent) {
         StoredEvent<T> storedEvent =
                 new StoredEvent<T>()
                         .setActor(actor.getName())
-                        .setEvent(applicationEvent);
+                        .setData(applicationEvent);
 
         return eventRepository.save(storedEvent);
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends ApplicationEvent> Flux<StoredEvent<T>> findEvents(Principal actor, String chatId) {
-        return eventRepository.findChat(actor.getName(), chatId)
+    public <T extends ApplicationEvent> Flux<StoredEvent<T>> getChatHistory(Principal actor, String chatId) {
+        return eventRepository.findEventsByChatId(actor.getName(), chatId)
                 .map((StoredEvent<?> event) -> (StoredEvent<T>) event);
     }
 }
