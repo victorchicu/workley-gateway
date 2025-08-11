@@ -25,14 +25,6 @@ public class AgentController {
         this.commandDispatcher = commandDispatcher;
     }
 
-    @GetMapping("/chat/{chatId}")
-    public <T extends Command> Mono<ResponseEntity<Result>> getChatQuery(Principal actor, @PathVariable String chatId) {
-        log.info("Find chat {} query for actor {}",
-                chatId, actor.getName());
-
-        throw new UnsupportedOperationException();
-    }
-
     @PostMapping("/command")
     public <T extends Command> Mono<ResponseEntity<Result>> executeCommand(Principal actor, @Valid @RequestBody T command) {
         log.info("Handle {}", command);
@@ -44,5 +36,13 @@ public class AgentController {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(result)
         );
+    }
+
+    @GetMapping("/chats/{chatId}")
+    public <T extends Command> Mono<ResponseEntity<Result>> getChatHistoryQuery(Principal actor, @PathVariable String chatId) {
+        log.info("Get chat history {} for actor {}",
+                chatId, actor.getName());
+
+        throw new UnsupportedOperationException();
     }
 }
