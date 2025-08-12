@@ -29,9 +29,10 @@ public class GetChatHistoryQueryHandler implements QueryHandler<GetChatHistoryQu
 
     @Override
     public Mono<GetChatHistoryQueryResult> handle(Principal actor, GetChatHistoryQuery query) {
-        return eventStore.findHistory(actor.getName(), query.chatId()).collectList()
-                .map((List<StoreEvent<ApplicationEvent>> events) ->
-                        toGetChatHistoryQueryResult(query.chatId(), events));
+        throw new UnsupportedOperationException("Not supported yet.");
+//        return eventStore.findHistory(actor.getName(), query.chatId()).collectList()
+//                .map((List<StoreEvent<ApplicationEvent>> events) ->
+//                        toGetChatHistoryQueryResult(query.chatId(), events));
     }
 
     private GetChatHistoryQueryResult toGetChatHistoryQueryResult(String chatId, List<StoreEvent<ApplicationEvent>> source) {
@@ -41,7 +42,7 @@ public class GetChatHistoryQueryHandler implements QueryHandler<GetChatHistoryQu
                             if (event.getEventData() instanceof CreateChatApplicationEvent createChatData) {
                                 return new Message<>(
                                         event.getId(),
-                                        createChatData.message().text(),
+                                        createChatData.message().content(),
                                         "user",
                                         event.getCreatedAt(),
                                         "sent"

@@ -34,7 +34,7 @@ public class SecurityConfiguration {
     private static Customizer<ServerHttpSecurity.AuthorizeExchangeSpec> withAuthorizeExchange() {
         return (ServerHttpSecurity.AuthorizeExchangeSpec authorizeExchangeSpec) ->
                 authorizeExchangeSpec
-                        .pathMatchers("/api/agent/**", "/api/agent/chats/**")
+                        .pathMatchers("/api/command/**", "/api/chats/**")
                         .permitAll()
                         .anyExchange()
                         .authenticated();

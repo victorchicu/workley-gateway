@@ -33,12 +33,12 @@ public class CreateChatCommandHandler implements CommandHandler<CreateChatComman
                 new CreateChatApplicationEvent(
                         actor,
                         chatIdGenerator.generate(),
-                        new Message<>(messageIdGenerator.generate(), RoleType.USER, command.prompt()));
+                        new Message<>(messageIdGenerator.generate(), RoleType.USER, command.prompt().text()));
 
         eventPublisher.publishEvent(createChatApplicationEvent);
 
-        return new CreateChatCommandResult(
-                createChatApplicationEvent.chatId(), createChatApplicationEvent.message());
+        return CreateChatCommandResult.response(createChatApplicationEvent.chatId(),
+                createChatApplicationEvent.message());
     }
 
     @Override

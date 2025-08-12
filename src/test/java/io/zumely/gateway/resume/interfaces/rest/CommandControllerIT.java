@@ -24,7 +24,7 @@ public class CommandControllerIT extends TestRunner {
     void createChatCommand() {
         WebTestClient.ResponseSpec spec = post(
                 new CreateChatCommand(
-                        new Prompt("I'm Java Developer")), "/api/agent/command");
+                        new Prompt("I'm Java Developer")), "/api/command");
 
         CreateChatCommandResult actual = spec.expectStatus().isOk()
                 .expectBody(CreateChatCommandResult.class)
