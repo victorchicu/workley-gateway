@@ -1,13 +1,13 @@
 package io.zumely.gateway.resume.application.query.handler.impl;
 
-import io.zumely.gateway.resume.application.event.ApplicationEvent;
-import io.zumely.gateway.resume.application.event.CreateChatApplicationEvent;
+import io.zumely.gateway.resume.application.event.data.CreateChatApplicationEvent;
+import io.zumely.gateway.resume.application.event.data.ApplicationEvent;
 import io.zumely.gateway.resume.application.query.data.GetChatHistoryQuery;
 import io.zumely.gateway.resume.application.query.data.GetChatHistoryQueryResult;
 import io.zumely.gateway.resume.application.query.data.Message;
 import io.zumely.gateway.resume.application.query.handler.QueryHandler;
-import io.zumely.gateway.resume.infrastructure.eventstore.EventStore;
-import io.zumely.gateway.resume.infrastructure.eventstore.data.StoredEvent;
+import io.zumely.gateway.resume.infrastructure.eventstore.ChatStore;
+import io.zumely.gateway.resume.infrastructure.eventstore.data.StoreObject;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -16,9 +16,9 @@ import java.util.List;
 
 @Component
 public class GetChatHistoryQueryHandler implements QueryHandler<GetChatHistoryQuery, GetChatHistoryQueryResult> {
-    private final EventStore eventStore;
+    private final ChatStore eventStore;
 
-    public GetChatHistoryQueryHandler(EventStore eventStore) {
+    public GetChatHistoryQueryHandler(ChatStore eventStore) {
         this.eventStore = eventStore;
     }
 
@@ -29,27 +29,27 @@ public class GetChatHistoryQueryHandler implements QueryHandler<GetChatHistoryQu
 
     @Override
     public Mono<GetChatHistoryQueryResult> handle(Principal actor, GetChatHistoryQuery query) {
-        return eventStore.getChatHistory(actor, query.chatId()).collectList()
-                .map((List<StoredEvent<ApplicationEvent>> events) ->
-                        toGetChatHistoryQueryResult(actor, query.chatId(), events));
+        return eventStore.findHistory(actor.getName(), query.chatId()).collectList()
+                .map((List<StoreObject<ApplicationEvent>> events) ->
+                        toGetChatHistoryQueryResult(query.chatId(), events));
     }
 
-    private GetChatHistoryQueryResult toGetChatHistoryQueryResult(Principal actor, String chatId, List<StoredEvent<ApplicationEvent>> source) {
+    private GetChatHistoryQueryResult toGetChatHistoryQueryResult(String chatId, List<StoreObject<ApplicationEvent>> source) {
         return new GetChatHistoryQueryResult(chatId,
                 source.stream()
-                        .map((StoredEvent<ApplicationEvent> event) -> {
-                            if (event.getData() instanceof CreateChatApplicationEvent createChatApplicationEvent) {
+                        .map((StoreObject<ApplicationEvent> event) -> {
+                            if (event.getEventData() instanceof CreateChatApplicationEvent createChatData) {
                                 return new Message<>(
                                         event.getId(),
-                                        createChatApplicationEvent.prompt().text(),
+                                        createChatData.prompt().text(),
                                         "user",
-                                        event.getCreatedOn(),
+                                        event.getCreatedAt(),
                                         "sent"
                                 );
                             }
                             throw new UnsupportedOperationException(
                                     "Not supported application event "
-                                            + event.getData().getClass().getSimpleName());
+                                            + event.getEventData().getClass().getSimpleName());
                         })
                         .toList()
         );

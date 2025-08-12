@@ -7,22 +7,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 
 @RequestMapping("/api/agent/chats/{chatId}")
 @RestController
-public class AgentChatController {
-    private static final Logger log = LoggerFactory.getLogger(AgentChatController.class);
+public class AgentChatQueryController {
+    private static final Logger log = LoggerFactory.getLogger(AgentChatQueryController.class);
 
     private final QueryDispatcher queryDispatcher;
 
-    public AgentChatController(QueryDispatcher queryDispatcher) {
+    public AgentChatQueryController(QueryDispatcher queryDispatcher) {
         this.queryDispatcher = queryDispatcher;
     }
 

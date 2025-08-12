@@ -1,10 +1,12 @@
 package io.zumely.gateway.resume.application.service;
 
-import io.zumely.gateway.resume.application.event.ApplicationEvent;
+import org.springframework.context.PayloadApplicationEvent;
+
+import java.security.Principal;
 
 public interface EventSerializer {
 
-    <T extends ApplicationEvent> String serialize(T event);
+    <T extends PayloadApplicationEvent<Principal>> String serialize(T event);
 
-    <T extends ApplicationEvent> T deserialize(String json);
+    <T extends PayloadApplicationEvent<Principal>> T deserialize(String json, Class<T> clazz);
 }
