@@ -12,19 +12,19 @@ import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 
-@RequestMapping("/api/agent/chats/{chatId}")
+@RequestMapping("/api/chats/{chatId}")
 @RestController
-public class AgentChatQueryController {
-    private static final Logger log = LoggerFactory.getLogger(AgentChatQueryController.class);
+public class GetChatQueryController {
+    private static final Logger log = LoggerFactory.getLogger(GetChatQueryController.class);
 
     private final QueryDispatcher queryDispatcher;
 
-    public AgentChatQueryController(QueryDispatcher queryDispatcher) {
+    public GetChatQueryController(QueryDispatcher queryDispatcher) {
         this.queryDispatcher = queryDispatcher;
     }
 
     @GetMapping
-    public Mono<ResponseEntity<QueryResult>> getChatHistoryQuery(Principal actor, @PathVariable String chatId) {
+    public Mono<ResponseEntity<QueryResult>> get(Principal actor, @PathVariable String chatId) {
         log.info("Get chat history {} for actor {}",
                 chatId, actor.getName());
 

@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.application.service;
 
-public interface ChatIdGenerator {
+public interface IdGenerator {
 
     String generate();
 }

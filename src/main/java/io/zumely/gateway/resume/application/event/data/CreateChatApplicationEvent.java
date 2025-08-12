@@ -1,6 +1,9 @@
 package io.zumely.gateway.resume.application.event.data;
 
+import io.zumely.gateway.resume.application.command.data.Message;
 import io.zumely.gateway.resume.application.command.data.Prompt;
 
-public record CreateChatApplicationEvent(String actor, String chatId, Prompt prompt) implements ApplicationEvent {
+import java.security.Principal;
+
+public record CreateChatApplicationEvent(Principal actor, String chatId, Message<Prompt> message) implements ApplicationEvent {
 }

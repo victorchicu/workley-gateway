@@ -10,9 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
 
 @Document(collection = "events")
-@CompoundIndexes({
-        @CompoundIndex(name = "event_actor_idx", def = "{'eventData.actor': 1}"), @CompoundIndex(name = "event_chat_idx", def = "{'eventData.chatId': 1}")})
-public class StoreObject<T extends ApplicationEvent> {
+public class StoreEvent<T extends ApplicationEvent> {
     @Id
     private String id;
     @CreatedDate
@@ -24,7 +22,7 @@ public class StoreObject<T extends ApplicationEvent> {
         return id;
     }
 
-    public StoreObject<T> setId(String id) {
+    public StoreEvent<T> setId(String id) {
         this.id = id;
         return this;
     }
@@ -33,7 +31,7 @@ public class StoreObject<T extends ApplicationEvent> {
         return createdAt;
     }
 
-    public StoreObject<T> setCreatedAt(Instant createdAt) {
+    public StoreEvent<T> setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
         return this;
     }
@@ -42,7 +40,7 @@ public class StoreObject<T extends ApplicationEvent> {
         return eventData;
     }
 
-    public StoreObject<T> setEventData(T eventData) {
+    public StoreEvent<T> setEventData(T eventData) {
         this.eventData = eventData;
         return this;
     }

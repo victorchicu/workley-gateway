@@ -1,9 +1,9 @@
 package io.zumely.gateway.resume.infrastructure.eventstore.impl;
 
 import io.zumely.gateway.resume.application.event.data.ApplicationEvent;
-import io.zumely.gateway.resume.infrastructure.eventstore.ChatRepository;
+import io.zumely.gateway.resume.infrastructure.eventstore.EventRepository;
 import io.zumely.gateway.resume.infrastructure.eventstore.ChatStore;
-import io.zumely.gateway.resume.infrastructure.eventstore.data.StoreObject;
+import io.zumely.gateway.resume.infrastructure.eventstore.data.StoreEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -11,30 +11,18 @@ import reactor.core.publisher.Mono;
 @Service
 public class ChatStoreImpl implements ChatStore {
 
-    private final ChatRepository chatRepository;
+    private final EventRepository eventRepository;
 
-    public ChatStoreImpl(ChatRepository chatRepository) {
-        this.chatRepository = chatRepository;
+    public ChatStoreImpl(EventRepository eventRepository) {
+        this.eventRepository = eventRepository;
     }
 
     @Override
-    public Mono<Boolean> exists(String actor, String chatId) {
-        return chatRepository.existsBy(actor, chatId);
-    }
-
-    @Override
-    public <T extends ApplicationEvent> Mono<StoreObject<T>> save(String actor, T object) {
-        StoreObject<T> storeObject =
-                new StoreObject<T>()
+    public <T extends ApplicationEvent> Mono<StoreEvent<T>> save(String actor, T object) {
+        StoreEvent<T> storeEvent =
+                new StoreEvent<T>()
                         .setEventData(object);
 
-        return chatRepository.save(storeObject);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T extends ApplicationEvent> Flux<StoreObject<T>> findHistory(String actor, String chatId) {
-        return chatRepository.findAllBy(actor, chatId)
-                .map((StoreObject<?> event) -> (StoreObject<T>) event);
+        return eventRepository.save(storeEvent);
     }
 }

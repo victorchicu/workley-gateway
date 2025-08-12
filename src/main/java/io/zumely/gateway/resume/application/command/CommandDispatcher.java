@@ -23,14 +23,14 @@ public class CommandDispatcher {
 
     @SuppressWarnings("unchecked")
     public <T extends Command, R extends CommandResult> R dispatch(Principal actor, T command) {
-        CommandHandler<T, R> handler = (CommandHandler<T, R>) handlers.get(command.getClass());
+        CommandHandler<T, R> commandHandler = (CommandHandler<T, R>) handlers.get(command.getClass());
 
-        if (handler == null) {
+        if (commandHandler == null) {
             throw new ApplicationException(
                     "No handler found for command type " + command.getClass().getSimpleName()
             );
         }
 
-        return handler.handle(actor, command);
+        return commandHandler.handle(actor, command);
     }
 }

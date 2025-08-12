@@ -7,7 +7,7 @@ import io.zumely.gateway.resume.application.query.data.GetChatHistoryQueryResult
 import io.zumely.gateway.resume.application.query.data.Message;
 import io.zumely.gateway.resume.application.query.handler.QueryHandler;
 import io.zumely.gateway.resume.infrastructure.eventstore.ChatStore;
-import io.zumely.gateway.resume.infrastructure.eventstore.data.StoreObject;
+import io.zumely.gateway.resume.infrastructure.eventstore.data.StoreEvent;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -30,18 +30,18 @@ public class GetChatHistoryQueryHandler implements QueryHandler<GetChatHistoryQu
     @Override
     public Mono<GetChatHistoryQueryResult> handle(Principal actor, GetChatHistoryQuery query) {
         return eventStore.findHistory(actor.getName(), query.chatId()).collectList()
-                .map((List<StoreObject<ApplicationEvent>> events) ->
+                .map((List<StoreEvent<ApplicationEvent>> events) ->
                         toGetChatHistoryQueryResult(query.chatId(), events));
     }
 
-    private GetChatHistoryQueryResult toGetChatHistoryQueryResult(String chatId, List<StoreObject<ApplicationEvent>> source) {
+    private GetChatHistoryQueryResult toGetChatHistoryQueryResult(String chatId, List<StoreEvent<ApplicationEvent>> source) {
         return new GetChatHistoryQueryResult(chatId,
                 source.stream()
-                        .map((StoreObject<ApplicationEvent> event) -> {
+                        .map((StoreEvent<ApplicationEvent> event) -> {
                             if (event.getEventData() instanceof CreateChatApplicationEvent createChatData) {
                                 return new Message<>(
                                         event.getId(),
-                                        createChatData.prompt().text(),
+                                        createChatData.message().text(),
                                         "user",
                                         event.getCreatedAt(),
                                         "sent"

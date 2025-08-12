@@ -3,7 +3,7 @@ package io.zumely.gateway.resume.application.command.handler.impl;
 import io.zumely.gateway.resume.application.command.data.SendMessageCommand;
 import io.zumely.gateway.resume.application.command.data.SendMessageCommandResult;
 import io.zumely.gateway.resume.application.command.handler.CommandHandler;
-import io.zumely.gateway.resume.application.event.data.SendMessageApplicationEvent;
+import io.zumely.gateway.resume.application.event.data.MessageAddedApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -19,14 +19,14 @@ public class SendMessageCommandHandler implements CommandHandler<SendMessageComm
 
     @Override
     public SendMessageCommandResult handle(Principal actor, SendMessageCommand command) {
-        SendMessageApplicationEvent sendMessageApplicationEvent =
-                new SendMessageApplicationEvent(actor.getName(), command.chatId(), command.message());
+        MessageAddedApplicationEvent messageAddedApplicationEvent =
+                new MessageAddedApplicationEvent(actor.getName(), command.chatId(), command.message());
 
-        eventPublisher.publishEvent(sendMessageApplicationEvent);
+        eventPublisher.publishEvent(messageAddedApplicationEvent);
 
         return SendMessageCommandResult.response(
-                sendMessageApplicationEvent.chatId(),
-                sendMessageApplicationEvent.message()
+                messageAddedApplicationEvent.chatId(),
+                messageAddedApplicationEvent.message()
         );
     }
 

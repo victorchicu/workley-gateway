@@ -13,19 +13,19 @@ import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 
-@RequestMapping("/api/agent")
+@RequestMapping("/api/command")
 @RestController
-public class AgentController {
+public class CommandController {
 
-    private static final Logger log = LoggerFactory.getLogger(AgentController.class);
+    private static final Logger log = LoggerFactory.getLogger(CommandController.class);
 
     private final CommandDispatcher commandDispatcher;
 
-    public AgentController(CommandDispatcher commandDispatcher) {
+    public CommandController(CommandDispatcher commandDispatcher) {
         this.commandDispatcher = commandDispatcher;
     }
 
-    @PostMapping("/command")
+    @PostMapping
     public <T extends Command> Mono<ResponseEntity<CommandResult>> executeCommand(Principal actor, @Valid @RequestBody T command) {
         log.info("Handle {}", command);
 
