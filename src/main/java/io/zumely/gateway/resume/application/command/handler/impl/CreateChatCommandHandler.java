@@ -3,6 +3,7 @@ package io.zumely.gateway.resume.application.command.handler.impl;
 import io.zumely.gateway.resume.application.command.data.CreateChatCommand;
 import io.zumely.gateway.resume.application.command.data.CreateChatCommandResult;
 import io.zumely.gateway.resume.application.command.data.Message;
+import io.zumely.gateway.resume.application.command.data.RoleType;
 import io.zumely.gateway.resume.application.command.handler.CommandHandler;
 import io.zumely.gateway.resume.application.event.data.CreateChatApplicationEvent;
 import io.zumely.gateway.resume.application.service.ChatIdGenerator;
@@ -34,7 +35,7 @@ public class CreateChatCommandHandler implements CommandHandler<CreateChatComman
 
         return new CreateChatCommandResult(
                 createChatApplicationEvent.chatId(),
-                new Message<>(createChatApplicationEvent.prompt().text())
+                new Message<>(null, RoleType.USER, createChatApplicationEvent.prompt().text())
         );
     }
 
