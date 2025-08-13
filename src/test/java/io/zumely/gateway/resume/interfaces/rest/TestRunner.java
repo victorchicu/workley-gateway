@@ -34,8 +34,25 @@ public class TestRunner {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON);
     }
 
+    protected WebTestClient.ResponseSpec get(String anonymousToken, String uri, Object... args) {
+        return webTestClient.get().uri(uri, args)
+                .cookie("__HOST-anonymousToken", anonymousToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON);
+    }
+
     protected WebTestClient.ResponseSpec post(Object body, String uri, Object... args) {
         return webTestClient.post().uri(uri, args)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(body)
+                .exchange()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON);
+    }
+
+    protected WebTestClient.ResponseSpec post(String anonymousToken, Object body, String uri, Object... args) {
+        return webTestClient.post().uri(uri, args)
+                .cookie("__HOST-anonymousToken", anonymousToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .exchange()

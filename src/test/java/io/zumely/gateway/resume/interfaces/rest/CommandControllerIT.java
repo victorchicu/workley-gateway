@@ -3,11 +3,9 @@ package io.zumely.gateway.resume.interfaces.rest;
 import io.zumely.gateway.resume.application.command.data.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.http.ResponseCookie;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
 
 public class CommandControllerIT extends TestRunner {
 //    @Container
@@ -19,7 +17,7 @@ public class CommandControllerIT extends TestRunner {
 //    }
 
     @Test
-    void createChatCommand() {
+    void createAnonymousChat() {
         WebTestClient.ResponseSpec spec = post(
                 new CreateChatCommand("I'm Java Developer"), "/api/command");
 
@@ -32,19 +30,26 @@ public class CommandControllerIT extends TestRunner {
     }
 
     @Test
-    void addMessageCommand() {
+    void addAnonymousMessage() {
         WebTestClient.ResponseSpec createChatSpec = post(
                 new CreateChatCommand("I'm Developer"), "/api/command");
 
-        CreateChatCommandResult createChatCommandResult = createChatSpec.expectStatus().isOk()
+        EntityExchangeResult<CreateChatCommandResult> createChatCommandResultEntityExchangeResult = createChatSpec.expectStatus().isOk()
                 .expectBody(CreateChatCommandResult.class)
-                .returnResult()
-                .getResponseBody();
+                .returnResult();
+
+        CreateChatCommandResult createChatCommandResult = createChatCommandResultEntityExchangeResult.getResponseBody();
 
         Assertions.assertNotNull(createChatCommandResult);
 
+        ResponseCookie anonymousTokenCookie =
+                createChatCommandResultEntityExchangeResult.getResponseCookies().getFirst("__HOST-anonymousToken");
+        Assertions.assertNotNull(anonymousTokenCookie);
+
         WebTestClient.ResponseSpec addMessageSpec = post(
-                new AddMessageCommand(createChatCommandResult.chatId(), Message.valueOf("Java Developer")), "/api/command");
+                anonymousTokenCookie.getValue(),
+                new AddMessageCommand(createChatCommandResult.chatId(),
+                        Message.valueOf("Java Developer")), "/api/command");
 
         AddMessageCommandResult addMessageCommandResult = addMessageSpec.expectStatus().isOk()
                 .expectBody(AddMessageCommandResult.class)

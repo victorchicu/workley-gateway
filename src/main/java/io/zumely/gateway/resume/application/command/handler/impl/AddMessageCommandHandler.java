@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
+import java.util.Set;
 
 @Component
 public class AddMessageCommandHandler implements CommandHandler<AddMessageCommand, AddMessageCommandResult> {
@@ -37,7 +38,8 @@ public class AddMessageCommandHandler implements CommandHandler<AddMessageComman
 
     @Override
     public Mono<AddMessageCommandResult> handle(Principal actor, AddMessageCommand command) {
-        return chatSessionRepository.findChatObjectById(command.chatId())
+        Set<String> participants = Set.of(actor.getName());
+        return chatSessionRepository.findChat(command.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops. Chat not found.")))
                 .flatMap(chatObject -> {
                     MessageAddedApplicationEvent messageAddedApplicationEvent =
