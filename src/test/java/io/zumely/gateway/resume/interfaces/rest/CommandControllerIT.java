@@ -1,20 +1,28 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
-import io.zumely.gateway.resume.application.command.data.*;
+import io.zumely.gateway.resume.application.command.AddMessageCommand;
+import io.zumely.gateway.resume.application.command.CreateChatCommand;
+import io.zumely.gateway.resume.application.command.Message;
+import io.zumely.gateway.resume.application.command.AddMessageCommandResult;
+import io.zumely.gateway.resume.application.command.CreateChatCommandResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseCookie;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
 
 public class CommandControllerIT extends TestRunner {
-//    @Container
-//    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:8.0.3-noble");
-//
-//    @DynamicPropertySource
-//    static void mongoDbProperties(DynamicPropertyRegistry registry) {
-//        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-//    }
+    @Container
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:8.0.3-noble");
+
+    @DynamicPropertySource
+    static void mongoDbProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+    }
 
     @Test
     void createAnonymousChat() {
@@ -34,22 +42,23 @@ public class CommandControllerIT extends TestRunner {
         WebTestClient.ResponseSpec createChatSpec = post(
                 new CreateChatCommand("I'm Developer"), "/api/command");
 
-        EntityExchangeResult<CreateChatCommandResult> createChatCommandResultEntityExchangeResult = createChatSpec.expectStatus().isOk()
-                .expectBody(CreateChatCommandResult.class)
-                .returnResult();
+        EntityExchangeResult<CreateChatCommandResult> exchange =
+                createChatSpec.expectStatus()
+                        .isOk()
+                        .expectBody(CreateChatCommandResult.class)
+                        .returnResult();
 
-        CreateChatCommandResult createChatCommandResult = createChatCommandResultEntityExchangeResult.getResponseBody();
-
+        CreateChatCommandResult createChatCommandResult = exchange.getResponseBody();
         Assertions.assertNotNull(createChatCommandResult);
 
         ResponseCookie anonymousTokenCookie =
-                createChatCommandResultEntityExchangeResult.getResponseCookies().getFirst("__HOST-anonymousToken");
+                exchange.getResponseCookies().getFirst("__HOST-anonymousToken");
         Assertions.assertNotNull(anonymousTokenCookie);
 
         WebTestClient.ResponseSpec addMessageSpec = post(
                 anonymousTokenCookie.getValue(),
                 new AddMessageCommand(createChatCommandResult.chatId(),
-                        Message.valueOf("Java Developer")), "/api/command");
+                        Message.create("Java Developer")), "/api/command");
 
         AddMessageCommandResult addMessageCommandResult = addMessageSpec.expectStatus().isOk()
                 .expectBody(AddMessageCommandResult.class)

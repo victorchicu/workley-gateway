@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.infrastructure.eventstore;
 
-import io.zumely.gateway.resume.infrastructure.eventstore.data.EventObject;
+import io.zumely.gateway.resume.infrastructure.data.EventObject;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 

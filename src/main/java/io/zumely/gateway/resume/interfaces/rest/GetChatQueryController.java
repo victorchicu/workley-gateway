@@ -1,8 +1,8 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.application.query.QueryDispatcher;
-import io.zumely.gateway.resume.application.query.data.GetChatHistoryQuery;
-import io.zumely.gateway.resume.application.query.data.QueryResult;
+import io.zumely.gateway.resume.application.query.GetChatQuery;
+import io.zumely.gateway.resume.application.query.QueryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -25,11 +25,10 @@ public class GetChatQueryController {
 
     @GetMapping
     public Mono<ResponseEntity<QueryResult>> get(Principal actor, @PathVariable String chatId) {
-        log.info("Get chat history {} for actor {}",
+        log.info("Get chat {} for actor {}",
                 chatId, actor.getName());
 
-        Mono<QueryResult> queryResult = queryDispatcher.dispatch(actor,
-                new GetChatHistoryQuery(chatId));
+        Mono<QueryResult> queryResult = queryDispatcher.dispatch(actor, new GetChatQuery(chatId));
 
         return queryResult.map((QueryResult result) ->
                 ResponseEntity.ok()

@@ -2,8 +2,8 @@ package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.application.command.Command;
 import io.zumely.gateway.resume.application.command.CommandDispatcher;
-import io.zumely.gateway.resume.application.command.data.ApplicationExceptionCommandResult;
-import io.zumely.gateway.resume.application.command.data.CommandResult;
+import io.zumely.gateway.resume.application.command.ApplicationExceptionCommandResult;
+import io.zumely.gateway.resume.application.command.CommandResult;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;

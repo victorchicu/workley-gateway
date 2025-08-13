@@ -1,11 +1,6 @@
 package io.zumely.gateway.resume.application.query;
 
-import io.zumely.gateway.resume.application.command.Command;
-import io.zumely.gateway.resume.application.command.data.CommandResult;
-import io.zumely.gateway.resume.application.command.handler.CommandHandler;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
-import io.zumely.gateway.resume.application.query.data.QueryResult;
-import io.zumely.gateway.resume.application.query.handler.QueryHandler;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 

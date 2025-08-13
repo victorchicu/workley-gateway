@@ -1,7 +1,7 @@
 package io.zumely.gateway.resume.infrastructure.eventstore;
 
-import io.zumely.gateway.resume.application.event.data.ApplicationEvent;
-import io.zumely.gateway.resume.infrastructure.eventstore.data.EventObject;
+import io.zumely.gateway.resume.application.event.ApplicationEvent;
+import io.zumely.gateway.resume.infrastructure.data.EventObject;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
