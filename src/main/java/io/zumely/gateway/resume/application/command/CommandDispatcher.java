@@ -4,6 +4,7 @@ import io.zumely.gateway.resume.application.command.handler.CommandHandler;
 import io.zumely.gateway.resume.application.command.data.CommandResult;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 import java.util.List;
@@ -22,7 +23,7 @@ public class CommandDispatcher {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Command, R extends CommandResult> R dispatch(Principal actor, T command) {
+    public <T extends Command, R extends CommandResult> Mono<R> dispatch(Principal actor, T command) {
         CommandHandler<T, R> commandHandler = (CommandHandler<T, R>) handlers.get(command.getClass());
 
         if (commandHandler == null) {

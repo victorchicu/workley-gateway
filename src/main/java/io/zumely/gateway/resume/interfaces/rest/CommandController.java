@@ -2,7 +2,9 @@ package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.application.command.Command;
 import io.zumely.gateway.resume.application.command.CommandDispatcher;
+import io.zumely.gateway.resume.application.command.data.ApplicationExceptionCommandResult;
 import io.zumely.gateway.resume.application.command.data.CommandResult;
+import io.zumely.gateway.resume.application.exception.ApplicationException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +31,17 @@ public class CommandController {
     public <T extends Command> Mono<ResponseEntity<CommandResult>> executeCommand(Principal actor, @Valid @RequestBody T command) {
         log.info("Handle {}", command);
 
-        CommandResult commandResult = commandDispatcher.dispatch(actor, command);
-
-        return Mono.just(
-                ResponseEntity.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(commandResult)
-        );
+        return commandDispatcher.dispatch(actor, command)
+                .flatMap((CommandResult commandResult) ->
+                        Mono.just(ResponseEntity.ok()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(commandResult))
+                )
+                .onErrorResume(ApplicationException.class,
+                        (ApplicationException error) ->
+                                Mono.just(ResponseEntity.badRequest()
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .body(new ApplicationExceptionCommandResult(error.getMessage())))
+                );
     }
 }

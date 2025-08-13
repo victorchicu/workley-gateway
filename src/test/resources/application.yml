@@ -12,6 +12,10 @@ server:
         same-site: lax
   forward-headers-strategy: framework
 spring:
+  data:
+    mongodb:
+      uri: mongodb://root:QAZwsx123@mongo:27017/zumely?authSource=admin
+      database: zumely
   cloud:
     stream:
       bindings:

@@ -8,7 +8,7 @@ public record CreateChatCommandResult(String chatId, Message<String> message) im
         this.message = Objects.requireNonNull(message, "message must not be null");
     }
 
-    public static CreateChatCommandResult response(String chatId, Message<String> message) {
-        return new CreateChatCommandResult(chatId, message);
+    public static CreateChatCommandResult response(String chatId, Message<String> prompt) {
+        return new CreateChatCommandResult(chatId, prompt);
     }
 }
