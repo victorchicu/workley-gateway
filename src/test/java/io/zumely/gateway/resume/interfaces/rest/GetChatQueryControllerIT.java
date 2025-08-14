@@ -1,11 +1,8 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.TestRunner;
-import io.zumely.gateway.resume.application.command.AddMessageCommand;
-import io.zumely.gateway.resume.application.command.CreateChatCommand;
-import io.zumely.gateway.resume.application.command.Message;
-import io.zumely.gateway.resume.application.command.AddMessageCommandResult;
-import io.zumely.gateway.resume.application.command.CreateChatCommandResult;
+import io.zumely.gateway.resume.application.command.*;
+import io.zumely.gateway.resume.application.query.GetChatQueryResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseCookie;
@@ -16,8 +13,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 
-public class CommandControllerIT extends TestRunner {
+public class GetChatQueryControllerIT extends TestRunner {
     private static final String API_COMMAND_URL = "/api/command";
+    private static final String API_CHATS_URL = "/api/chats/{chatId}";
 
     @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:8.0.3-noble");
@@ -28,20 +26,7 @@ public class CommandControllerIT extends TestRunner {
     }
 
     @Test
-    void createChat() {
-        WebTestClient.ResponseSpec spec = post(
-                new CreateChatCommand("I'm Java Developer"), API_COMMAND_URL);
-
-        CreateChatCommandResult actual = spec.expectStatus().isOk()
-                .expectBody(CreateChatCommandResult.class)
-                .returnResult()
-                .getResponseBody();
-
-        Assertions.assertNotNull(actual);
-    }
-
-    @Test
-    void addMessage() {
+    void getChatQuery() {
         WebTestClient.ResponseSpec createChatSpec = post(
                 new CreateChatCommand("I'm Developer"), API_COMMAND_URL);
 
@@ -57,16 +42,16 @@ public class CommandControllerIT extends TestRunner {
         ResponseCookie cookie = exchange.getResponseCookies().getFirst("__HOST-anonymousToken");
         Assertions.assertNotNull(cookie);
 
-        WebTestClient.ResponseSpec addMessageSpec = post(
-                cookie.getValue(),
-                new AddMessageCommand(createChatCommandResult.chatId(),
-                        Message.create("Java Developer")), API_COMMAND_URL);
+        WebTestClient.ResponseSpec getChatQuerySpec =
+                get(cookie.getValue(), API_CHATS_URL, createChatCommandResult.chatId());
 
-        AddMessageCommandResult addMessageCommandResult = addMessageSpec.expectStatus().isOk()
-                .expectBody(AddMessageCommandResult.class)
-                .returnResult()
-                .getResponseBody();
+        GetChatQueryResult getChatQueryResult =
+                getChatQuerySpec.expectStatus()
+                        .isOk()
+                        .expectBody(GetChatQueryResult.class)
+                        .returnResult()
+                        .getResponseBody();
 
-        Assertions.assertNotNull(addMessageCommandResult);
+        Assertions.assertNotNull(getChatQueryResult);
     }
 }

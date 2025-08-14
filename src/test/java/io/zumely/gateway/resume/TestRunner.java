@@ -1,4 +1,4 @@
-package io.zumely.gateway.resume.interfaces.rest;
+package io.zumely.gateway.resume;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;

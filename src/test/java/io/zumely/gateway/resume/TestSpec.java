@@ -1,4 +1,4 @@
-package io.zumely.gateway.resume.interfaces.rest;
+package io.zumely.gateway.resume;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
