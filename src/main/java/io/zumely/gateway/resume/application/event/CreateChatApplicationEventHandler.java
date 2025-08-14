@@ -48,7 +48,7 @@ public class CreateChatApplicationEventHandler {
                                     chatObject.getId(), chatObject.getSummary().getContent());
 
                     eventPublisher.publishEvent(
-                            new MessageAddedApplicationEvent(source.actor(), chatObject.getId(), message));
+                            new MessageReceivedApplicationEvent(source.actor(), chatObject.getId(), message));
 
                 })
                 .doOnError(error -> {

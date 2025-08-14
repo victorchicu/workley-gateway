@@ -10,17 +10,17 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class MessageAddedApplicationEventHandler {
-    private static final Logger log = LoggerFactory.getLogger(MessageAddedApplicationEventHandler.class);
+public class MessageReceivedApplicationEventHandler {
+    private static final Logger log = LoggerFactory.getLogger(MessageReceivedApplicationEventHandler.class);
 
     private final MessageHistoryRepository messageHistoryRepository;
 
-    public MessageAddedApplicationEventHandler(MessageHistoryRepository messageHistoryRepository) {
+    public MessageReceivedApplicationEventHandler(MessageHistoryRepository messageHistoryRepository) {
         this.messageHistoryRepository = messageHistoryRepository;
     }
 
     @EventListener
-    public Mono<MessageObject<String>> handle(MessageAddedApplicationEvent source) {
+    public Mono<MessageObject<String>> handle(MessageReceivedApplicationEvent source) {
         MessageObject<String> message =
                 MessageObject.create(
                         source.message().id(), source.actor().getName(), source.chatId(), source.message().content());

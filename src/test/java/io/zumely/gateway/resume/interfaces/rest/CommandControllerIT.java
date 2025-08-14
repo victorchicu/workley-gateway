@@ -1,10 +1,10 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.TestRunner;
-import io.zumely.gateway.resume.application.command.AddMessageCommand;
+import io.zumely.gateway.resume.application.command.SendMessageCommand;
 import io.zumely.gateway.resume.application.command.CreateChatCommand;
 import io.zumely.gateway.resume.application.command.Message;
-import io.zumely.gateway.resume.application.command.AddMessageCommandResult;
+import io.zumely.gateway.resume.application.command.SendMessageCommandResult;
 import io.zumely.gateway.resume.application.command.CreateChatCommandResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ public class CommandControllerIT extends TestRunner {
     }
 
     @Test
-    void addMessage() {
+    void sendMessage() {
         WebTestClient.ResponseSpec createChatSpec = post(
                 new CreateChatCommand("I'm Developer"), API_COMMAND_URL);
 
@@ -59,14 +59,14 @@ public class CommandControllerIT extends TestRunner {
 
         WebTestClient.ResponseSpec addMessageSpec = post(
                 cookie.getValue(),
-                new AddMessageCommand(createChatCommandResult.chatId(),
+                new SendMessageCommand(createChatCommandResult.chatId(),
                         Message.create("Java Developer")), API_COMMAND_URL);
 
-        AddMessageCommandResult addMessageCommandResult = addMessageSpec.expectStatus().isOk()
-                .expectBody(AddMessageCommandResult.class)
+        SendMessageCommandResult sendMessageCommandResult = addMessageSpec.expectStatus().isOk()
+                .expectBody(SendMessageCommandResult.class)
                 .returnResult()
                 .getResponseBody();
 
-        Assertions.assertNotNull(addMessageCommandResult);
+        Assertions.assertNotNull(sendMessageCommandResult);
     }
 }

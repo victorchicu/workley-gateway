@@ -1,7 +1,7 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.application.exception.ApplicationException;
-import io.zumely.gateway.resume.application.query.ApplicationExceptionQueryResult;
+import io.zumely.gateway.resume.application.query.InternalErrorQueryResult;
 import io.zumely.gateway.resume.application.query.QueryDispatcher;
 import io.zumely.gateway.resume.application.query.GetChatQuery;
 import io.zumely.gateway.resume.application.query.QueryResult;
@@ -40,7 +40,7 @@ public class GetChatQueryController {
                         (ApplicationException error) ->
                                 Mono.just(ResponseEntity.badRequest()
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .body(new ApplicationExceptionQueryResult(error.getMessage())))
+                                        .body(new InternalErrorQueryResult(error.getMessage())))
                 );
     }
 }

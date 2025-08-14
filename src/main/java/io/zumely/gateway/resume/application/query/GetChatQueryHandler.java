@@ -1,12 +1,9 @@
 package io.zumely.gateway.resume.application.query;
 
-import io.zumely.gateway.resume.application.command.AddMessageCommandResult;
 import io.zumely.gateway.resume.application.command.Message;
-import io.zumely.gateway.resume.application.event.MessageAddedApplicationEvent;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.ChatSessionRepository;
 import io.zumely.gateway.resume.infrastructure.MessageHistoryRepository;
-import io.zumely.gateway.resume.infrastructure.data.EventObject;
 import io.zumely.gateway.resume.infrastructure.data.MessageObject;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

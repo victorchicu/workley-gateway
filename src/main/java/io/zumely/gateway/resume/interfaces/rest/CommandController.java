@@ -2,7 +2,7 @@ package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.application.command.Command;
 import io.zumely.gateway.resume.application.command.CommandDispatcher;
-import io.zumely.gateway.resume.application.command.ApplicationExceptionCommandResult;
+import io.zumely.gateway.resume.application.command.InternalErrorCommandResult;
 import io.zumely.gateway.resume.application.command.CommandResult;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import jakarta.validation.Valid;
@@ -41,7 +41,7 @@ public class CommandController {
                         (ApplicationException error) ->
                                 Mono.just(ResponseEntity.badRequest()
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .body(new ApplicationExceptionCommandResult(error.getMessage())))
+                                        .body(new InternalErrorCommandResult(error.getMessage())))
                 );
     }
 }

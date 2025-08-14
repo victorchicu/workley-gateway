@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = CreateChatCommand.class, name = "CreateChatCommand"),
-        @JsonSubTypes.Type(value = AddMessageCommand.class, name = "SendMessageCommand")
+        @JsonSubTypes.Type(value = SendMessageCommand.class, name = "SendMessageCommand")
 })
 public interface Command {
 }

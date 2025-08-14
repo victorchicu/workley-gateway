@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.application.command;
 
-import io.zumely.gateway.resume.application.event.MessageAddedApplicationEvent;
+import io.zumely.gateway.resume.application.event.MessageReceivedApplicationEvent;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.application.service.IdGenerator;
 import io.zumely.gateway.resume.infrastructure.ChatSessionRepository;
@@ -14,13 +14,13 @@ import java.security.Principal;
 import java.util.Set;
 
 @Component
-public class AddMessageCommandHandler implements CommandHandler<AddMessageCommand, AddMessageCommandResult> {
+public class SendMessageCommandHandler implements CommandHandler<SendMessageCommand, SendMessageCommandResult> {
     private final EventStore eventStore;
     private final IdGenerator messageIdGenerator;
     private final ChatSessionRepository chatSessionRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public AddMessageCommandHandler(
+    public SendMessageCommandHandler(
             EventStore eventStore,
             IdGenerator messageIdGenerator,
             ChatSessionRepository chatSessionRepository,
@@ -33,27 +33,27 @@ public class AddMessageCommandHandler implements CommandHandler<AddMessageComman
     }
 
     @Override
-    public Class<AddMessageCommand> supported() {
-        return AddMessageCommand.class;
+    public Class<SendMessageCommand> supported() {
+        return SendMessageCommand.class;
     }
 
     @Override
-    public Mono<AddMessageCommandResult> handle(Principal actor, AddMessageCommand command) {
+    public Mono<SendMessageCommandResult> handle(Principal actor, SendMessageCommand command) {
         Set<String> participants = Set.of(actor.getName());
         return chatSessionRepository.findChat(command.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops. Chat not found.")))
                 .flatMap(chatObject -> {
 
-                    MessageAddedApplicationEvent messageAddedApplicationEvent =
-                            new MessageAddedApplicationEvent(actor, command.chatId(),
+                    MessageReceivedApplicationEvent messageReceivedApplicationEvent =
+                            new MessageReceivedApplicationEvent(actor, command.chatId(),
                                     Message.create(messageIdGenerator.generate(), actor.getName(), command.message().content()));
 
-                    return eventStore.save(actor, messageAddedApplicationEvent)
+                    return eventStore.save(actor, messageReceivedApplicationEvent)
                             .doOnSuccess(eventObject -> {
                                 applicationEventPublisher.publishEvent(eventObject.getEventData());
                             })
-                            .map((EventObject<MessageAddedApplicationEvent> eventObject) ->
-                                    AddMessageCommandResult.response(
+                            .map((EventObject<MessageReceivedApplicationEvent> eventObject) ->
+                                    SendMessageCommandResult.response(
                                             eventObject.getEventData().chatId(), eventObject.getEventData().message())
                             );
                 });
