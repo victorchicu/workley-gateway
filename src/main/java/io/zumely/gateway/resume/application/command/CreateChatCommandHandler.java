@@ -41,7 +41,8 @@ public class CreateChatCommandHandler implements CommandHandler<CreateChatComman
                     applicationEventPublisher.publishEvent(eventObject.getEventData());
                 })
                 .map((EventObject<CreateChatApplicationEvent> eventObject) -> {
-                    return CreateChatCommandResult.response(eventObject.getEventData().chatId(),
+                    return CreateChatCommandResult.response(
+                            eventObject.getEventData().chatId(),
                             eventObject.getEventData().message());
                 });
     }

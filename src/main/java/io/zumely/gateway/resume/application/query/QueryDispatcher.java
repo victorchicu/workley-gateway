@@ -22,14 +22,14 @@ public class QueryDispatcher {
 
     @SuppressWarnings("unchecked")
     public <T extends Query, R extends QueryResult> Mono<R> dispatch(Principal actor, T query) {
-        QueryHandler<T, R> handler = (QueryHandler<T, R>) handlers.get(query.getClass());
+        QueryHandler<T, R> queryHandler = (QueryHandler<T, R>) handlers.get(query.getClass());
 
-        if (handler == null) {
+        if (queryHandler == null) {
             throw new ApplicationException(
                     "No handler found for query type " + query.getClass().getSimpleName()
             );
         }
 
-        return handler.handle(actor, query);
+        return queryHandler.handle(actor, query);
     }
 }
