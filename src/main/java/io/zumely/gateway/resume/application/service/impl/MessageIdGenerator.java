@@ -9,6 +9,6 @@ import java.util.UUID;
 public class MessageIdGenerator implements IdGenerator {
     @Override
     public String generate() {
-        return "message-".concat(UUID.randomUUID().toString());
+        return UUID.randomUUID().toString();
     }
 }

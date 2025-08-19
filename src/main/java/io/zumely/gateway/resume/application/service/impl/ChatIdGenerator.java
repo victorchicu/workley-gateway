@@ -10,6 +10,6 @@ public class ChatIdGenerator implements IdGenerator {
 
     @Override
     public String generate() {
-        return "chat-".concat(UUID.randomUUID().toString());
+        return UUID.randomUUID().toString();
     }
 }
