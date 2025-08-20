@@ -10,16 +10,16 @@ import java.time.Instant;
 public class MessageObject<T> {
     @Id
     private String id;
-    private String owner;
+    private String author;
     private String chatId;
     private T content;
     @CreatedDate
     private Instant addedAt;
 
-    public static <T> MessageObject<T> create(String id, String owner, String chatId, T content) {
+    public static <T> MessageObject<T> create(String id, String author, String chatId, T content) {
         return new MessageObject<T>()
                 .setId(id)
-                .setOwner(owner)
+                .setAuthor(author)
                 .setChatId(chatId)
                 .setContent(content);
     }
@@ -37,12 +37,12 @@ public class MessageObject<T> {
         return chatId;
     }
 
-    public String getOwner() {
-        return owner;
+    public String getAuthor() {
+        return author;
     }
 
-    public MessageObject<T> setOwner(String owner) {
-        this.owner = owner;
+    public MessageObject<T> setAuthor(String author) {
+        this.author = author;
         return this;
     }
 

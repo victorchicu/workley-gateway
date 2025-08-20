@@ -1,21 +1,21 @@
 package io.zumely.gateway.resume.infrastructure.data;
 
 public class SummaryObject<T> {
-    private String owner;
+    private String author;
     private T content;
 
-    public static <T> SummaryObject<T> create(String owner, T content) {
+    public static <T> SummaryObject<T> create(String author, T content) {
         return new SummaryObject<T>()
-                .setOwner(owner)
+                .setAuthor(author)
                 .setContent(content);
     }
 
-    public String getOwner() {
-        return owner;
+    public String getAuthor() {
+        return author;
     }
 
-    public SummaryObject<T> setOwner(String owner) {
-        this.owner = owner;
+    public SummaryObject<T> setAuthor(String author) {
+        this.author = author;
         return this;
     }
 

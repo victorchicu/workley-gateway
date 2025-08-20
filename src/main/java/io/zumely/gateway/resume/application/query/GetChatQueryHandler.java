@@ -35,7 +35,7 @@ public class GetChatQueryHandler implements QueryHandler<GetChatQuery, GetChatQu
                         messageHistoryRepository.findAllByChatId(chatObject.getId())
                                 .map((MessageObject<String> messageObject) ->
                                         Message.create(messageObject.getId(),
-                                                messageObject.getOwner(), messageObject.getContent()))
+                                                messageObject.getAuthor(), messageObject.getContent()))
                                 .collectList()
                                 .map(messages -> new GetChatQueryResult(chatObject.getId(), messages))
                 );
