@@ -9,12 +9,12 @@ import java.util.Set;
 @Document(collection = "chat_sessions")
 public class ChatObject {
     private String id;
-    private SummaryObject<String> summary;
     private Set<ParticipantObject> participants;
+    private SummaryObject<MessageObject<String>> summary;
     @CreatedDate
     private Instant createdAt;
 
-    public static ChatObject create(String chatId, SummaryObject<String> summary, Set<ParticipantObject> participants) {
+    public static ChatObject create(String chatId, SummaryObject<MessageObject<String>> summary, Set<ParticipantObject> participants) {
         return new ChatObject()
                 .setId(chatId)
                 .setSummary(summary)
@@ -39,11 +39,11 @@ public class ChatObject {
         return this;
     }
 
-    public SummaryObject<String> getSummary() {
+    public SummaryObject<MessageObject<String>> getSummary() {
         return summary;
     }
 
-    public ChatObject setSummary(SummaryObject<String> summary) {
+    public ChatObject setSummary(SummaryObject<MessageObject<String>> summary) {
         this.summary = summary;
         return this;
     }

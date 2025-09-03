@@ -33,11 +33,15 @@ public class GetChatQueryHandler implements QueryHandler<GetChatQuery, GetChatQu
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops. Chat not found.")))
                 .flatMap(chatObject ->
                         messageHistoryRepository.findAllByChatId(chatObject.getId())
-                                .map((MessageObject<String> messageObject) ->
-                                        Message.create(messageObject.getId(),
-                                                messageObject.getAuthor(), messageObject.getContent()))
+                                .map(GetChatQueryHandler::toMessage)
                                 .collectList()
                                 .map(messages -> new GetChatQueryResult(chatObject.getId(), messages))
                 );
+    }
+
+    private static Message<String> toMessage(MessageObject<String> messageObject) {
+        return Message.create(
+                messageObject.getId(), messageObject.getChatId(), messageObject.getAuthor(), messageObject.getRole(), messageObject.getContent()
+        );
     }
 }

@@ -43,10 +43,11 @@ public class SendMessageCommandHandler implements CommandHandler<SendMessageComm
         return chatSessionRepository.findChat(command.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops. Chat not found.")))
                 .flatMap(chatObject -> {
+                    Message<String> message =
+                            Message.create(messageIdGenerator.generate(), chatObject.getId(), actor.getName(), Role.USER, command.message().content());
 
                     MessageReceivedApplicationEvent messageReceivedApplicationEvent =
-                            new MessageReceivedApplicationEvent(actor, command.chatId(),
-                                    Message.create(messageIdGenerator.generate(), actor.getName(), command.message().content()));
+                            new MessageReceivedApplicationEvent(actor, command.chatId(), message);
 
                     return eventStore.save(actor, messageReceivedApplicationEvent)
                             .doOnSuccess(eventObject -> {

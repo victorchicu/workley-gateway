@@ -4,5 +4,6 @@ import io.zumely.gateway.resume.application.command.Message;
 
 import java.security.Principal;
 
-public record CreateChatApplicationEvent(Principal actor, String chatId, Message<String> message) implements ApplicationEvent {
+public record CreateChatApplicationEvent(Principal actor, String chatId, Message<String> message)
+        implements ApplicationEvent {
 }

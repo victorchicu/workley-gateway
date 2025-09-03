@@ -31,17 +31,20 @@ public class CreateChatCommandHandler implements CommandHandler<CreateChatComman
 
     @Override
     public Mono<CreateChatCommandResult> handle(Principal actor, CreateChatCommand command) {
-        Message<String> message = Message.create(messageIdGenerator.generate(), actor.getName(), command.prompt());
+        String chatId = chatIdGenerator.generate();
+
+        Message<String> message =
+                Message.create(messageIdGenerator.generate(), chatId, actor.getName(), Role.USER, command.prompt());
 
         CreateChatApplicationEvent createChatApplicationEvent =
-                new CreateChatApplicationEvent(actor, chatIdGenerator.generate(), message);
+                new CreateChatApplicationEvent(actor, chatId, message);
 
         return eventStore.save(actor, createChatApplicationEvent)
                 .doOnSuccess((EventObject<CreateChatApplicationEvent> eventObject) -> {
                     applicationEventPublisher.publishEvent(eventObject.getEventData());
                 })
                 .map((EventObject<CreateChatApplicationEvent> eventObject) -> {
-                    return CreateChatCommandResult.response(
+                    return CreateChatCommandResult.reply(
                             eventObject.getEventData().chatId(),
                             eventObject.getEventData().message());
                 });

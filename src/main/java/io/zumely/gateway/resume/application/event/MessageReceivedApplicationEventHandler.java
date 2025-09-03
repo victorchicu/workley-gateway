@@ -23,15 +23,21 @@ public class MessageReceivedApplicationEventHandler {
     public Mono<MessageObject<String>> handle(MessageReceivedApplicationEvent source) {
         MessageObject<String> message =
                 MessageObject.create(
-                        source.message().id(), source.actor().getName(), source.chatId(), source.message().content());
+                        source.message().id(),
+                        source.message().role(),
+                        source.message().chatId(),
+                        source.message().createdAt(),
+                        source.message().content(),
+                        source.actor().getName()
+                );
 
         return messageHistoryRepository.save(message)
                 .doOnSuccess((MessageObject<?> event) -> {
-                    log.info("Saved {} event for actor {}",
+                    log.info("Saved {} event for author {}",
                             source.getClass().getSimpleName(), source.actor().getName());
                 })
                 .doOnError(error -> {
-                    String formatted = "Oops! Something went wrong while saving event %s for actor %s"
+                    String formatted = "Oops! Something went wrong while saving event %s for author %s"
                             .formatted(source.getClass().getSimpleName(), source.actor().getName());
                     log.error(formatted, error);
                 })

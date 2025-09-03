@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.infrastructure.data;
 
-import org.springframework.data.annotation.CreatedDate;
+import io.zumely.gateway.resume.application.command.Role;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -10,17 +10,19 @@ import java.time.Instant;
 public class MessageObject<T> {
     @Id
     private String id;
-    private String author;
+    private Role role;
     private String chatId;
+    private Instant createdAt;
     private T content;
-    @CreatedDate
-    private Instant addedAt;
+    private String author;
 
-    public static <T> MessageObject<T> create(String id, String author, String chatId, T content) {
+    public static <T> MessageObject<T> create(String id, Role role, String chatId, Instant createdAt, T content, String author) {
         return new MessageObject<T>()
                 .setId(id)
                 .setAuthor(author)
+                .setRole(role)
                 .setChatId(chatId)
+                .setCreatedAt(createdAt)
                 .setContent(content);
     }
 
@@ -37,12 +39,12 @@ public class MessageObject<T> {
         return chatId;
     }
 
-    public String getAuthor() {
-        return author;
+    public Role getRole() {
+        return role;
     }
 
-    public MessageObject<T> setAuthor(String author) {
-        this.author = author;
+    public MessageObject<T> setRole(Role role) {
+        this.role = role;
         return this;
     }
 
@@ -60,12 +62,21 @@ public class MessageObject<T> {
         return this;
     }
 
-    public Instant getAddedAt() {
-        return addedAt;
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 
-    public MessageObject<T> setAddedAt(Instant addedAt) {
-        this.addedAt = addedAt;
+    public MessageObject<T> setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public MessageObject<T> setAuthor(String author) {
+        this.author = author;
         return this;
     }
 }
