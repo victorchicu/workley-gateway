@@ -19,23 +19,7 @@ spring:
     mongodb:
       uri: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/zumely?authSource=admin
       database: zumely
-  kafka:
-    bootstrap-servers: ${GATEWAY_SPRING_KAFKA_BOOTSTRAP_SERVERS}
   cloud:
-    stream:
-      bindings:
-        handleActorEvent-in-0:
-          destination: actor.events
-          group: gateway
-          consumer:
-            # max-attempts: 3 # Example: retry configuration
-            # back-off-initial-interval: 1000
-            # back-off-max-interval: 10000
-            # back-off-multiplier: 2.0
-            concurrency: 1 # Adjust based on expected load and processing time
-    function:
-      definition: >
-        handleActorEvent;
     gateway:
       globalcors:
         cors-configurations:
