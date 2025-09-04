@@ -28,14 +28,14 @@ import java.util.UUID;
 public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticationWebFilter {
 
     private static final String ANONYMOUS_KEY = "anonymousId";
-    private static final String ANONYMOUS_TOKEN_COOKIE_KEY = "__HOST-anonymousToken";
-    private static final Duration TOKEN_MAX_AGE = Duration.ofMinutes(5);
+    private static final String ANONYMOUS_TOKEN_COOKIE = "__HOST-anonymousToken";
     private static final Duration COOKIE_MAX_AGE = Duration.ofDays(30);
+    private static final Duration TOKEN_EXPIRES_AFTER = Duration.ofDays(1);
 
     private final AnonymousJwtSecret jwtSecret;
 
     public CookieAnonymousAuthenticationWebFilter(AnonymousJwtSecret jwtSecret) {
-        super(UUID.randomUUID().toString());
+        super(ANONYMOUS_KEY);
         this.jwtSecret = jwtSecret;
     }
 
@@ -49,7 +49,7 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
 
 
     private void addAnonymousTokenCookie(ServerWebExchange exchange, String token) {
-        ResponseCookie cookie = ResponseCookie.from(ANONYMOUS_TOKEN_COOKIE_KEY, token)
+        ResponseCookie cookie = ResponseCookie.from(ANONYMOUS_TOKEN_COOKIE, token)
                 .path("/")
                 .secure(true)
                 .maxAge(COOKIE_MAX_AGE)
@@ -60,7 +60,7 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     }
 
     private String extractAnonymousTokenFromCookie(ServerWebExchange exchange) {
-        HttpCookie cookie = exchange.getRequest().getCookies().getFirst(ANONYMOUS_TOKEN_COOKIE_KEY);
+        HttpCookie cookie = exchange.getRequest().getCookies().getFirst(ANONYMOUS_TOKEN_COOKIE);
         return Optional.ofNullable(cookie)
                 .map(HttpCookie::getValue)
                 .orElse(null);
@@ -69,7 +69,7 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     private DecodedJWT createAnonymousJwtToken(ServerWebExchange exchange) {
         String token = JWT.create()
                 .withSubject(UUID.randomUUID().toString())
-                .withExpiresAt(Instant.now().plus(TOKEN_MAX_AGE))
+                .withExpiresAt(Instant.now().plus(TOKEN_EXPIRES_AFTER))
                 .sign(jwtSecret.getAlgorithm());
 
         addAnonymousTokenCookie(exchange, token);
