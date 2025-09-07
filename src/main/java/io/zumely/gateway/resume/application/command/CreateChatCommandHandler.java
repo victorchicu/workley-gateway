@@ -1,6 +1,6 @@
 package io.zumely.gateway.resume.application.command;
 
-import io.zumely.gateway.resume.application.event.CreateChatApplicationEvent;
+import io.zumely.gateway.resume.application.event.ChatCreatedApplicationEvent;
 import io.zumely.gateway.resume.application.service.IdGenerator;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventStore;
 import io.zumely.gateway.resume.infrastructure.data.EventObject;
@@ -34,16 +34,16 @@ public class CreateChatCommandHandler implements CommandHandler<CreateChatComman
         String chatId = chatIdGenerator.generate();
 
         Message<String> message =
-                Message.create(messageIdGenerator.generate(), chatId, actor.getName(), Role.USER, command.prompt());
+                Message.create(messageIdGenerator.generate(), chatId, actor.getName(), Role.ANONYMOUS, command.prompt());
 
-        CreateChatApplicationEvent createChatApplicationEvent =
-                new CreateChatApplicationEvent(actor, chatId, message);
+        ChatCreatedApplicationEvent chatCreatedApplicationEvent =
+                new ChatCreatedApplicationEvent(actor, chatId, message);
 
-        return eventStore.save(actor, createChatApplicationEvent)
-                .doOnSuccess((EventObject<CreateChatApplicationEvent> eventObject) -> {
+        return eventStore.save(actor, chatCreatedApplicationEvent)
+                .doOnSuccess((EventObject<ChatCreatedApplicationEvent> eventObject) -> {
                     applicationEventPublisher.publishEvent(eventObject.getEventData());
                 })
-                .map((EventObject<CreateChatApplicationEvent> eventObject) -> {
+                .map((EventObject<ChatCreatedApplicationEvent> eventObject) -> {
                     return CreateChatCommandResult.reply(
                             eventObject.getEventData().chatId(),
                             eventObject.getEventData().message());

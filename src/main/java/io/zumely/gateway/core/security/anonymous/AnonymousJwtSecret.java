@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 public class AnonymousJwtSecret {
     private final Algorithm algorithm;
 
-    public AnonymousJwtSecret(@Value("${security.anonymous.jwt.secret}") String secret) {
+    public AnonymousJwtSecret(@Value("${gateway.security.anonymous.jwt.secret}") String secret) {
         this.algorithm = Algorithm.HMAC256(secret.getBytes(StandardCharsets.UTF_8));
     }
 

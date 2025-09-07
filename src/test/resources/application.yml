@@ -12,28 +12,28 @@ server:
         same-site: lax
   forward-headers-strategy: framework
 spring:
+  ai:
+    openai:
+      api-key: api-key
+      chat:
+        options:
+          model: gpt-5-nano
+          temperature: 0.8
   data:
     mongodb:
       uri: mongodb://root:QAZwsx123@mongo:27017/zumely?authSource=admin
-      database: zumely
   cloud:
-    stream:
-      bindings:
-        handleActorEvent-in-0:
-          destination: actor.events
-          group: gateway
-          consumer:
-            # max-attempts: 3 # Example: retry configuration
-            # back-off-initial-interval: 1000
-            # back-off-max-interval: 10000
-            # back-off-multiplier: 2.0
-            concurrency: 1 # Adjust based on expected load and processing time
-    function:
-      definition: >
-        handleActorEvent;
-security:
-  openai:
-    secret: openai_secret
-  anonymous:
-    jwt:
-      secret: anonymous_jwt_secret
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: zumely-gateway
+              uri: http://localhost:8443
+              predicates:
+                - Path=/api/command/**
+                - Path=/api/chats/**
+gateway:
+  security:
+    anonymous:
+      jwt:
+        secret: secret

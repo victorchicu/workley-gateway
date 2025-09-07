@@ -10,17 +10,17 @@ import java.time.Instant;
 public class MessageObject<T> {
     @Id
     private String id;
-    private Role role;
+    private Role writtenBy;
     private String chatId;
+    private String authorId;
     private Instant createdAt;
     private T content;
-    private String author;
 
-    public static <T> MessageObject<T> create(String id, Role role, String chatId, Instant createdAt, T content, String author) {
+    public static <T> MessageObject<T> create(String id, Role writtenBy, String chatId, String authorId, Instant createdAt, T content) {
         return new MessageObject<T>()
                 .setId(id)
-                .setAuthor(author)
-                .setRole(role)
+                .setAuthorId(authorId)
+                .setWrittenBy(writtenBy)
                 .setChatId(chatId)
                 .setCreatedAt(createdAt)
                 .setContent(content);
@@ -39,17 +39,26 @@ public class MessageObject<T> {
         return chatId;
     }
 
-    public Role getRole() {
-        return role;
-    }
-
-    public MessageObject<T> setRole(Role role) {
-        this.role = role;
+    public MessageObject<T> setChatId(String chatId) {
+        this.chatId = chatId;
         return this;
     }
 
-    public MessageObject<T> setChatId(String chatId) {
-        this.chatId = chatId;
+    public String getAuthorId() {
+        return authorId;
+    }
+
+    public MessageObject<T> setAuthorId(String authorId) {
+        this.authorId = authorId;
+        return this;
+    }
+
+    public Role getWrittenBy() {
+        return writtenBy;
+    }
+
+    public MessageObject<T> setWrittenBy(Role writtenBy) {
+        this.writtenBy = writtenBy;
         return this;
     }
 
@@ -68,15 +77,6 @@ public class MessageObject<T> {
 
     public MessageObject<T> setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
-        return this;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public MessageObject<T> setAuthor(String author) {
-        this.author = author;
         return this;
     }
 }

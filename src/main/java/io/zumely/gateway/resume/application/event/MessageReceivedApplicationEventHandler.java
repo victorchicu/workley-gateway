@@ -24,20 +24,18 @@ public class MessageReceivedApplicationEventHandler {
         MessageObject<String> message =
                 MessageObject.create(
                         source.message().id(),
-                        source.message().role(),
+                        source.message().writtenBy(),
                         source.message().chatId(),
-                        source.message().createdAt(),
-                        source.message().content(),
-                        source.actor().getName()
+                        source.actor().getName(), source.message().createdAt(),
+                        source.message().content()
                 );
-
         return messageHistoryRepository.save(message)
-                .doOnSuccess((MessageObject<?> event) -> {
-                    log.info("Saved {} event for author {}",
+                .doOnSuccess((MessageObject<String> event) -> {
+                    log.info("Saved {} event for authorId {}",
                             source.getClass().getSimpleName(), source.actor().getName());
                 })
                 .doOnError(error -> {
-                    String formatted = "Oops! Something went wrong while saving event %s for author %s"
+                    String formatted = "Oops! Something went wrong while saving event %s for authorId %s"
                             .formatted(source.getClass().getSimpleName(), source.actor().getName());
                     log.error(formatted, error);
                 })

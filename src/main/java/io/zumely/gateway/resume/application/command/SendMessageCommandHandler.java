@@ -44,7 +44,7 @@ public class SendMessageCommandHandler implements CommandHandler<SendMessageComm
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops. Chat not found.")))
                 .flatMap(chatObject -> {
                     Message<String> message =
-                            Message.create(messageIdGenerator.generate(), chatObject.getId(), actor.getName(), Role.USER, command.message().content());
+                            Message.create(messageIdGenerator.generate(), chatObject.getId(), actor.getName(), Role.ANONYMOUS, command.message().content());
 
                     MessageReceivedApplicationEvent messageReceivedApplicationEvent =
                             new MessageReceivedApplicationEvent(actor, command.chatId(), message);

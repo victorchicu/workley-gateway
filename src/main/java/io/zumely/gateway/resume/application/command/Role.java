@@ -1,7 +1,8 @@
 package io.zumely.gateway.resume.application.command;
 
 public enum Role {
-    USER,
+    ANONYMOUS,
+    CLIENT,
     ASSISTANT,
     UNKNOWN;
 }

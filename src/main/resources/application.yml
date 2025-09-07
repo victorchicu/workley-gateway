@@ -15,30 +15,34 @@ server:
         same-site: lax
   forward-headers-strategy: framework
 spring:
+  ai:
+    openai:
+      api-key: ${SPRING_AI_OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-5-nano
+          temperature: 0.8
   data:
     mongodb:
-      uri: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/zumely?authSource=admin
-      database: zumely
+      uri: ${SPRING_DATA_MONGODB_URI}
   cloud:
     gateway:
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowed-methods: GET, POST, PUT, DELETE, OPTIONS
-            allowed-headers: "*"
-            allow-credentials: true
-            allowed-origin-patterns: "https://*.zumely.io"
-        add-to-simple-url-handler-mapping: true
-      routes:
-        - id: zumely-gateway
-          uri: http://localhost:8443
-          predicates:
-            - Path=/api/prompt/**
+      server:
+        webflux:
+          routes:
+            - id: zumely-gateway
+              uri: http://localhost:8443
+              predicates:
+                - Path=/api/command/**
+                - Path=/api/chats/**
+  rsocket:
+    server:
+      transport: websocket
+      mapping-path: /api/rsocket
   application:
     name: zumely-gateway
-security:
-  openai:
-    secret: ${GATEWAY_SECURITY_OPENAI_SECRET}
-  anonymous:
-    jwt:
-      secret: ${GATEWAY_SECURITY_ANONYMOUS_JWT_SECRET}
+gateway:
+  security:
+    anonymous:
+      jwt:
+        secret: ${GATEWAY_SECURITY_ANONYMOUS_JWT_SECRET}

@@ -30,7 +30,8 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     private static final String ANONYMOUS_KEY = "anonymousId";
     private static final String ANONYMOUS_TOKEN_COOKIE = "__HOST-anonymousToken";
     private static final Duration COOKIE_MAX_AGE = Duration.ofDays(30);
-    private static final Duration TOKEN_EXPIRES_AFTER = Duration.ofDays(1);
+    private static final Duration TOKEN_EXPIRES_AFTER_DAY = Duration.ofDays(1);
+    private static final Duration TOKEN_EXPIRES_AFTER_1_MIN = Duration.ofMinutes(1);
 
     private final AnonymousJwtSecret jwtSecret;
 
@@ -69,7 +70,7 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     private DecodedJWT createAnonymousJwtToken(ServerWebExchange exchange) {
         String token = JWT.create()
                 .withSubject(UUID.randomUUID().toString())
-                .withExpiresAt(Instant.now().plus(TOKEN_EXPIRES_AFTER))
+                .withExpiresAt(Instant.now().plus(TOKEN_EXPIRES_AFTER_DAY))
                 .sign(jwtSecret.getAlgorithm());
 
         addAnonymousTokenCookie(exchange, token);
