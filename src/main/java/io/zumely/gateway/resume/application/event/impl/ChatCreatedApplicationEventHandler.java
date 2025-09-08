@@ -58,6 +58,8 @@ public class ChatCreatedApplicationEventHandler {
         SummaryObject<MessageObject<String>> summary
                 = SummaryObject.create(toMessageObject(source));
 
+        //TODO: validate chat existence
+
         return chatSessionRepository.save(ChatObject.create(source.chatId(), summary, participants))
                 .flatMap((ChatObject chatObject) -> {
                     log.info("Saved {} event for authorId {}", source.getClass().getSimpleName(), source.actor().getName());

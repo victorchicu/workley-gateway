@@ -4,11 +4,11 @@ import io.zumely.gateway.resume.application.command.impl.AddChatMessageCommand;
 import io.zumely.gateway.resume.application.command.Message;
 import io.zumely.gateway.resume.application.command.Role;
 import io.zumely.gateway.resume.application.service.IdGenerator;
+import io.zumely.gateway.resume.infrastructure.MessageHistoryRepository;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -21,16 +21,16 @@ import java.util.function.Predicate;
 public class AssistantReplyAddedApplicationEventHandler {
     private final IdGenerator messageIdGenerator;
     private final OpenAiChatModel openAiChatModel;
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final MessageHistoryRepository messageHistoryRepository;
 
     public AssistantReplyAddedApplicationEventHandler(
             IdGenerator messageIdGenerator,
             OpenAiChatModel openAiChatModel,
-            ApplicationEventPublisher applicationEventPublisher
+            MessageHistoryRepository messageHistoryRepository
     ) {
         this.openAiChatModel = openAiChatModel;
         this.messageIdGenerator = messageIdGenerator;
-        this.applicationEventPublisher = applicationEventPublisher;
+        this.messageHistoryRepository = messageHistoryRepository;
     }
 
     @EventListener
@@ -48,13 +48,7 @@ public class AssistantReplyAddedApplicationEventHandler {
                 })
                 .filter(Predicate.not(String::isBlank))
                 .map((String text) -> toMessage(source, text))
-                .concatMap((Message<String> savedCandidate) ->
-                        Mono.fromRunnable(() ->
-                                applicationEventPublisher.publishEvent(
-                                        new AddChatMessageCommand(source.chatId(), savedCandidate)
-                                )
-                        )
-                )
+                .concatMap((Message<String> savedCandidate) -> messageHistoryRepository.save(savedCandidate))
                 .then();
 
     }

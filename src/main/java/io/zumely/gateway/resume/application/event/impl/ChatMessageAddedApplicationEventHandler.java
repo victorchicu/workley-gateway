@@ -2,6 +2,7 @@ package io.zumely.gateway.resume.application.event.impl;
 
 import io.zumely.gateway.resume.application.command.CommandDispatcher;
 import io.zumely.gateway.resume.application.command.impl.AskAssistantCommand;
+import io.zumely.gateway.resume.application.command.impl.AskAssistantCommandResult;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.MessageHistoryRepository;
 import io.zumely.gateway.resume.infrastructure.data.MessageObject;
@@ -27,7 +28,7 @@ public class ChatMessageAddedApplicationEventHandler {
     }
 
     @EventListener
-    public Mono<Void> handle(ChatMessageAddedApplicationEvent source) {
+    public Mono<AskAssistantCommandResult> handle(ChatMessageAddedApplicationEvent source) {
         MessageObject<String> message =
                 MessageObject.create(
                         source.message().id(),
@@ -40,9 +41,7 @@ public class ChatMessageAddedApplicationEventHandler {
                 .flatMap((MessageObject<String> messageObject) -> {
                     log.info("Saved {} event for authorId {}",
                             source.getClass().getSimpleName(), source.actor().getName());
-                    return commandDispatcher
-                            .dispatch(source.actor(),
-                                    new AskAssistantCommand(messageObject.getContent(), messageObject.getChatId())).then();
+                    return dispatchAskAssistant(source, messageObject);
                 })
                 .doOnError(error -> {
                     String formatted = "Oops! Something went wrong while saving event %s for authorId %s"
@@ -50,5 +49,11 @@ public class ChatMessageAddedApplicationEventHandler {
                     log.error(formatted, error);
                 })
                 .onErrorResume(error -> Mono.error(new ApplicationException("Oops! Something went wrong while saving message.")));
+    }
+
+    private Mono<AskAssistantCommandResult> dispatchAskAssistant(ChatMessageAddedApplicationEvent source, MessageObject<String> messageObject) {
+        return commandDispatcher
+                .dispatch(source.actor(),
+                        new AskAssistantCommand(messageObject.getContent(), messageObject.getChatId()));
     }
 }
