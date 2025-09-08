@@ -1,5 +1,7 @@
-package io.zumely.gateway.resume.application.event;
+package io.zumely.gateway.resume.application.event.impl;
 
+import io.zumely.gateway.resume.application.command.CommandDispatcher;
+import io.zumely.gateway.resume.application.command.impl.AskAssistantCommand;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.MessageHistoryRepository;
 import io.zumely.gateway.resume.infrastructure.data.MessageObject;
@@ -10,17 +12,22 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class MessageReceivedApplicationEventHandler {
-    private static final Logger log = LoggerFactory.getLogger(MessageReceivedApplicationEventHandler.class);
+public class ChatMessageAddedApplicationEventHandler {
+    private static final Logger log = LoggerFactory.getLogger(ChatMessageAddedApplicationEventHandler.class);
 
+    private final CommandDispatcher commandDispatcher;
     private final MessageHistoryRepository messageHistoryRepository;
 
-    public MessageReceivedApplicationEventHandler(MessageHistoryRepository messageHistoryRepository) {
+    public ChatMessageAddedApplicationEventHandler(
+            CommandDispatcher commandDispatcher,
+            MessageHistoryRepository messageHistoryRepository
+    ) {
+        this.commandDispatcher = commandDispatcher;
         this.messageHistoryRepository = messageHistoryRepository;
     }
 
     @EventListener
-    public Mono<MessageObject<String>> handle(MessageReceivedApplicationEvent source) {
+    public Mono<Void> handle(ChatMessageAddedApplicationEvent source) {
         MessageObject<String> message =
                 MessageObject.create(
                         source.message().id(),
@@ -30,9 +37,12 @@ public class MessageReceivedApplicationEventHandler {
                         source.message().content()
                 );
         return messageHistoryRepository.save(message)
-                .doOnSuccess((MessageObject<String> event) -> {
+                .flatMap((MessageObject<String> messageObject) -> {
                     log.info("Saved {} event for authorId {}",
                             source.getClass().getSimpleName(), source.actor().getName());
+                    return commandDispatcher
+                            .dispatch(source.actor(),
+                                    new AskAssistantCommand(messageObject.getContent(), messageObject.getChatId())).then();
                 })
                 .doOnError(error -> {
                     String formatted = "Oops! Something went wrong while saving event %s for authorId %s"

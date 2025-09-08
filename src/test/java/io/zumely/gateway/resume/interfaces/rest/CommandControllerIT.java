@@ -1,11 +1,11 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.TestRunner;
-import io.zumely.gateway.resume.application.command.SendMessageCommand;
-import io.zumely.gateway.resume.application.command.CreateChatCommand;
+import io.zumely.gateway.resume.application.command.impl.AddChatMessageCommand;
+import io.zumely.gateway.resume.application.command.impl.CreateChatCommand;
 import io.zumely.gateway.resume.application.command.Message;
-import io.zumely.gateway.resume.application.command.SendMessageCommandResult;
-import io.zumely.gateway.resume.application.command.CreateChatCommandResult;
+import io.zumely.gateway.resume.application.command.impl.AddChatMessageCommandResult;
+import io.zumely.gateway.resume.application.command.impl.CreateChatCommandResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseCookie;
@@ -41,7 +41,7 @@ public class CommandControllerIT extends TestRunner {
     }
 
     @Test
-    void sendMessage() {
+    void addChatMessage() {
         WebTestClient.ResponseSpec createChatSpec = post(
                 new CreateChatCommand("I'm Developer"), API_COMMAND_URL);
 
@@ -59,14 +59,14 @@ public class CommandControllerIT extends TestRunner {
 
         WebTestClient.ResponseSpec addMessageSpec = post(
                 cookie.getValue(),
-                new SendMessageCommand(createChatCommandResult.chatId(),
+                new AddChatMessageCommand(createChatCommandResult.chatId(),
                         Message.create("Java Developer")), API_COMMAND_URL);
 
-        SendMessageCommandResult sendMessageCommandResult = addMessageSpec.expectStatus().isOk()
-                .expectBody(SendMessageCommandResult.class)
+        AddChatMessageCommandResult addChatMessageCommandResult = addMessageSpec.expectStatus().isOk()
+                .expectBody(AddChatMessageCommandResult.class)
                 .returnResult()
                 .getResponseBody();
 
-        Assertions.assertNotNull(sendMessageCommandResult);
+        Assertions.assertNotNull(addChatMessageCommandResult);
     }
 }

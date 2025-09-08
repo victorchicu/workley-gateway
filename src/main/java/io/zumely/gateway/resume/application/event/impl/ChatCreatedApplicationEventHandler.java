@@ -1,9 +1,8 @@
-package io.zumely.gateway.resume.application.event;
+package io.zumely.gateway.resume.application.event.impl;
 
 import io.zumely.gateway.resume.application.command.CommandDispatcher;
-import io.zumely.gateway.resume.application.command.CommandResult;
 import io.zumely.gateway.resume.application.command.Message;
-import io.zumely.gateway.resume.application.command.SendMessageCommand;
+import io.zumely.gateway.resume.application.command.impl.AddChatMessageCommand;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.ChatSessionRepository;
 import io.zumely.gateway.resume.infrastructure.data.ChatObject;
@@ -16,7 +15,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.security.Principal;
 import java.util.Set;
 
 @Component
@@ -32,7 +30,7 @@ public class ChatCreatedApplicationEventHandler {
     }
 
     private static Message<String> toMessage(MessageObject<String> messageObject) {
-        return Message.reply(
+        return Message.create(
                 messageObject.getId(),
                 messageObject.getChatId(),
                 messageObject.getAuthorId(),
@@ -53,14 +51,20 @@ public class ChatCreatedApplicationEventHandler {
     }
 
     @EventListener
-    public Mono<CommandResult> handle(ChatCreatedApplicationEvent source) {
-        Set<ParticipantObject> participants = Set.of(ParticipantObject.create(source.actor().getName()));
-        SummaryObject<MessageObject<String>> summary = SummaryObject.create(toMessageObject(source));
+    public Mono<Void> handle(ChatCreatedApplicationEvent source) {
+        Set<ParticipantObject> participants
+                = Set.of(ParticipantObject.create(source.actor().getName()));
+
+        SummaryObject<MessageObject<String>> summary
+                = SummaryObject.create(toMessageObject(source));
+
         return chatSessionRepository.save(ChatObject.create(source.chatId(), summary, participants))
                 .flatMap((ChatObject chatObject) -> {
                     log.info("Saved {} event for authorId {}", source.getClass().getSimpleName(), source.actor().getName());
                     Message<String> message = toMessage(chatObject.getSummary().getMessage());
-                    return safeDispatch(source.actor(), new SendMessageCommand(chatObject.getId(), message));
+                    return commandDispatcher
+                            .dispatch(source.actor(),
+                                    new AddChatMessageCommand(chatObject.getId(), message)).then();
                 })
                 .doOnError(error -> {
                     String formatted = "Failed to save %s event for authorId %s"
@@ -68,9 +72,5 @@ public class ChatCreatedApplicationEventHandler {
                     log.error(formatted, error);
                 })
                 .onErrorResume(error -> Mono.error(new ApplicationException("Oops! Chat not saved.")));
-    }
-
-    private Mono<CommandResult> safeDispatch(Principal actor, SendMessageCommand sendMessageCommand) {
-        return commandDispatcher.dispatch(actor, sendMessageCommand);
     }
 }

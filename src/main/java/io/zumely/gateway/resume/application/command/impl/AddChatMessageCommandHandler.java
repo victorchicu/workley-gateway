@@ -1,6 +1,9 @@
-package io.zumely.gateway.resume.application.command;
+package io.zumely.gateway.resume.application.command.impl;
 
-import io.zumely.gateway.resume.application.event.MessageReceivedApplicationEvent;
+import io.zumely.gateway.resume.application.command.CommandHandler;
+import io.zumely.gateway.resume.application.command.Message;
+import io.zumely.gateway.resume.application.command.Role;
+import io.zumely.gateway.resume.application.event.impl.ChatMessageAddedApplicationEvent;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.application.service.IdGenerator;
 import io.zumely.gateway.resume.infrastructure.ChatSessionRepository;
@@ -15,13 +18,13 @@ import java.security.Principal;
 import java.util.Set;
 
 @Component
-public class SendMessageCommandHandler implements CommandHandler<SendMessageCommand, SendMessageCommandResult> {
+public class AddChatMessageCommandHandler implements CommandHandler<AddChatMessageCommand, AddChatMessageCommandResult> {
     private final EventStore eventStore;
     private final IdGenerator messageIdGenerator;
     private final ChatSessionRepository chatSessionRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public SendMessageCommandHandler(
+    public AddChatMessageCommandHandler(
             EventStore eventStore,
             IdGenerator messageIdGenerator,
             ChatSessionRepository chatSessionRepository,
@@ -34,12 +37,12 @@ public class SendMessageCommandHandler implements CommandHandler<SendMessageComm
     }
 
     @Override
-    public Class<SendMessageCommand> supported() {
-        return SendMessageCommand.class;
+    public Class<AddChatMessageCommand> supported() {
+        return AddChatMessageCommand.class;
     }
 
     @Override
-    public Mono<SendMessageCommandResult> handle(Principal actor, SendMessageCommand command) {
+    public Mono<AddChatMessageCommandResult> handle(Principal actor, AddChatMessageCommand command) {
         Set<String> participants = Set.of(actor.getName());
         return chatSessionRepository.findChat(command.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops. Chat not found.")))
@@ -47,15 +50,15 @@ public class SendMessageCommandHandler implements CommandHandler<SendMessageComm
                     Message<String> message =
                             Message.create(messageIdGenerator.generate(), chatObject.getId(), actor.getName(), Role.ANONYMOUS, command.message().content());
 
-                    MessageReceivedApplicationEvent messageReceivedApplicationEvent =
-                            new MessageReceivedApplicationEvent(actor, command.chatId(), message);
+                    ChatMessageAddedApplicationEvent chatMessageAddedApplicationEvent =
+                            new ChatMessageAddedApplicationEvent(actor, command.chatId(), message);
 
-                    return eventStore.save(actor, messageReceivedApplicationEvent)
-                            .doOnSuccess((EventObject<MessageReceivedApplicationEvent> eventObject) -> {
+                    return eventStore.save(actor, chatMessageAddedApplicationEvent)
+                            .doOnSuccess((EventObject<ChatMessageAddedApplicationEvent> eventObject) -> {
                                 applicationEventPublisher.publishEvent(eventObject.getEventData());
                             })
-                            .map((EventObject<MessageReceivedApplicationEvent> eventObject) ->
-                                    SendMessageCommandResult.response(
+                            .map((EventObject<ChatMessageAddedApplicationEvent> eventObject) ->
+                                    AddChatMessageCommandResult.response(
                                             eventObject.getEventData().chatId(), eventObject.getEventData().message())
                             );
                 });

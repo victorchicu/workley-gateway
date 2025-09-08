@@ -1,4 +1,7 @@
-package io.zumely.gateway.resume.application.command;
+package io.zumely.gateway.resume.application.command.impl;
+
+import io.zumely.gateway.resume.application.command.CommandResult;
+import io.zumely.gateway.resume.application.command.Message;
 
 import java.util.Objects;
 
@@ -8,7 +11,7 @@ public record CreateChatCommandResult(String chatId, Message<String> message) im
         this.message = Objects.requireNonNull(message, "message must not be null");
     }
 
-    public static CreateChatCommandResult reply(String chatId, Message<String> message) {
+    public static CreateChatCommandResult response(String chatId, Message<String> message) {
         return new CreateChatCommandResult(chatId, message);
     }
 }

@@ -1,7 +1,7 @@
 package io.zumely.gateway.resume.application.service.impl;
 
 import io.zumely.gateway.resume.application.command.Command;
-import io.zumely.gateway.resume.application.command.CreateChatCommand;
+import io.zumely.gateway.resume.application.command.impl.CreateChatCommand;
 import io.zumely.gateway.resume.application.service.PromptHandler;
 import org.springframework.stereotype.Component;
 

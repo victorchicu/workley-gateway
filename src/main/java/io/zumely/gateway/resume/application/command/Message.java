@@ -12,7 +12,7 @@ public record Message<T>(String id, String chatId, String authorId, Role written
         return new Message<>(id, chatId, authorId, writtenBy, Instant.now(), content);
     }
 
-    public static Message<String> reply(String id, String chatId, String authorId, Role writtenBy, Instant createdAt, String content) {
+    public static Message<String> create(String id, String chatId, String authorId, Role writtenBy, Instant createdAt, String content) {
         return new Message<>(id, chatId, authorId, writtenBy, createdAt, content);
     }
 }

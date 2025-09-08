@@ -1,6 +1,9 @@
-package io.zumely.gateway.resume.application.command;
+package io.zumely.gateway.resume.application.command.impl;
 
-import io.zumely.gateway.resume.application.event.ChatCreatedApplicationEvent;
+import io.zumely.gateway.resume.application.command.CommandHandler;
+import io.zumely.gateway.resume.application.command.Message;
+import io.zumely.gateway.resume.application.command.Role;
+import io.zumely.gateway.resume.application.event.impl.ChatCreatedApplicationEvent;
 import io.zumely.gateway.resume.application.service.IdGenerator;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventStore;
 import io.zumely.gateway.resume.infrastructure.data.EventObject;
@@ -14,7 +17,7 @@ import java.security.Principal;
 public class CreateChatCommandHandler implements CommandHandler<CreateChatCommand, CreateChatCommandResult> {
     private final EventStore eventStore;
     private final IdGenerator chatIdGenerator;
-    private final IdGenerator messageIdGenerator;
+    private final IdGenerator messageIdGenerator;;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public CreateChatCommandHandler(
@@ -27,6 +30,12 @@ public class CreateChatCommandHandler implements CommandHandler<CreateChatComman
         this.chatIdGenerator = chatIdGenerator;
         this.messageIdGenerator = messageIdGenerator;
         this.applicationEventPublisher = applicationEventPublisher;
+    }
+
+    private static CreateChatCommandResult toCreateChatCommandResult(EventObject<ChatCreatedApplicationEvent> eventObject) {
+        return CreateChatCommandResult.response(
+                eventObject.getEventData().chatId(),
+                eventObject.getEventData().message());
     }
 
     @Override
@@ -43,11 +52,7 @@ public class CreateChatCommandHandler implements CommandHandler<CreateChatComman
                 .doOnSuccess((EventObject<ChatCreatedApplicationEvent> eventObject) -> {
                     applicationEventPublisher.publishEvent(eventObject.getEventData());
                 })
-                .map((EventObject<ChatCreatedApplicationEvent> eventObject) -> {
-                    return CreateChatCommandResult.reply(
-                            eventObject.getEventData().chatId(),
-                            eventObject.getEventData().message());
-                });
+                .map(CreateChatCommandHandler::toCreateChatCommandResult);
     }
 
     @Override

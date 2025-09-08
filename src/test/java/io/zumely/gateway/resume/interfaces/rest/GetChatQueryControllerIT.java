@@ -1,7 +1,8 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.TestRunner;
-import io.zumely.gateway.resume.application.command.*;
+import io.zumely.gateway.resume.application.command.impl.CreateChatCommand;
+import io.zumely.gateway.resume.application.command.impl.CreateChatCommandResult;
 import io.zumely.gateway.resume.application.query.GetChatQueryResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

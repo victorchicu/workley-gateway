@@ -16,11 +16,15 @@ server:
   forward-headers-strategy: framework
 spring:
   ai:
+    chat:
+      observations:
+        log-prompt: true
+        log-completion: true
     openai:
       api-key: ${SPRING_AI_OPENAI_API_KEY}
       chat:
         options:
-          model: gpt-5-nano
+          model: gpt-4o-mini
           temperature: 0.8
   data:
     mongodb:
