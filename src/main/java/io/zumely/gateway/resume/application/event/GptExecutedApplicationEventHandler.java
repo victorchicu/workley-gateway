@@ -13,14 +13,14 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 @Component
-public class GptReplyApplicationEventHandler {
+public class GptExecutedApplicationEventHandler {
     private final IdGenerator messageIdGenerator;
     private final OpenAiChatModel openAiChatModel;
     private final Sinks.Many<Message<String>> chatSink;
     private final MessageHistoryRepository messageHistoryRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public GptReplyApplicationEventHandler(
+    public GptExecutedApplicationEventHandler(
             IdGenerator messageIdGenerator,
             OpenAiChatModel openAiChatModel,
             Sinks.Many<Message<String>> chatSink,
@@ -35,18 +35,18 @@ public class GptReplyApplicationEventHandler {
     }
 
     @EventListener
-    public Mono<Void> handle(GptReplyApplicationEvent source) {
-        Prompt prompt = Prompt.builder().content(source.message().content())
+    public Mono<Void> handle(GptExecutedApplicationEvent source) {
+        Prompt prompt = Prompt.builder().content(source.prompt())
                 .build();
 
         throw new UnsupportedOperationException("Not yet implemented");
 
 //        return openAiChatModel.stream(prompt)
 //                .map(chatResponse -> {
-//                    chatResponse.getResults().get(0).getOutput().getText()
+//                    throw new UnsupportedOperationException("Not yet implemented");
 //                })
 //                .doOnNext(message -> {
-//                    chatSink.emitNext(message, Sinks.EmitFailureHandler.FAIL_FAST);
+//                    chatSink.emitNext(null, Sinks.EmitFailureHandler.FAIL_FAST);
 //                })
 //                .then();
 

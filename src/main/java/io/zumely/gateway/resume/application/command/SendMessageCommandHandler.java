@@ -4,6 +4,7 @@ import io.zumely.gateway.resume.application.event.MessageReceivedApplicationEven
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.application.service.IdGenerator;
 import io.zumely.gateway.resume.infrastructure.ChatSessionRepository;
+import io.zumely.gateway.resume.infrastructure.data.ChatObject;
 import io.zumely.gateway.resume.infrastructure.eventstore.EventStore;
 import io.zumely.gateway.resume.infrastructure.data.EventObject;
 import org.springframework.context.ApplicationEventPublisher;
@@ -42,7 +43,7 @@ public class SendMessageCommandHandler implements CommandHandler<SendMessageComm
         Set<String> participants = Set.of(actor.getName());
         return chatSessionRepository.findChat(command.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops. Chat not found.")))
-                .flatMap(chatObject -> {
+                .flatMap((ChatObject chatObject) -> {
                     Message<String> message =
                             Message.create(messageIdGenerator.generate(), chatObject.getId(), actor.getName(), Role.ANONYMOUS, command.message().content());
 
@@ -50,7 +51,7 @@ public class SendMessageCommandHandler implements CommandHandler<SendMessageComm
                             new MessageReceivedApplicationEvent(actor, command.chatId(), message);
 
                     return eventStore.save(actor, messageReceivedApplicationEvent)
-                            .doOnSuccess(eventObject -> {
+                            .doOnSuccess((EventObject<MessageReceivedApplicationEvent> eventObject) -> {
                                 applicationEventPublisher.publishEvent(eventObject.getEventData());
                             })
                             .map((EventObject<MessageReceivedApplicationEvent> eventObject) ->
