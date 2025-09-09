@@ -8,7 +8,6 @@ import java.time.Instant;
 
 @Document(collection = "message_history")
 public class MessageObject<T> {
-    @Id
     private String id;
     private Role writtenBy;
     private String chatId;
@@ -19,9 +18,9 @@ public class MessageObject<T> {
     public static <T> MessageObject<T> create(String id, Role writtenBy, String chatId, String authorId, Instant createdAt, T content) {
         return new MessageObject<T>()
                 .setId(id)
-                .setAuthorId(authorId)
                 .setWrittenBy(writtenBy)
                 .setChatId(chatId)
+                .setAuthorId(authorId)
                 .setCreatedAt(createdAt)
                 .setContent(content);
     }

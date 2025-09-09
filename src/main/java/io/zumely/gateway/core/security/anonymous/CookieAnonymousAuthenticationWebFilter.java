@@ -1,14 +1,12 @@
 package io.zumely.gateway.core.security.anonymous;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.auth0.jwt.exceptions.*;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.boot.web.server.Cookie;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -91,13 +89,12 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     }
 
     private DecodedJWT maybeRefreshAnonymousJwtToken(ServerWebExchange exchange, String token) {
-        DecodedJWT jwt;
+        DecodedJWT jwt = null;
         try {
-            jwt = JWT.require(jwtSecret.getAlgorithm()).build().verify(token);
-        } catch (TokenExpiredException e) {
-            jwt = createAnonymousJwtToken(exchange);
+            jwt = JWT.require(jwtSecret.getAlgorithm()).build()
+                    .verify(token);
         } catch (JWTVerificationException e) {
-            throw new InsufficientAuthenticationException("Anonymous token is invalid", e);
+            jwt = createAnonymousJwtToken(exchange);
         }
         return jwt;
     }

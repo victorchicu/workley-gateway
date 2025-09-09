@@ -45,7 +45,8 @@ public class ChatCreatedApplicationEventHandler {
                 source.message().id(),
                 source.message().writtenBy(),
                 source.message().chatId(),
-                source.actor().getName(), source.message().createdAt(),
+                source.actor().getName(),
+                source.message().createdAt(),
                 source.message().content()
         );
     }
@@ -58,21 +59,20 @@ public class ChatCreatedApplicationEventHandler {
         SummaryObject<MessageObject<String>> summary
                 = SummaryObject.create(toMessageObject(source));
 
-        //TODO: validate chat existence
-
         return chatSessionRepository.save(ChatObject.create(source.chatId(), summary, participants))
                 .flatMap((ChatObject chatObject) -> {
-                    log.info("Saved {} event for authorId {}", source.getClass().getSimpleName(), source.actor().getName());
+                    log.info("Successfully saved {} event: {}",
+                            source.getClass().getSimpleName(), source);
                     Message<String> message = toMessage(chatObject.getSummary().getMessage());
                     return commandDispatcher
                             .dispatch(source.actor(),
-                                    new AddChatMessageCommand(chatObject.getId(), message)).then();
+                                    new AddChatMessageCommand(chatObject.getChatId(), message)).then();
                 })
                 .doOnError(error -> {
-                    String formatted = "Failed to save %s event for authorId %s"
-                            .formatted(source.getClass().getSimpleName(), source.actor().getName());
+                    String formatted = "Failed to save %s event: %s"
+                            .formatted(source.getClass().getSimpleName(), source);
                     log.error(formatted, error);
                 })
-                .onErrorResume(error -> Mono.error(new ApplicationException("Oops! Chat not saved.")));
+                .onErrorResume(error -> Mono.error(new ApplicationException("Oops! Could not save your chat.")));
     }
 }

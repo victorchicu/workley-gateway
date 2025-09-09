@@ -4,6 +4,7 @@ import io.zumely.gateway.resume.application.command.Message;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.ChatSessionRepository;
 import io.zumely.gateway.resume.infrastructure.MessageHistoryRepository;
+import io.zumely.gateway.resume.infrastructure.data.ChatObject;
 import io.zumely.gateway.resume.infrastructure.data.MessageObject;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -31,11 +32,11 @@ public class GetChatQueryHandler implements QueryHandler<GetChatQuery, GetChatQu
         Set<String> participants = Set.of(actor.getName());
         return chatSessionRepository.findChat(query.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops. Chat not found.")))
-                .flatMap(chatObject ->
-                        messageHistoryRepository.findAllByChatId(chatObject.getId())
+                .flatMap((ChatObject chatObject) ->
+                        messageHistoryRepository.findAllByChatId(chatObject.getChatId())
                                 .map(GetChatQueryHandler::toMessage)
                                 .collectList()
-                                .map(messages -> new GetChatQueryResult(chatObject.getId(), messages))
+                                .map(messages -> new GetChatQueryResult(chatObject.getChatId(), messages))
                 );
     }
 

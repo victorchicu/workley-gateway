@@ -1,19 +1,19 @@
 package io.zumely.gateway.resume.infrastructure.data;
 
 public class ParticipantObject {
-    private String id;
+    private String participantId;
 
     public static ParticipantObject create(String id) {
         return new ParticipantObject()
-                .setId(id);
+                .setParticipantId(id);
     }
 
-    public String getId() {
-        return id;
+    public String getParticipantId() {
+        return participantId;
     }
 
-    public ParticipantObject setId(String id) {
-        this.id = id;
+    public ParticipantObject setParticipantId(String participantId) {
+        this.participantId = participantId;
         return this;
     }
 }

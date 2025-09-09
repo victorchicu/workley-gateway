@@ -34,21 +34,22 @@ public class ChatMessageAddedApplicationEventHandler {
                         source.message().id(),
                         source.message().writtenBy(),
                         source.message().chatId(),
-                        source.actor().getName(), source.message().createdAt(),
+                        source.actor().getName(),
+                        source.message().createdAt(),
                         source.message().content()
                 );
         return messageHistoryRepository.save(message)
                 .flatMap((MessageObject<String> messageObject) -> {
-                    log.info("Saved {} event for authorId {}",
-                            source.getClass().getSimpleName(), source.actor().getName());
+                    log.info("Successfully saved {} event: {}",
+                            source.getClass().getSimpleName(), source);
                     return dispatchAskAssistant(source, messageObject);
                 })
                 .doOnError(error -> {
-                    String formatted = "Oops! Something went wrong while saving event %s for authorId %s"
-                            .formatted(source.getClass().getSimpleName(), source.actor().getName());
+                    String formatted = "Failed to save %s event: %s"
+                            .formatted(source.getClass().getSimpleName(), source);
                     log.error(formatted, error);
                 })
-                .onErrorResume(error -> Mono.error(new ApplicationException("Oops! Something went wrong while saving message.")));
+                .onErrorResume(error -> Mono.error(new ApplicationException("Oops! Could not save your message.")));
     }
 
     private Mono<AskAssistantCommandResult> dispatchAskAssistant(ChatMessageAddedApplicationEvent source, MessageObject<String> messageObject) {
