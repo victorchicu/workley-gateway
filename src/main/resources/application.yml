@@ -42,7 +42,7 @@ spring:
   rsocket:
     server:
       transport: websocket
-      mapping-path: /api/rsocket
+      mapping-path: /rsocket
   application:
     name: zumely-gateway
 gateway:
