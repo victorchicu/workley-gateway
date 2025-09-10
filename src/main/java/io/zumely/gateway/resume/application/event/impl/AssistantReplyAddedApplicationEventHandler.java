@@ -49,6 +49,7 @@ public class AssistantReplyAddedApplicationEventHandler {
         Prompt prompt = Prompt.builder()
                 .content(source.prompt())
                 .build();
+
         return Mono.fromCallable(() -> new StreamContext(messageIdGenerator.generate(), source))
                 .flatMap(context ->
                         openAiChatModel.stream(prompt)
