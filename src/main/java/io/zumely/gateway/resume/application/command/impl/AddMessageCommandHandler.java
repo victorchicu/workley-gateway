@@ -51,7 +51,7 @@ public class AddMessageCommandHandler implements CommandHandler<AddMessageComman
                             Message.create(messageIdGenerator.generate(), chatObject.getChatId(), actor.getName(), Role.ANONYMOUS, command.message().content());
 
                     MessageAddedApplicationEvent messageAddedApplicationEvent =
-                            new MessageAddedApplicationEvent(actor, command.chatId(), message);
+                            new MessageAddedApplicationEvent(actor, message);
 
                     return eventStore.save(actor, messageAddedApplicationEvent)
                             .doOnSuccess((EventObject<MessageAddedApplicationEvent> eventObject) -> {
@@ -59,7 +59,8 @@ public class AddMessageCommandHandler implements CommandHandler<AddMessageComman
                             })
                             .map((EventObject<MessageAddedApplicationEvent> eventObject) ->
                                     AddMessageCommandResult.response(
-                                            eventObject.getEventData().chatId(), eventObject.getEventData().message())
+                                            eventObject.getEventData().message().chatId(),
+                                            eventObject.getEventData().message())
                             );
                 });
     }

@@ -1,6 +1,7 @@
 package io.zumely.gateway.resume.application.event.impl;
 
 import io.zumely.gateway.resume.application.command.CommandDispatcher;
+import io.zumely.gateway.resume.application.command.Message;
 import io.zumely.gateway.resume.application.command.impl.GenerateReplyCommand;
 import io.zumely.gateway.resume.application.command.impl.GenerateReplyCommandResult;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
@@ -42,7 +43,7 @@ public class MessageAddedApplicationEventHandler {
                 .flatMap((MessageObject<String> messageObject) -> {
                     log.info("Successfully saved {} event: {}",
                             source.getClass().getSimpleName(), source);
-                    return dispatchCommand(source, messageObject);
+                    return dispatchCommand(source);
                 })
                 .doOnError(error -> {
                     String formatted = "Failed to save %s event: %s"
@@ -52,9 +53,9 @@ public class MessageAddedApplicationEventHandler {
                 .onErrorResume(error -> Mono.error(new ApplicationException("Oops! Could not save your message.")));
     }
 
-    private Mono<GenerateReplyCommandResult> dispatchCommand(MessageAddedApplicationEvent source, MessageObject<String> messageObject) {
+    private Mono<GenerateReplyCommandResult> dispatchCommand(MessageAddedApplicationEvent source) {
         return commandDispatcher
                 .dispatch(source.actor(),
-                        new GenerateReplyCommand(messageObject.getContent(), messageObject.getChatId()));
+                        new GenerateReplyCommand(source.message().content(), source.message().chatId()));
     }
 }

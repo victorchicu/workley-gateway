@@ -5,6 +5,5 @@ import io.zumely.gateway.resume.application.event.ApplicationEvent;
 
 import java.security.Principal;
 
-public record MessageAddedApplicationEvent(
-        Principal actor, Message<String> message) implements ApplicationEvent {
+public record EmbeddingSavedApplicationEvent(Principal actor, Message<String> message) implements ApplicationEvent {
 }
