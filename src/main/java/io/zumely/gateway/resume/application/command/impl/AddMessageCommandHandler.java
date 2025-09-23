@@ -3,7 +3,7 @@ package io.zumely.gateway.resume.application.command.impl;
 import io.zumely.gateway.resume.application.command.CommandHandler;
 import io.zumely.gateway.resume.application.command.Message;
 import io.zumely.gateway.resume.application.command.Role;
-import io.zumely.gateway.resume.application.event.impl.ChatMessageAddedApplicationEvent;
+import io.zumely.gateway.resume.application.event.impl.MessageAddedApplicationEvent;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.application.service.IdGenerator;
 import io.zumely.gateway.resume.infrastructure.ChatSessionRepository;
@@ -18,13 +18,13 @@ import java.security.Principal;
 import java.util.Set;
 
 @Component
-public class AddChatMessageCommandHandler implements CommandHandler<AddChatMessageCommand, AddChatMessageCommandResult> {
+public class AddMessageCommandHandler implements CommandHandler<AddMessageCommand, AddMessageCommandResult> {
     private final EventStore eventStore;
     private final IdGenerator messageIdGenerator;
     private final ChatSessionRepository chatSessionRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public AddChatMessageCommandHandler(
+    public AddMessageCommandHandler(
             EventStore eventStore,
             IdGenerator messageIdGenerator,
             ChatSessionRepository chatSessionRepository,
@@ -37,12 +37,12 @@ public class AddChatMessageCommandHandler implements CommandHandler<AddChatMessa
     }
 
     @Override
-    public Class<AddChatMessageCommand> supported() {
-        return AddChatMessageCommand.class;
+    public Class<AddMessageCommand> supported() {
+        return AddMessageCommand.class;
     }
 
     @Override
-    public Mono<AddChatMessageCommandResult> handle(Principal actor, AddChatMessageCommand command) {
+    public Mono<AddMessageCommandResult> handle(Principal actor, AddMessageCommand command) {
         Set<String> participants = Set.of(actor.getName());
         return chatSessionRepository.findChat(command.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops. Chat not found.")))
@@ -50,15 +50,15 @@ public class AddChatMessageCommandHandler implements CommandHandler<AddChatMessa
                     Message<String> message =
                             Message.create(messageIdGenerator.generate(), chatObject.getChatId(), actor.getName(), Role.ANONYMOUS, command.message().content());
 
-                    ChatMessageAddedApplicationEvent chatMessageAddedApplicationEvent =
-                            new ChatMessageAddedApplicationEvent(actor, command.chatId(), message);
+                    MessageAddedApplicationEvent messageAddedApplicationEvent =
+                            new MessageAddedApplicationEvent(actor, command.chatId(), message);
 
-                    return eventStore.save(actor, chatMessageAddedApplicationEvent)
-                            .doOnSuccess((EventObject<ChatMessageAddedApplicationEvent> eventObject) -> {
+                    return eventStore.save(actor, messageAddedApplicationEvent)
+                            .doOnSuccess((EventObject<MessageAddedApplicationEvent> eventObject) -> {
                                 applicationEventPublisher.publishEvent(eventObject.getEventData());
                             })
-                            .map((EventObject<ChatMessageAddedApplicationEvent> eventObject) ->
-                                    AddChatMessageCommandResult.response(
+                            .map((EventObject<MessageAddedApplicationEvent> eventObject) ->
+                                    AddMessageCommandResult.response(
                                             eventObject.getEventData().chatId(), eventObject.getEventData().message())
                             );
                 });

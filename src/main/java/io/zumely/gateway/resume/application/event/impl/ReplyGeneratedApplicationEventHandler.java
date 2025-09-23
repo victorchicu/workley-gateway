@@ -23,15 +23,15 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
-public class AssistantReplyAddedApplicationEventHandler {
-    private static final Logger log = LoggerFactory.getLogger(AssistantReplyAddedApplicationEventHandler.class);
+public class ReplyGeneratedApplicationEventHandler {
+    private static final Logger log = LoggerFactory.getLogger(ReplyGeneratedApplicationEventHandler.class);
 
     private final IdGenerator messageIdGenerator;
     private final OpenAiChatModel openAiChatModel;
     private final MessageHistoryRepository messageHistoryRepository;
     private final Sinks.Many<Message<String>> chatSink;
 
-    public AssistantReplyAddedApplicationEventHandler(
+    public ReplyGeneratedApplicationEventHandler(
             IdGenerator messageIdGenerator,
             OpenAiChatModel openAiChatModel,
             MessageHistoryRepository messageHistoryRepository,
@@ -45,7 +45,7 @@ public class AssistantReplyAddedApplicationEventHandler {
     }
 
     @EventListener
-    public Mono<Void> handle(AssistantReplyAddedApplicationEvent source) {
+    public Mono<Void> handle(ReplyGeneratedApplicationEvent source) {
         Prompt prompt = Prompt.builder()
                 .content(source.prompt())
                 .build();
@@ -95,16 +95,17 @@ public class AssistantReplyAddedApplicationEventHandler {
     }
 
     private String extractText(ChatResponse response) {
-        if (response == null) return "";
+        if (response == null)
+            return "";
 
         List<Generation> generations = response.getResults();
-        if (generations == null || generations.isEmpty()) {
+        if (generations.isEmpty()) {
             return "";
         }
 
         return generations.stream()
-                .map(g -> g != null ? g.getOutput() : null)
                 .filter(Objects::nonNull)
+                .map(Generation::getOutput)
                 .map(AbstractMessage::getText)
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining());
@@ -114,7 +115,7 @@ public class AssistantReplyAddedApplicationEventHandler {
         return MessageObject.create(source.id(), source.writtenBy(), source.chatId(), source.authorId(), source.createdAt(), source.content());
     }
 
-    private record StreamContext(String messageId, AssistantReplyAddedApplicationEvent source) {
+    private record StreamContext(String messageId, ReplyGeneratedApplicationEvent source) {
 
     }
 }

@@ -1,8 +1,8 @@
 package io.zumely.gateway.resume.application.event.impl;
 
 import io.zumely.gateway.resume.application.command.CommandDispatcher;
-import io.zumely.gateway.resume.application.command.impl.AskAssistantCommand;
-import io.zumely.gateway.resume.application.command.impl.AskAssistantCommandResult;
+import io.zumely.gateway.resume.application.command.impl.GenerateReplyCommand;
+import io.zumely.gateway.resume.application.command.impl.GenerateReplyCommandResult;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.MessageHistoryRepository;
 import io.zumely.gateway.resume.infrastructure.data.MessageObject;
@@ -13,13 +13,13 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class ChatMessageAddedApplicationEventHandler {
-    private static final Logger log = LoggerFactory.getLogger(ChatMessageAddedApplicationEventHandler.class);
+public class MessageAddedApplicationEventHandler {
+    private static final Logger log = LoggerFactory.getLogger(MessageAddedApplicationEventHandler.class);
 
     private final CommandDispatcher commandDispatcher;
     private final MessageHistoryRepository messageHistoryRepository;
 
-    public ChatMessageAddedApplicationEventHandler(
+    public MessageAddedApplicationEventHandler(
             CommandDispatcher commandDispatcher,
             MessageHistoryRepository messageHistoryRepository
     ) {
@@ -28,7 +28,7 @@ public class ChatMessageAddedApplicationEventHandler {
     }
 
     @EventListener
-    public Mono<AskAssistantCommandResult> handle(ChatMessageAddedApplicationEvent source) {
+    public Mono<GenerateReplyCommandResult> handle(MessageAddedApplicationEvent source) {
         MessageObject<String> message =
                 MessageObject.create(
                         source.message().id(),
@@ -42,7 +42,7 @@ public class ChatMessageAddedApplicationEventHandler {
                 .flatMap((MessageObject<String> messageObject) -> {
                     log.info("Successfully saved {} event: {}",
                             source.getClass().getSimpleName(), source);
-                    return dispatchAskAssistant(source, messageObject);
+                    return dispatchCommand(source, messageObject);
                 })
                 .doOnError(error -> {
                     String formatted = "Failed to save %s event: %s"
@@ -52,9 +52,9 @@ public class ChatMessageAddedApplicationEventHandler {
                 .onErrorResume(error -> Mono.error(new ApplicationException("Oops! Could not save your message.")));
     }
 
-    private Mono<AskAssistantCommandResult> dispatchAskAssistant(ChatMessageAddedApplicationEvent source, MessageObject<String> messageObject) {
+    private Mono<GenerateReplyCommandResult> dispatchCommand(MessageAddedApplicationEvent source, MessageObject<String> messageObject) {
         return commandDispatcher
                 .dispatch(source.actor(),
-                        new AskAssistantCommand(messageObject.getContent(), messageObject.getChatId()));
+                        new GenerateReplyCommand(messageObject.getContent(), messageObject.getChatId()));
     }
 }

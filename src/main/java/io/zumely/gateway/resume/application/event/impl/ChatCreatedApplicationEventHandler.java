@@ -2,7 +2,7 @@ package io.zumely.gateway.resume.application.event.impl;
 
 import io.zumely.gateway.resume.application.command.CommandDispatcher;
 import io.zumely.gateway.resume.application.command.Message;
-import io.zumely.gateway.resume.application.command.impl.AddChatMessageCommand;
+import io.zumely.gateway.resume.application.command.impl.AddMessageCommand;
 import io.zumely.gateway.resume.application.exception.ApplicationException;
 import io.zumely.gateway.resume.infrastructure.ChatSessionRepository;
 import io.zumely.gateway.resume.infrastructure.data.ChatObject;
@@ -66,7 +66,7 @@ public class ChatCreatedApplicationEventHandler {
                     Message<String> message = toMessage(chatObject.getSummary().getMessage());
                     return commandDispatcher
                             .dispatch(source.actor(),
-                                    new AddChatMessageCommand(chatObject.getChatId(), message)).then();
+                                    new AddMessageCommand(chatObject.getChatId(), message)).then();
                 })
                 .doOnError(error -> {
                     String formatted = "Failed to save %s event: %s"

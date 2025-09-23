@@ -5,6 +5,6 @@ import io.zumely.gateway.resume.application.event.ApplicationEvent;
 
 import java.security.Principal;
 
-public record ChatMessageAddedApplicationEvent(
+public record MessageAddedApplicationEvent(
         Principal actor, String chatId, Message<String> message) implements ApplicationEvent {
 }

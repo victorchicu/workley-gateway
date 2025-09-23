@@ -1,10 +1,10 @@
 package io.zumely.gateway.resume.interfaces.rest;
 
 import io.zumely.gateway.resume.TestRunner;
-import io.zumely.gateway.resume.application.command.impl.AddChatMessageCommand;
+import io.zumely.gateway.resume.application.command.impl.AddMessageCommand;
+import io.zumely.gateway.resume.application.command.impl.AddMessageCommandResult;
 import io.zumely.gateway.resume.application.command.impl.CreateChatCommand;
 import io.zumely.gateway.resume.application.command.Message;
-import io.zumely.gateway.resume.application.command.impl.AddChatMessageCommandResult;
 import io.zumely.gateway.resume.application.command.impl.CreateChatCommandResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -59,14 +59,14 @@ public class CommandControllerIT extends TestRunner {
 
         WebTestClient.ResponseSpec addMessageSpec = post(
                 cookie.getValue(),
-                new AddChatMessageCommand(createChatCommandResult.chatId(),
+                new AddMessageCommand(createChatCommandResult.chatId(),
                         Message.create("Java Developer")), API_COMMAND_URL);
 
-        AddChatMessageCommandResult addChatMessageCommandResult = addMessageSpec.expectStatus().isOk()
-                .expectBody(AddChatMessageCommandResult.class)
+        AddMessageCommandResult addMessageCommandResult = addMessageSpec.expectStatus().isOk()
+                .expectBody(AddMessageCommandResult.class)
                 .returnResult()
                 .getResponseBody();
 
-        Assertions.assertNotNull(addChatMessageCommandResult);
+        Assertions.assertNotNull(addMessageCommandResult);
     }
 }
