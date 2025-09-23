@@ -11,6 +11,7 @@ public class EmbeddingObject {
     @Id
     private String id;
     private String model;
+    private Integer dimension;
     private String chatId;
     private String messageId;
     private float[] embedding;
@@ -32,6 +33,15 @@ public class EmbeddingObject {
 
     public EmbeddingObject setModel(String model) {
         this.model = model;
+        return this;
+    }
+
+    public Integer getDimension() {
+        return dimension;
+    }
+
+    public EmbeddingObject setDimension(Integer dimension) {
+        this.dimension = dimension;
         return this;
     }
 
