@@ -21,13 +21,13 @@ spring:
           temperature: 0.8
   data:
     mongodb:
-      uri: mongodb://root:QAZwsx123@mongo:27017/zumely?authSource=admin
+      uri: mongodb://root:QAZwsx123@mongo:27017/jobbortunity?authSource=admin
   cloud:
     gateway:
       server:
         webflux:
           routes:
-            - id: zumely-gateway
+            - id: jobbortunity-gateway
               uri: http://localhost:8443
               predicates:
                 - Path=/api/command/**

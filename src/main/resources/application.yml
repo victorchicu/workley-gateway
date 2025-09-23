@@ -38,7 +38,7 @@ spring:
       server:
         webflux:
           routes:
-            - id: zumely-gateway
+            - id: jobbortunity-gateway
               uri: http://localhost:8443
               predicates:
                 - Path=/api/command/**
@@ -48,7 +48,7 @@ spring:
       transport: websocket
       mapping-path: /rsocket
   application:
-    name: zumely-gateway
+    name: jobbortunity-gateway
 gateway:
   security:
     anonymous:
