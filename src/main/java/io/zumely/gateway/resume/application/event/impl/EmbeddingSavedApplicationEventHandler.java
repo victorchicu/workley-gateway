@@ -19,8 +19,7 @@ public class EmbeddingSavedApplicationEventHandler {
 
     public EmbeddingSavedApplicationEventHandler(
             EmbeddingsRepository embeddingsRepository,
-            OpenAiEmbeddingModel openAiEmbeddingModel,
-            Embedding
+            OpenAiEmbeddingModel openAiEmbeddingModel
     ) {
         this.embeddingsRepository = embeddingsRepository;
         this.openAiEmbeddingModel = openAiEmbeddingModel;
