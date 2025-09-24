@@ -1,0 +1,16 @@
+package ai.jobbortunity.gateway.chat.infrastructure;
+
+import ai.jobbortunity.gateway.chat.infrastructure.data.ChatObject;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
+
+import java.util.Collection;
+
+@Repository
+public interface ChatSessionRepository extends ReactiveMongoRepository<ChatObject, String> {
+
+    @Query("{ 'chatId': ?0, 'participants.participantId': { $all: ?1 } }")
+    Mono<ChatObject> findChat(String id, Collection<String> participants);
+}
