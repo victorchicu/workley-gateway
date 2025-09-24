@@ -1,12 +1,14 @@
 package ai.jobbortunity.gateway.resume.infrastructure.data;
 
 import ai.jobbortunity.gateway.resume.application.command.Role;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
 @Document(collection = "message_history")
 public class MessageObject<T> {
+    @Id
     private String id;
     private Role role;
     private String chatId;

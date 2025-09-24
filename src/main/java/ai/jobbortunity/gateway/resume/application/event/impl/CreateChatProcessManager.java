@@ -9,6 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
+import reactor.util.retry.RetryBackoffSpec;
 
 import java.time.Duration;
 
@@ -25,15 +26,21 @@ public class CreateChatProcessManager {
     @EventListener
     @Order(1)
     public Mono<Void> on(CreateChatEvent e) {
-        return commandDispatcher
-                .dispatch(e.actor(), new AddMessageCommand(e.chatId(), e.message()))
-                .retryWhen(Retry.backoff(3, Duration.ofMillis(200))
+        RetryBackoffSpec addMessageRetry =
+                Retry.backoff(3, Duration.ofMillis(200))
                         .doBeforeRetry(retrySignal ->
                                 log.warn("Retrying AddMessage (chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
-                )
-                .onErrorResume(err -> {
-                    log.error("Giving up AddMessageCommand for chatId={}", e.chatId(), err);
+                                        e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
+        return commandDispatcher
+                .dispatch(e.actor(), new AddMessageCommand(e.chatId(), e.message()))
+                .timeout(Duration.ofSeconds(5))
+                .retryWhen(addMessageRetry)
+                .doOnSuccess(result ->
+                        log.info("AddMessage succeeded (chatId={}, message={})",
+                                e.chatId(), e.message()))
+                .onErrorResume(error -> {
+                    log.error("Giving up AddMessageCommand for chatId={}",
+                            e.chatId(), error);
                     return Mono.empty();
                 })
                 .then();

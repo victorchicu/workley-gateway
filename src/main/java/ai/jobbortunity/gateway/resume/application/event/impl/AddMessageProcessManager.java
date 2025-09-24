@@ -33,17 +33,15 @@ public class AddMessageProcessManager {
                         .jitter(0.25)
                         .doBeforeRetry(rs ->
                                 log.warn("Retrying SaveEmbedding (chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.chatId(), e.message().id(), rs.totalRetries() + 1, rs.failure().toString()
-                        ));
+                                        e.chatId(), e.message().id(), rs.totalRetries() + 1, rs.failure().toString()));
 
         var replyRetry =
-                Retry.backoff(2, Duration.ofMillis(300))
-                        .maxBackoff(Duration.ofSeconds(1))
+                Retry.backoff(1, Duration.ofMillis(300))
                         .jitter(0.25)
+                        .maxBackoff(Duration.ofSeconds(1))
                         .doBeforeRetry(retrySignal ->
                                 log.warn("Retrying GenerateReply (chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()
-                        ));
+                                        e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
 
         Mono<CommandResult> saveEmbedding =
                 commandDispatcher

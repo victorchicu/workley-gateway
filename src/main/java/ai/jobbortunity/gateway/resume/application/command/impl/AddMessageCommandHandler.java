@@ -60,13 +60,10 @@ public class AddMessageCommandHandler implements CommandHandler<AddMessageComman
                                     actor, chatObject.getChatId(), message);
 
                     return eventStore.save(actor, addMessageEvent)
-                            .doOnSuccess((EventObject<AddMessageEvent> eventObject) -> {
+                            .map((EventObject<AddMessageEvent> eventObject) -> {
                                 applicationEventPublisher.publishEvent(eventObject.getEventData());
-                            })
-                            .map((EventObject<AddMessageEvent> eventObject) ->
-                                    AddMessageCommandResult.response(
-                                            eventObject.getEventData().chatId(), message)
-                            );
+                                return AddMessageCommandResult.response(eventObject.getEventData().chatId(), message);
+                            });
                 })
                 .as(transactionalOperator::transactional)
                 .onErrorMap(error -> new ApplicationException("Oops! Could not add your message.", error));

@@ -32,7 +32,6 @@ public class GenerateReplyProcessManager {
                         log.warn("Retrying SaveEmbedding (chatId={}) attempt #{} due to {}",
                                 e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString())
                 );
-
         return commandDispatcher
                 .dispatch(e.actor(), new SaveEmbeddingCommand(e.chatId(), e.prompt()))
                 .timeout(Duration.ofSeconds(5))

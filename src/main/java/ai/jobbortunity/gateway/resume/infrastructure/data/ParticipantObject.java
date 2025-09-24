@@ -1,6 +1,9 @@
 package ai.jobbortunity.gateway.resume.infrastructure.data;
 
+import org.springframework.data.mongodb.core.index.Indexed;
+
 public class ParticipantObject {
+    @Indexed(unique = true)
     private String participantId;
 
     public static ParticipantObject create(String id) {
