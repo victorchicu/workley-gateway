@@ -5,5 +5,6 @@ import ai.jobbortunity.gateway.resume.application.event.ApplicationEvent;
 
 import java.security.Principal;
 
-public record ChatCreatedApplicationEvent(Principal actor, String chatId, Message<String> message) implements ApplicationEvent {
+public record GenerateReplyEvent(Principal actor, String chatId, Message<String> prompt) implements ApplicationEvent {
+
 }

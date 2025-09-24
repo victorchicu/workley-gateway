@@ -1,0 +1,41 @@
+package ai.jobbortunity.gateway.resume.application.event.impl;
+
+import ai.jobbortunity.gateway.resume.application.command.CommandDispatcher;
+import ai.jobbortunity.gateway.resume.application.command.impl.AddMessageCommand;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+
+import java.time.Duration;
+
+@Component
+public class CreateChatProcessManager {
+    private static final Logger log = LoggerFactory.getLogger(CreateChatProcessManager.class);
+
+    private final CommandDispatcher commandDispatcher;
+
+    CreateChatProcessManager(CommandDispatcher commandDispatcher) {
+        this.commandDispatcher = commandDispatcher;
+    }
+
+    @EventListener
+    @Order(1)
+    public Mono<Void> on(CreateChatEvent e) {
+        return commandDispatcher
+                .dispatch(e.actor(), new AddMessageCommand(e.chatId(), e.message()))
+                .retryWhen(Retry.backoff(3, Duration.ofMillis(200))
+                        .doBeforeRetry(retrySignal ->
+                                log.warn("Retrying AddMessage (chatId={}, messageId={}) attempt #{} due to {}",
+                                        e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
+                )
+                .onErrorResume(err -> {
+                    log.error("Giving up AddMessageCommand for chatId={}", e.chatId(), err);
+                    return Mono.empty();
+                })
+                .then();
+    }
+}

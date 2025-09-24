@@ -3,56 +3,64 @@ package ai.jobbortunity.gateway.resume.application.command.impl;
 import ai.jobbortunity.gateway.resume.application.command.CommandHandler;
 import ai.jobbortunity.gateway.resume.application.command.Message;
 import ai.jobbortunity.gateway.resume.application.command.Role;
-import ai.jobbortunity.gateway.resume.application.event.impl.ChatCreatedApplicationEvent;
+import ai.jobbortunity.gateway.resume.application.event.impl.CreateChatEvent;
+import ai.jobbortunity.gateway.resume.application.event.impl.CreateChatProjectionListener;
+import ai.jobbortunity.gateway.resume.application.exception.ApplicationException;
 import ai.jobbortunity.gateway.resume.application.service.IdGenerator;
-import ai.jobbortunity.gateway.resume.infrastructure.eventstore.EventStore;
 import ai.jobbortunity.gateway.resume.infrastructure.data.EventObject;
+import ai.jobbortunity.gateway.resume.infrastructure.eventstore.EventStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 
 @Component
 public class CreateChatCommandHandler implements CommandHandler<CreateChatCommand, CreateChatCommandResult> {
+    private static final Logger log = LoggerFactory.getLogger(CreateChatCommandHandler.class);
+
     private final EventStore eventStore;
-    private final IdGenerator chatIdGenerator;
-    private final IdGenerator messageIdGenerator;;
+    private final IdGenerator randomIdGenerator;
+    private final TransactionalOperator transactionalOperator;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public CreateChatCommandHandler(
             EventStore eventStore,
-            IdGenerator chatIdGenerator,
-            IdGenerator messageIdGenerator,
+            IdGenerator randomIdGenerator,
+            TransactionalOperator transactionalOperator,
             ApplicationEventPublisher applicationEventPublisher
     ) {
         this.eventStore = eventStore;
-        this.chatIdGenerator = chatIdGenerator;
-        this.messageIdGenerator = messageIdGenerator;
+        this.randomIdGenerator = randomIdGenerator;
+        this.transactionalOperator = transactionalOperator;
         this.applicationEventPublisher = applicationEventPublisher;
-    }
-
-    private static CreateChatCommandResult toCreateChatCommandResult(EventObject<ChatCreatedApplicationEvent> eventObject) {
-        return CreateChatCommandResult.response(
-                eventObject.getEventData().chatId(),
-                eventObject.getEventData().message());
     }
 
     @Override
     public Mono<CreateChatCommandResult> handle(Principal actor, CreateChatCommand command) {
-        String chatId = chatIdGenerator.generate();
+        String chatId = randomIdGenerator.generate();
 
         Message<String> message =
-                Message.create(messageIdGenerator.generate(), chatId, actor.getName(), Role.ANONYMOUS, command.prompt());
+                Message.create(randomIdGenerator.generate(), chatId, actor.getName(), Role.ANONYMOUS, command.prompt());
 
-        ChatCreatedApplicationEvent chatCreatedApplicationEvent =
-                new ChatCreatedApplicationEvent(actor, chatId, message);
+        CreateChatEvent createChatEvent =
+                new CreateChatEvent(actor, chatId, message);
 
-        return eventStore.save(actor, chatCreatedApplicationEvent)
-                .doOnSuccess((EventObject<ChatCreatedApplicationEvent> eventObject) -> {
-                    applicationEventPublisher.publishEvent(eventObject.getEventData());
-                })
-                .map(CreateChatCommandHandler::toCreateChatCommandResult);
+        return Mono.defer(() ->
+                        eventStore.save(actor, createChatEvent)
+                                .map((EventObject<CreateChatEvent> eventObject) -> {
+                                    applicationEventPublisher.publishEvent(eventObject.getEventData());
+                                    return CreateChatCommandResult.response(chatId, message);
+                                })
+                )
+                .as(transactionalOperator::transactional)
+                .onErrorMap(error -> {
+                    log.error("Oops! Could not create chat.", error);
+                    return new ApplicationException("Oops! Could not create chat.");
+                });
     }
 
     @Override

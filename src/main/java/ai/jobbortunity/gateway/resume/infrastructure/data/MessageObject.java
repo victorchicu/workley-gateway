@@ -8,16 +8,16 @@ import java.time.Instant;
 @Document(collection = "message_history")
 public class MessageObject<T> {
     private String id;
-    private Role writtenBy;
+    private Role role;
     private String chatId;
     private String authorId;
     private Instant createdAt;
     private T content;
 
-    public static <T> MessageObject<T> create(String id, Role writtenBy, String chatId, String authorId, Instant createdAt, T content) {
+    public static <T> MessageObject<T> create(String id, Role role, String chatId, String authorId, Instant createdAt, T content) {
         return new MessageObject<T>()
                 .setId(id)
-                .setWrittenBy(writtenBy)
+                .setRole(role)
                 .setChatId(chatId)
                 .setAuthorId(authorId)
                 .setCreatedAt(createdAt)
@@ -30,6 +30,15 @@ public class MessageObject<T> {
 
     public MessageObject<T> setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public MessageObject<T> setRole(Role role) {
+        this.role = role;
         return this;
     }
 
@@ -51,15 +60,6 @@ public class MessageObject<T> {
         return this;
     }
 
-    public Role getWrittenBy() {
-        return writtenBy;
-    }
-
-    public MessageObject<T> setWrittenBy(Role writtenBy) {
-        this.writtenBy = writtenBy;
-        return this;
-    }
-
     public T getContent() {
         return content;
     }
@@ -76,5 +76,17 @@ public class MessageObject<T> {
     public MessageObject<T> setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "MessageObject{" +
+                "id='" + id + '\'' +
+                ", role=" + role +
+                ", chatId='" + chatId + '\'' +
+                ", authorId='" + authorId + '\'' +
+                ", createdAt=" + createdAt +
+                ", message=" + content +
+                '}';
     }
 }

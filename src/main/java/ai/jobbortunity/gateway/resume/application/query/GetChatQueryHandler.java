@@ -42,7 +42,7 @@ public class GetChatQueryHandler implements QueryHandler<GetChatQuery, GetChatQu
 
     private static Message<String> toMessage(MessageObject<String> messageObject) {
         return Message.create(
-                messageObject.getId(), messageObject.getChatId(), messageObject.getAuthorId(), messageObject.getWrittenBy(), messageObject.getContent()
+                messageObject.getId(), messageObject.getChatId(), messageObject.getAuthorId(), messageObject.getRole(), messageObject.getContent()
         );
     }
 }
