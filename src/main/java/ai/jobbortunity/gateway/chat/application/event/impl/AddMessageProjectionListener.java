@@ -1,8 +1,10 @@
 package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
+import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.MessageHistoryRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.MessageObject;
+import com.mongodb.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -26,17 +28,24 @@ public class AddMessageProjectionListener {
 
     private static MessageObject<String> createObject(AddMessageEvent source) {
         return MessageObject.create(
-                source.message().id(), source.message().role(), source.message().chatId(), source.actor().getName(), source.message().createdAt(), source.message().content()
+                source.message().role(), source.message().chatId(), source.message().id(), source.actor().getName(), source.message().createdAt(), source.message().content()
         );
     }
 
     @EventListener
     @Order(0)
-    public Mono<Void> handle(AddMessageEvent source) {
-        return messageHistoryRepository.save(createObject(source))
-                .map(AddMessageProjectionListener::toMessage)
-                .doOnSuccess(v -> log.info("Message added: {}", source))
-                .doOnError(error -> log.error("Message not added: {}", source, error))
+    public Mono<Void> handle(AddMessageEvent e) {
+        return messageHistoryRepository.save(createObject(e))
+                .map(message -> {
+                    log.info("Message added (actor={}, chatId={}, messageId={})",
+                            message.getAuthorId(), message.getChatId(), message.getMessageId());
+                    return toMessage(message);
+                })
+                .onErrorResume(Exceptions::isDuplicateKey, error -> {
+                    log.error("Failed to add message (actor={}, chatId={})",
+                            e.actor().getName(), e.chatId(), error);
+                    return Mono.empty();
+                })
                 .then();
     }
 }

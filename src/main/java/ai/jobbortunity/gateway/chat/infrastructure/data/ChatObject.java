@@ -2,6 +2,7 @@ package ai.jobbortunity.gateway.chat.infrastructure.data;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -11,6 +12,7 @@ import java.util.Set;
 public class ChatObject {
     @Id
     private String id;
+    @Indexed(unique = true)
     private String chatId;
     private Set<ParticipantObject> participants;
     private SummaryObject<MessageObject<String>> summary;

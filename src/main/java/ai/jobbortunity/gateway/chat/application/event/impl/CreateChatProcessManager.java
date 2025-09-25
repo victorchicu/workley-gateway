@@ -29,18 +29,18 @@ public class CreateChatProcessManager {
         RetryBackoffSpec addMessageRetry =
                 Retry.backoff(3, Duration.ofMillis(200))
                         .doBeforeRetry(retrySignal ->
-                                log.warn("Retrying AddMessage (chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
+                                log.warn("Retrying AddMessage (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
+                                        e.actor().getName(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
         return commandDispatcher
                 .dispatch(e.actor(), new AddMessageCommand(e.chatId(), e.message()))
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(addMessageRetry)
                 .doOnSuccess(result ->
-                        log.info("AddMessage succeeded (chatId={}, message={})",
-                                e.chatId(), e.message()))
+                        log.info("AddMessage succeeded (actor={}, chatId={}, message={})",
+                                e.actor().getName(), e.chatId(), e.message()))
                 .onErrorResume(error -> {
-                    log.error("Giving up AddMessageCommand for chatId={}",
-                            e.chatId(), error);
+                    log.error("Giving up AddMessageCommand for (actor={}, chatId={})",
+                            e.actor().getName(), e.chatId(), error);
                     return Mono.empty();
                 })
                 .then();

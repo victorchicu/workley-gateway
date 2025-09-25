@@ -32,16 +32,16 @@ public class AddMessageProcessManager {
                         .maxBackoff(Duration.ofSeconds(2))
                         .jitter(0.25)
                         .doBeforeRetry(rs ->
-                                log.warn("Retrying SaveEmbedding (chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.chatId(), e.message().id(), rs.totalRetries() + 1, rs.failure().toString()));
+                                log.warn("Retrying SaveEmbedding (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
+                                        e.actor().getName(), e.chatId(), e.message().id(), rs.totalRetries() + 1, rs.failure().toString()));
 
         var replyRetry =
                 Retry.backoff(1, Duration.ofMillis(300))
                         .jitter(0.25)
                         .maxBackoff(Duration.ofSeconds(1))
                         .doBeforeRetry(retrySignal ->
-                                log.warn("Retrying GenerateReply (chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
+                                log.warn("Retrying GenerateReply (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
+                                        e.actor().getName(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
 
         Mono<CommandResult> saveEmbedding =
                 commandDispatcher
@@ -49,11 +49,11 @@ public class AddMessageProcessManager {
                         .timeout(Duration.ofSeconds(5))
                         .retryWhen(embeddingRetry)
                         .doOnSuccess(result ->
-                                log.info("SaveEmbedding succeeded (chatId={}, messageId={})",
-                                        e.chatId(), e.message().id()))
+                                log.info("SaveEmbedding succeeded (actor={}, chatId={}, messageId={})",
+                                        e.actor().getName(), e.chatId(), e.message().id()))
                         .onErrorResume(error -> {
-                            log.error("SaveEmbedding failed after retries (chatId={}, messageId={})",
-                                    e.chatId(), e.message().id(), error);
+                            log.error("SaveEmbedding failed after retries (actor={}, chatId={}, messageId={})",
+                                    e.actor().getName(), e.chatId(), e.message().id(), error);
                             return Mono.empty();
                         });
 
@@ -63,11 +63,11 @@ public class AddMessageProcessManager {
                         .timeout(Duration.ofSeconds(30))
                         .retryWhen(replyRetry)
                         .doOnSuccess(v ->
-                                log.info("GenerateReply succeeded (chatId={}, messageId={})",
-                                        e.chatId(), e.message().id()))
+                                log.info("GenerateReply succeeded (actor={}, chatId={}, messageId={})",
+                                        e.actor().getName(), e.chatId(), e.message().id()))
                         .onErrorResume(err -> {
-                            log.error("GenerateReply failed after retries (chatId={}, messageId={})",
-                                    e.chatId(), e.message().id(), err);
+                            log.error("GenerateReply failed after retries (actor={}, chatId={}, messageId={})",
+                                    e.actor().getName(), e.chatId(), e.message().id(), err);
                             return Mono.empty();
                         });
 

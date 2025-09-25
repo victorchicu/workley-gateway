@@ -3,9 +3,11 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 import ai.jobbortunity.gateway.chat.application.command.Message;
 import ai.jobbortunity.gateway.chat.application.command.Role;
 import ai.jobbortunity.gateway.chat.application.exception.ApplicationException;
+import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
 import ai.jobbortunity.gateway.chat.application.service.IdGenerator;
 import ai.jobbortunity.gateway.chat.infrastructure.MessageHistoryRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.MessageObject;
+import com.mongodb.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -47,10 +49,10 @@ public class GenerateReplyProjectionListener {
     }
 
     @EventListener
-    public Mono<Void> handle(GenerateReplyEvent source) {
-        Prompt prompt = Prompt.builder().content(source.prompt().content()).build();
+    public Mono<Void> handle(GenerateReplyEvent e) {
+        Prompt prompt = Prompt.builder().content(e.prompt().content()).build();
 
-        return Mono.defer(() -> Mono.just(new StreamContext(messageIdGenerator.generate(), source)))
+        return Mono.defer(() -> Mono.just(new StreamContext(e, messageIdGenerator.generate())))
                 .flatMap(ctx ->
                         openAiChatModel.stream(prompt)
                                 .timeout(Duration.ofSeconds(60))
@@ -61,22 +63,23 @@ public class GenerateReplyProjectionListener {
                                 .reduce(new StringBuilder(), StringBuilder::append)
                                 .map(StringBuilder::toString)
                                 .filter(content -> !content.isEmpty())
-                                .flatMap(content -> saveFinalMessage(ctx, content))
+                                .flatMap(content -> saveMessage(ctx, content))
                 )
-                .doOnError(err -> log.error("Reply generation failed: chatId={}", source.chatId(), err))
-                .onErrorResume(err -> Mono.empty())
+                .doOnError(error -> log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
+                        e.actor().getName(), e.chatId(), e.prompt(), error))
+                .onErrorResume(error -> Mono.empty())
                 .then();
     }
 
     private void emitChunk(StreamContext ctx, String chunk) {
         Message<String> message =
-                Message.create(ctx.messageId, ctx.source.chatId(), ctx.source.actor().getName(), Role.ASSISTANT, Instant.now(), chunk);
+                Message.create(ctx.messageId, ctx.e.chatId(), ctx.e.actor().getName(), Role.ASSISTANT, Instant.now(), chunk);
 
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
 
         if (emitResult.isFailure()) {
-            log.debug("Stream emit failed ({}): chatId={}, messageId={}",
-                    emitResult, ctx.source.chatId(), ctx.messageId);
+            log.debug("Failed to emit chunk (actor={}, chatId={}, messageId={}) -> ({})",
+                    ctx.e.actor().getName(), ctx.e.chatId(), ctx.messageId, emitResult);
         }
     }
 
@@ -92,16 +95,21 @@ public class GenerateReplyProjectionListener {
                 .collect(Collectors.joining());
     }
 
-    private Mono<Message<String>> saveFinalMessage(StreamContext ctx, String content) {
+    private Mono<Message<String>> saveMessage(StreamContext ctx, String content) {
         MessageObject<String> mo = MessageObject.create(
-                ctx.messageId, Role.ASSISTANT, ctx.source.chatId(), ctx.source.actor().getName(), Instant.now(), content);
+                Role.ASSISTANT, ctx.e.chatId(), ctx.messageId(), ctx.e.actor().getName(), Instant.now(), content);
 
         return messageHistoryRepository.save(mo)
                 .map(saved -> Message.create(
-                        saved.getId(), saved.getChatId(), ctx.source.actor().getName(),
+                        saved.getId(), saved.getChatId(), ctx.e.actor().getName(),
                         saved.getRole(), saved.getCreatedAt(), saved.getContent()))
-                .onErrorMap(err -> new ApplicationException("Oops! Could not save your message.", err));
+                .onErrorResume(Exceptions::isDuplicateKey, error -> {
+                    log.error("Failed to save reply (actor={}, chatId={})",
+                            ctx.e.actor().getName(), ctx.e.chatId(), error);
+                    return Mono.empty();
+                });
     }
 
-    private record StreamContext(String messageId, GenerateReplyEvent source) {}
+    private record StreamContext(GenerateReplyEvent e, String messageId) {
+    }
 }

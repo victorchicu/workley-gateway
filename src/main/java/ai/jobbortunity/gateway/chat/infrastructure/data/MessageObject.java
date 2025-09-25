@@ -2,6 +2,7 @@ package ai.jobbortunity.gateway.chat.infrastructure.data;
 
 import ai.jobbortunity.gateway.chat.application.command.Role;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -12,15 +13,17 @@ public class MessageObject<T> {
     private String id;
     private Role role;
     private String chatId;
+    @Indexed(unique = true)
+    private String messageId;
     private String authorId;
     private Instant createdAt;
     private T content;
 
-    public static <T> MessageObject<T> create(String id, Role role, String chatId, String authorId, Instant createdAt, T content) {
+    public static <T> MessageObject<T> create(Role role, String chatId, String messageId, String authorId, Instant createdAt, T content) {
         return new MessageObject<T>()
-                .setId(id)
                 .setRole(role)
                 .setChatId(chatId)
+                .setMessageId(messageId)
                 .setAuthorId(authorId)
                 .setCreatedAt(createdAt)
                 .setContent(content);
@@ -50,6 +53,15 @@ public class MessageObject<T> {
 
     public MessageObject<T> setChatId(String chatId) {
         this.chatId = chatId;
+        return this;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public MessageObject<T> setMessageId(String messageId) {
+        this.messageId = messageId;
         return this;
     }
 

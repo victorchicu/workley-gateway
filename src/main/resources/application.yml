@@ -33,6 +33,7 @@ spring:
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI}
+      auto-index-creation: true
   cloud:
     gateway:
       server:

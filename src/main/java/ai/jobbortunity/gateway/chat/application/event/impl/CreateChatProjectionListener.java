@@ -1,6 +1,7 @@
 package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
+import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.ChatSessionRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.ChatObject;
 import ai.jobbortunity.gateway.chat.infrastructure.data.MessageObject;
@@ -38,9 +39,9 @@ public class CreateChatProjectionListener {
 
     private static MessageObject<String> toMessageObject(CreateChatEvent source) {
         return MessageObject.create(
-                source.message().id(),
                 source.message().role(),
                 source.message().chatId(),
+                source.message().id(),
                 source.actor().getName(),
                 source.message().createdAt(),
                 source.message().content()
@@ -53,14 +54,15 @@ public class CreateChatProjectionListener {
         SummaryObject<MessageObject<String>> summary = SummaryObject.create(toMessageObject(e));
         return chatSessionRepository.save(ChatObject.create(e.chatId(), summary, Set.of(ParticipantObject.create(e.actor().getName()))))
                 .map((ChatObject chatObject) -> {
-                    log.info("Chat created: {}", e);
+                    log.info("Chat created (actor={}, chatId={})", e.actor().getName(), e.chatId());
                     return toMessage(chatObject.getSummary().getMessage());
                 })
-                .doOnError(error -> {
-                    String formatted = "Chat not created: %s".formatted(e);
-                    log.error(formatted, error);
+                .onErrorResume(Exceptions::isDuplicateKey,error -> {
+                    log.error("Failed to create chat (actor={}, chatId={})",
+                            e.actor().getName(), e.chatId(), error);
+                    return Mono.empty();
                 })
-                .onErrorResume(error -> Mono.empty())
                 .then();
     }
+
 }

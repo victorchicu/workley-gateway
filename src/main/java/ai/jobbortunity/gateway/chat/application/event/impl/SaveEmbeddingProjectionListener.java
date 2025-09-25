@@ -1,7 +1,9 @@
 package ai.jobbortunity.gateway.chat.application.event.impl;
 
+import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.EmbeddingsRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.EmbeddingObject;
+import com.mongodb.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
@@ -65,8 +67,8 @@ public class SaveEmbeddingProjectionListener {
                             .doOnSuccess(saved ->
                                     log.info("Embedding saved: chatId={}, messageId={}",
                                             saved.getChatId(), saved.getMessageId()))
-                            .onErrorResume(this::isDuplicateKey, err -> {
-                                log.info("Embedding already exists (idempotent): chatId={}, messageId={}",
+                            .onErrorResume(Exceptions::isDuplicateKey, error -> {
+                                log.info("Embedding already exists (chatId={}, messageId={})",
                                         e.message().chatId(), e.message().id());
                                 return Mono.empty();
                             });
@@ -81,13 +83,9 @@ public class SaveEmbeddingProjectionListener {
                                 })
                 )
                 .doOnError(error ->
-                        log.error("Embedding failed: chatId={}, messageId={}",
+                        log.error("Embedding failed (chatId={}, messageId={})",
                                 e.message().chatId(), e.message().id(), error))
                 .onErrorResume(err -> Mono.empty());
-    }
-
-    private boolean isDuplicateKey(Throwable throwable) {
-        return throwable instanceof org.springframework.dao.DuplicateKeyException;
     }
 
     @ConfigurationProperties("spring.ai.openai.embedding.options")
