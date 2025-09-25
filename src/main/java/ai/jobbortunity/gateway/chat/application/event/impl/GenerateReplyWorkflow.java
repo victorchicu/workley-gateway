@@ -13,12 +13,12 @@ import reactor.util.retry.Retry;
 import java.time.Duration;
 
 @Component
-public class GenerateReplyProcessManager {
-    private static final Logger log = LoggerFactory.getLogger(GenerateReplyProcessManager.class);
+public class GenerateReplyWorkflow {
+    private static final Logger log = LoggerFactory.getLogger(GenerateReplyWorkflow.class);
 
     private final CommandDispatcher commandDispatcher;
 
-    public GenerateReplyProcessManager(CommandDispatcher commandDispatcher) {
+    public GenerateReplyWorkflow(CommandDispatcher commandDispatcher) {
         this.commandDispatcher = commandDispatcher;
     }
 
@@ -29,14 +29,14 @@ public class GenerateReplyProcessManager {
                 .maxBackoff(Duration.ofSeconds(2))
                 .jitter(0.25)
                 .doBeforeRetry(retrySignal ->
-                        log.warn("Retrying SaveEmbedding (chatId={}) attempt #{} due to {}",
-                                e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString())
+                        log.warn("Retrying SaveEmbedding (author={}, chatId={}) attempt #{} due to {}",
+                                e.actor().getName(), e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString())
                 );
         return commandDispatcher
                 .dispatch(e.actor(), new SaveEmbeddingCommand(e.chatId(), e.prompt()))
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(embeddingRetry)
-                .doOnSuccess(v -> log.info("SaveEmbedding succeeded (chatId={})", e.chatId()))
+                .doOnSuccess(v -> log.info("SaveEmbedding succeeded (author={}, chatId={})", e.actor().getName(), e.chatId()))
                 .onErrorResume(err -> {
                     log.error("SaveEmbedding failed after retries (chatId={})", e.chatId(), err);
                     return Mono.empty();

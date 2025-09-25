@@ -17,12 +17,12 @@ import reactor.core.publisher.Mono;
 import java.util.Set;
 
 @Component
-public class CreateChatProjectionListener {
-    private static final Logger log = LoggerFactory.getLogger(CreateChatProjectionListener.class);
+public class CreateChatProjection {
+    private static final Logger log = LoggerFactory.getLogger(CreateChatProjection.class);
 
     private final ChatSessionRepository chatSessionRepository;
 
-    public CreateChatProjectionListener(ChatSessionRepository chatSessionRepository) {
+    public CreateChatProjection(ChatSessionRepository chatSessionRepository) {
         this.chatSessionRepository = chatSessionRepository;
     }
 

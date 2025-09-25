@@ -4,7 +4,6 @@ import ai.jobbortunity.gateway.chat.application.command.Message;
 import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.MessageHistoryRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.MessageObject;
-import com.mongodb.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -13,12 +12,12 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class AddMessageProjectionListener {
-    private static final Logger log = LoggerFactory.getLogger(AddMessageProjectionListener.class);
+public class AddMessageProjection {
+    private static final Logger log = LoggerFactory.getLogger(AddMessageProjection.class);
 
     private final MessageHistoryRepository messageHistoryRepository;
 
-    public AddMessageProjectionListener(MessageHistoryRepository messageHistoryRepository) {
+    public AddMessageProjection(MessageHistoryRepository messageHistoryRepository) {
         this.messageHistoryRepository = messageHistoryRepository;
     }
 

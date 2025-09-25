@@ -27,9 +27,6 @@ public class GetChatQueryController {
 
     @GetMapping
     public Mono<ResponseEntity<QueryResult>> get(Principal actor, @PathVariable String chatId) {
-        log.info("Get chat {} for authorId {}",
-                chatId, actor.getName());
-
         return queryDispatcher.dispatch(actor, new GetChatQuery(chatId))
                 .flatMap((QueryResult queryResult) ->
                         Mono.just(ResponseEntity.ok()

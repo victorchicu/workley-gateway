@@ -15,12 +15,12 @@ import reactor.util.retry.Retry;
 import java.time.Duration;
 
 @Component
-public class AddMessageProcessManager {
-    private static final Logger log = LoggerFactory.getLogger(AddMessageProcessManager.class);
+public class AddMessageWorkflow {
+    private static final Logger log = LoggerFactory.getLogger(AddMessageWorkflow.class);
 
     private final CommandDispatcher commandDispatcher;
 
-    public AddMessageProcessManager(CommandDispatcher commandDispatcher) {
+    public AddMessageWorkflow(CommandDispatcher commandDispatcher) {
         this.commandDispatcher = commandDispatcher;
     }
 

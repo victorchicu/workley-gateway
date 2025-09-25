@@ -3,7 +3,6 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.EmbeddingsRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.EmbeddingObject;
-import com.mongodb.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
@@ -22,15 +21,15 @@ import java.util.List;
 import java.util.Objects;
 
 @Component
-@EnableConfigurationProperties(SaveEmbeddingProjectionListener.OpenAiEmbeddingOption.class)
-public class SaveEmbeddingProjectionListener {
-    private static final Logger log = LoggerFactory.getLogger(SaveEmbeddingProjectionListener.class);
+@EnableConfigurationProperties(SaveEmbeddingProjection.OpenAiEmbeddingOption.class)
+public class SaveEmbeddingProjection {
+    private static final Logger log = LoggerFactory.getLogger(SaveEmbeddingProjection.class);
 
     private final EmbeddingsRepository embeddingsRepository;
     private final OpenAiEmbeddingModel openAiEmbeddingModel;
     private final OpenAiEmbeddingOption openAiEmbeddingOption;
 
-    public SaveEmbeddingProjectionListener(
+    public SaveEmbeddingProjection(
             EmbeddingsRepository embeddingsRepository,
             OpenAiEmbeddingModel openAiEmbeddingModel,
             OpenAiEmbeddingOption openAiEmbeddingOption
@@ -43,7 +42,6 @@ public class SaveEmbeddingProjectionListener {
     @EventListener
     public Mono<EmbeddingObject> handle(SaveEmbeddingEvent e) {
         var document = new Document(e.chatId(), e.message().content(), Collections.emptyMap());
-
         return Mono.fromCallable(() -> openAiEmbeddingModel.embed(
                         List.of(document),
                         EmbeddingOptionsBuilder.builder()
@@ -65,11 +63,11 @@ public class SaveEmbeddingProjectionListener {
 
                     return embeddingsRepository.save(embedding)
                             .doOnSuccess(saved ->
-                                    log.info("Embedding saved: chatId={}, messageId={}",
-                                            saved.getChatId(), saved.getMessageId()))
+                                    log.info("Embedding saved (actor={}, chatId={}, messageId={})",
+                                            e.actor(), saved.getChatId(), saved.getMessageId()))
                             .onErrorResume(Exceptions::isDuplicateKey, error -> {
-                                log.info("Embedding already exists (chatId={}, messageId={})",
-                                        e.message().chatId(), e.message().id());
+                                log.info("Embedding already exists (actor={}, chatId={}, messageId={})",
+                                        e.actor(), e.message().chatId(), e.message().id());
                                 return Mono.empty();
                             });
                 })
@@ -78,8 +76,8 @@ public class SaveEmbeddingProjectionListener {
                                 .maxBackoff(java.time.Duration.ofSeconds(2))
                                 .jitter(0.25)
                                 .doBeforeRetry(retrySignal -> {
-                                    log.warn("Retrying embedding save (chatId={}, messageId={}) attempt #{} due to {}",
-                                            e.message().chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure());
+                                    log.warn("Retrying embedding save (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
+                                            e.actor(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
                                 })
                 )
                 .doOnError(error ->

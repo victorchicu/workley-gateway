@@ -2,12 +2,10 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
 import ai.jobbortunity.gateway.chat.application.command.Role;
-import ai.jobbortunity.gateway.chat.application.exception.ApplicationException;
 import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
 import ai.jobbortunity.gateway.chat.application.service.IdGenerator;
 import ai.jobbortunity.gateway.chat.infrastructure.MessageHistoryRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.MessageObject;
-import com.mongodb.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -27,15 +25,15 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
-public class GenerateReplyProjectionListener {
-    private static final Logger log = LoggerFactory.getLogger(GenerateReplyProjectionListener.class);
+public class GenerateReplyProjection {
+    private static final Logger log = LoggerFactory.getLogger(GenerateReplyProjection.class);
 
     private final IdGenerator messageIdGenerator;
     private final OpenAiChatModel openAiChatModel;
     private final MessageHistoryRepository messageHistoryRepository;
     private final Sinks.Many<Message<String>> chatSink;
 
-    public GenerateReplyProjectionListener(
+    public GenerateReplyProjection(
             IdGenerator messageIdGenerator,
             OpenAiChatModel openAiChatModel,
             MessageHistoryRepository messageHistoryRepository,

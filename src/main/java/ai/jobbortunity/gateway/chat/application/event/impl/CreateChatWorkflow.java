@@ -14,12 +14,12 @@ import reactor.util.retry.RetryBackoffSpec;
 import java.time.Duration;
 
 @Component
-public class CreateChatProcessManager {
-    private static final Logger log = LoggerFactory.getLogger(CreateChatProcessManager.class);
+public class CreateChatWorkflow {
+    private static final Logger log = LoggerFactory.getLogger(CreateChatWorkflow.class);
 
     private final CommandDispatcher commandDispatcher;
 
-    CreateChatProcessManager(CommandDispatcher commandDispatcher) {
+    CreateChatWorkflow(CommandDispatcher commandDispatcher) {
         this.commandDispatcher = commandDispatcher;
     }
 
