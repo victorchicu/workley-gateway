@@ -14,6 +14,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 import java.util.Collections;
@@ -41,7 +42,7 @@ public class SaveEmbeddingProjection {
 
     @EventListener
     public Mono<EmbeddingObject> handle(SaveEmbeddingEvent e) {
-        var document = new Document(e.chatId(), e.message().content(), Collections.emptyMap());
+        var document = new Document(e.reference(), e.text(), Collections.emptyMap());
         return Mono.fromCallable(() -> openAiEmbeddingModel.embed(
                         List.of(document),
                         EmbeddingOptionsBuilder.builder()
@@ -50,24 +51,24 @@ public class SaveEmbeddingProjection {
                                 .build(),
                         new TokenCountBatchingStrategy()
                 ))
-                .publishOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .publishOn(Schedulers.boundedElastic())
                 .map(list -> list.isEmpty() ? null : list.getFirst())
                 .filter(Objects::nonNull)
                 .flatMap(vector -> {
                     var embedding = new EmbeddingObject()
+                            .setType(e.type())
+                            .setActor(e.actor())
+                            .setReference(e.reference())
                             .setModel(openAiEmbeddingOption.getModel())
                             .setDimension(openAiEmbeddingOption.getDimension())
-                            .setChatId(e.message().chatId())
-                            .setMessageId(e.message().id())
                             .setEmbedding(vector);
-
                     return embeddingsRepository.save(embedding)
                             .doOnSuccess(saved ->
-                                    log.info("Embedding saved (actor={}, chatId={}, messageId={})",
-                                            e.actor(), saved.getChatId(), saved.getMessageId()))
+                                    log.info("Embedding saved (actor={}, type={}, reference={})",
+                                            saved.getActor(), saved.getType(), saved.getReference()))
                             .onErrorResume(Exceptions::isDuplicateKey, error -> {
-                                log.info("Embedding already exists (actor={}, chatId={}, messageId={})",
-                                        e.actor(), e.message().chatId(), e.message().id());
+                                log.info("Embedding already exists (actor={}, type={}, reference={})",
+                                        e.actor(), e.type(), e.reference());
                                 return Mono.empty();
                             });
                 })
@@ -76,13 +77,13 @@ public class SaveEmbeddingProjection {
                                 .maxBackoff(java.time.Duration.ofSeconds(2))
                                 .jitter(0.25)
                                 .doBeforeRetry(retrySignal -> {
-                                    log.warn("Retrying embedding save (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
-                                            e.actor(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
+                                    log.warn("Retrying embedding save (actor={}, type={}, reference={}) attempt #{} due to {}",
+                                            e.actor(), e.type(), e.reference(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
                                 })
                 )
                 .doOnError(error ->
-                        log.error("Embedding failed (actor={}, chatId={}, messageId={})",
-                                e.actor(), e.message().chatId(), e.message().id(), error))
+                        log.error("Embedding failed (actor={}, type={}, reference={})",
+                                e.actor(), e.type(), e.reference(), error))
                 .onErrorResume(err -> Mono.empty());
     }
 

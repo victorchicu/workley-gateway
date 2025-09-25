@@ -32,28 +32,28 @@ public class AddMessageWorkflow {
                         .maxBackoff(Duration.ofSeconds(2))
                         .jitter(0.25)
                         .doBeforeRetry(rs ->
-                                log.warn("Retrying SaveEmbedding (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.actor().getName(), e.chatId(), e.message().id(), rs.totalRetries() + 1, rs.failure().toString()));
+                                log.warn("Retrying save embedding (actor={}, type={}, reference={}) attempt #{} due to {}",
+                                        e.actor().getName(), e.getClass(), e.message().id(), rs.totalRetries() + 1, rs.failure().toString()));
 
         var replyRetry =
                 Retry.backoff(1, Duration.ofMillis(300))
                         .jitter(0.25)
                         .maxBackoff(Duration.ofSeconds(1))
                         .doBeforeRetry(retrySignal ->
-                                log.warn("Retrying GenerateReply (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
+                                log.warn("Retrying generating reply (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
                                         e.actor().getName(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
 
         Mono<CommandResult> saveEmbedding =
                 commandDispatcher
-                        .dispatch(e.actor(), new SaveEmbeddingCommand(e.chatId(), e.message()))
+                        .dispatch(e.actor(), new SaveEmbeddingCommand(e.getClass().getName(), e.message().id(), e.message().content()))
                         .timeout(Duration.ofSeconds(5))
                         .retryWhen(embeddingRetry)
                         .doOnSuccess(result ->
-                                log.info("SaveEmbedding succeeded (actor={}, chatId={}, messageId={})",
-                                        e.actor().getName(), e.chatId(), e.message().id()))
+                                log.info("Dispatch save embedding command (actor={}, type={}, reference={})",
+                                        e.actor().getName(), e.getClass(), e.message().id()))
                         .onErrorResume(error -> {
-                            log.error("SaveEmbedding failed after retries (actor={}, chatId={}, messageId={})",
-                                    e.actor().getName(), e.chatId(), e.message().id(), error);
+                            log.error("Save embedding failed even after all retry attempts (actor={}, type={}, reference={})",
+                                    e.actor().getName(), e.getClass(), e.message().id(), error);
                             return Mono.empty();
                         });
 
@@ -63,11 +63,11 @@ public class AddMessageWorkflow {
                         .timeout(Duration.ofSeconds(30))
                         .retryWhen(replyRetry)
                         .doOnSuccess(v ->
-                                log.info("GenerateReply succeeded (actor={}, chatId={}, messageId={})",
-                                        e.actor().getName(), e.chatId(), e.message().id()))
-                        .onErrorResume(err -> {
-                            log.error("GenerateReply failed after retries (actor={}, chatId={}, messageId={})",
-                                    e.actor().getName(), e.chatId(), e.message().id(), err);
+                                log.info("Dispatch generate reply command (actor={}, messageId={}, prompt={})",
+                                        e.actor().getName(), e.message().id(), e.message().content()))
+                        .onErrorResume(error -> {
+                            log.error("Generate reply failed even after all retry attempts (actor={}, messageId={}, prompt={})",
+                                    e.actor().getName(), e.message().id(), e.message().content(), error);
                             return Mono.empty();
                         });
 

@@ -11,9 +11,10 @@ public class EmbeddingObject {
     @Id
     private String id;
     private String model;
+    private String actor;
+    private String type;
+    private String reference;
     private Integer dimension;
-    private String chatId;
-    private String messageId;
     private float[] embedding;
     @CreatedDate
     private Instant createdAt;
@@ -36,30 +37,39 @@ public class EmbeddingObject {
         return this;
     }
 
+    public String getActor() {
+        return actor;
+    }
+
+    public EmbeddingObject setActor(String actor) {
+        this.actor = actor;
+        return this;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public EmbeddingObject setType(String type) {
+        this.type = type;
+        return this;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public EmbeddingObject setReference(String reference) {
+        this.reference = reference;
+        return this;
+    }
+
     public Integer getDimension() {
         return dimension;
     }
 
     public EmbeddingObject setDimension(Integer dimension) {
         this.dimension = dimension;
-        return this;
-    }
-
-    public String getChatId() {
-        return chatId;
-    }
-
-    public EmbeddingObject setChatId(String chatId) {
-        this.chatId = chatId;
-        return this;
-    }
-
-    public String getMessageId() {
-        return messageId;
-    }
-
-    public EmbeddingObject setMessageId(String messageId) {
-        this.messageId = messageId;
         return this;
     }
 

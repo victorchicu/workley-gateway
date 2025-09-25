@@ -57,12 +57,11 @@ public class CreateChatProjection {
                     log.info("Chat created (actor={}, chatId={})", e.actor().getName(), e.chatId());
                     return toMessage(chatObject.getSummary().getMessage());
                 })
-                .onErrorResume(Exceptions::isDuplicateKey,error -> {
+                .onErrorResume(Exceptions::isDuplicateKey, error -> {
                     log.error("Failed to create chat (actor={}, chatId={})",
                             e.actor().getName(), e.chatId(), error);
                     return Mono.empty();
                 })
                 .then();
     }
-
 }

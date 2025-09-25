@@ -29,18 +29,18 @@ public class CreateChatWorkflow {
         RetryBackoffSpec addMessageRetry =
                 Retry.backoff(3, Duration.ofMillis(200))
                         .doBeforeRetry(retrySignal ->
-                                log.warn("Retrying AddMessage (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
+                                log.warn("Retrying adding message (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
                                         e.actor().getName(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
         return commandDispatcher
                 .dispatch(e.actor(), new AddMessageCommand(e.chatId(), e.message()))
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(addMessageRetry)
                 .doOnSuccess(result ->
-                        log.info("AddMessage succeeded (actor={}, chatId={}, message={})",
-                                e.actor().getName(), e.chatId(), e.message()))
+                        log.info("Dispatch add message command (actor={}, chatId={}, messageId={})",
+                                e.actor().getName(), e.chatId(), e.message().id()))
                 .onErrorResume(error -> {
-                    log.error("Giving up AddMessageCommand for (actor={}, chatId={})",
-                            e.actor().getName(), e.chatId(), error);
+                    log.error("Failed to add message even after all retry attempts (actor={}, chatId={}, messageId={})",
+                            e.actor().getName(), e.chatId(), e.message().id(), error);
                     return Mono.empty();
                 })
                 .then();

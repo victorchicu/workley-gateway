@@ -63,7 +63,7 @@ public class GenerateReplyProjection {
                                 .filter(content -> !content.isEmpty())
                                 .flatMap(content -> saveMessage(ctx, content))
                 )
-                .doOnError(error -> log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
+                .doOnError(error -> log.error("Failed to generate reply (actor={}, type={}, prompt={})",
                         e.actor().getName(), e.chatId(), e.prompt(), error))
                 .onErrorResume(error -> Mono.empty())
                 .then();
@@ -71,12 +71,12 @@ public class GenerateReplyProjection {
 
     private void emitChunk(StreamContext ctx, String chunk) {
         Message<String> message =
-                Message.create(ctx.messageId, ctx.e.chatId(), ctx.e.actor().getName(), Role.ASSISTANT, Instant.now(), chunk);
+                Message.create(ctx.messageId(), ctx.e().chatId(), ctx.e().actor().getName(), Role.ASSISTANT, Instant.now(), chunk);
 
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
 
         if (emitResult.isFailure()) {
-            log.debug("Failed to emit chunk (actor={}, chatId={}, messageId={}) -> ({})",
+            log.debug("Failed to emit chunk (actor={}, type={}, messageId={}) -> ({})",
                     ctx.e.actor().getName(), ctx.e.chatId(), ctx.messageId, emitResult);
         }
     }
@@ -102,8 +102,8 @@ public class GenerateReplyProjection {
                         saved.getId(), saved.getChatId(), ctx.e.actor().getName(),
                         saved.getRole(), saved.getCreatedAt(), saved.getContent()))
                 .onErrorResume(Exceptions::isDuplicateKey, error -> {
-                    log.error("Failed to save reply (actor={}, chatId={})",
-                            ctx.e.actor().getName(), ctx.e.chatId(), error);
+                    log.error("Failed to save reply (actor={}, chatId={}, messageId={}, prompt={})",
+                            ctx.e.actor().getName(), ctx.e.chatId(), ctx.messageId(), ctx.e().prompt().content(), error);
                     return Mono.empty();
                 });
     }

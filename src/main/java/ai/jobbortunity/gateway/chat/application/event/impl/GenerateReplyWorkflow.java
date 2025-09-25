@@ -29,16 +29,19 @@ public class GenerateReplyWorkflow {
                 .maxBackoff(Duration.ofSeconds(2))
                 .jitter(0.25)
                 .doBeforeRetry(retrySignal ->
-                        log.warn("Retrying SaveEmbedding (author={}, chatId={}) attempt #{} due to {}",
-                                e.actor().getName(), e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString())
+                        log.warn("Retrying save embedding (actor={}, type={}, reference={}) attempt #{} due to {}",
+                                e.actor().getName(), e.getClass(), e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString())
                 );
         return commandDispatcher
-                .dispatch(e.actor(), new SaveEmbeddingCommand(e.chatId(), e.prompt()))
+                .dispatch(e.actor(), new SaveEmbeddingCommand(e.getClass().getName(), e.chatId(), e.prompt().content()))
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(embeddingRetry)
-                .doOnSuccess(v -> log.info("SaveEmbedding succeeded (author={}, chatId={})", e.actor().getName(), e.chatId()))
-                .onErrorResume(err -> {
-                    log.error("SaveEmbedding failed after retries (chatId={})", e.chatId(), err);
+                .doOnSuccess(result ->
+                        log.info("Dispatch save embedding command (author={}, type={}, reference={})",
+                                e.actor().getName(), e.getClass(), e.chatId()))
+                .onErrorResume(error -> {
+                    log.error("Save embedding failed even after all retry attempts (actor={}, type={}, reference={})",
+                            e.actor().getName(), e.getClass(), e.chatId(), error);
                     return Mono.empty();
                 })
                 .then();

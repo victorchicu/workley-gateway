@@ -36,13 +36,13 @@ public class AddMessageProjection {
     public Mono<Void> handle(AddMessageEvent e) {
         return messageHistoryRepository.save(createObject(e))
                 .map(message -> {
-                    log.info("Message added (actor={}, chatId={}, messageId={})",
+                    log.info("Message was saved successfully (actor={}, chatId={}, messageId={})",
                             message.getAuthorId(), message.getChatId(), message.getMessageId());
                     return toMessage(message);
                 })
                 .onErrorResume(Exceptions::isDuplicateKey, error -> {
-                    log.error("Failed to add message (actor={}, chatId={})",
-                            e.actor().getName(), e.chatId(), error);
+                    log.error("Failed to add message (actor={}, chatId={}, messageId={})",
+                            e.actor().getName(), e.chatId(), e.message().id(), error);
                     return Mono.empty();
                 })
                 .then();

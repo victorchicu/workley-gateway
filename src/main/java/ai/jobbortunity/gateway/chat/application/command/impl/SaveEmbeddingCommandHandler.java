@@ -36,7 +36,7 @@ public class SaveEmbeddingCommandHandler implements CommandHandler<SaveEmbedding
     @Override
     public Mono<SaveEmbeddingCommandResult> handle(Principal actor, SaveEmbeddingCommand command) {
         SaveEmbeddingEvent saveEmbeddingEvent =
-                new SaveEmbeddingEvent(actor.getName(), command.chatId(), command.message());
+                new SaveEmbeddingEvent(actor.getName(), command.type(), command.reference(), command.text());
 
         return Mono.defer(() ->
                         eventStore.save(actor, saveEmbeddingEvent)

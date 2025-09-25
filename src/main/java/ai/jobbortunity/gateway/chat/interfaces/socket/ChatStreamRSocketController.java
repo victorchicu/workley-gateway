@@ -18,6 +18,8 @@ public class ChatStreamRSocketController {
 
     @MessageMapping("chat.stream.{chatId}")
     public Flux<Message<String>> stream(@DestinationVariable String chatId) {
-        return chatSink.asFlux().filter((Message<String> message) -> chatId.equals(message.chatId()));
+        return chatSink.asFlux().filter((Message<String> message) -> {
+            return chatId.equals(message.chatId());
+        });
     }
 }

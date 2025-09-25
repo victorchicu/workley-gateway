@@ -19,8 +19,6 @@ import java.security.Principal;
 @RestController
 public class CommandController {
 
-    private static final Logger log = LoggerFactory.getLogger(CommandController.class);
-
     private final CommandDispatcher commandDispatcher;
 
     public CommandController(CommandDispatcher commandDispatcher) {

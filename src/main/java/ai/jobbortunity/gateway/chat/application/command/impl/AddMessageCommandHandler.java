@@ -48,7 +48,6 @@ public class AddMessageCommandHandler implements CommandHandler<AddMessageComman
     @Override
     public Mono<AddMessageCommandResult> handle(Principal actor, AddMessageCommand command) {
         Set<String> participants = Set.of(actor.getName());
-
         return chatSessionRepository.findChat(command.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationException("Oops! Chat not found.")))
                 .flatMap((ChatObject chatObject) -> {
