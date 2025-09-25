@@ -81,8 +81,8 @@ public class SaveEmbeddingProjection {
                                 })
                 )
                 .doOnError(error ->
-                        log.error("Embedding failed (chatId={}, messageId={})",
-                                e.message().chatId(), e.message().id(), error))
+                        log.error("Embedding failed (actor={}, chatId={}, messageId={})",
+                                e.actor(), e.message().chatId(), e.message().id(), error))
                 .onErrorResume(err -> Mono.empty());
     }
 
