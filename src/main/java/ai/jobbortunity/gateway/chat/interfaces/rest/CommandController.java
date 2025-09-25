@@ -2,12 +2,10 @@ package ai.jobbortunity.gateway.chat.interfaces.rest;
 
 import ai.jobbortunity.gateway.chat.application.command.Command;
 import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
-import ai.jobbortunity.gateway.chat.application.command.InternalErrorCommandResult;
+import ai.jobbortunity.gateway.chat.interfaces.rest.error.InternalError;
 import ai.jobbortunity.gateway.chat.application.command.CommandResult;
 import ai.jobbortunity.gateway.chat.application.exception.ApplicationException;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +35,7 @@ public class CommandController {
                         (ApplicationException error) ->
                                 Mono.just(ResponseEntity.badRequest()
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .body(new InternalErrorCommandResult(error.getMessage())))
+                                        .body(new InternalError(error.getMessage())))
                 );
     }
 }

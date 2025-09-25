@@ -1,4 +1,4 @@
-package ai.jobbortunity.gateway.chat.infrastructure.configuration;
+package ai.jobbortunity.gateway.chat.infrastructure;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
