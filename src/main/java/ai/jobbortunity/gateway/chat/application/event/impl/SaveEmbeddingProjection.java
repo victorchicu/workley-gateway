@@ -12,6 +12,7 @@ import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -41,6 +42,7 @@ public class SaveEmbeddingProjection {
     }
 
     @EventListener
+    @Order(0)
     public Mono<EmbeddingObject> handle(SaveEmbeddingEvent e) {
         var document = new Document(e.reference(), e.text(), Collections.emptyMap());
         return Mono.fromCallable(() -> openAiEmbeddingModel.embed(

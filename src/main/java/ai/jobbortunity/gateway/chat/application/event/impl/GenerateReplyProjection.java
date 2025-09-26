@@ -14,6 +14,7 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -47,6 +48,7 @@ public class GenerateReplyProjection {
     }
 
     @EventListener
+    @Order(0)
     public Mono<Void> handle(GenerateReplyEvent e) {
         Prompt prompt = Prompt.builder().content(e.prompt()).build();
 
