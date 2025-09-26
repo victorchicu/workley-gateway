@@ -14,12 +14,12 @@ public class ChatObject {
     private String id;
     @Indexed(unique = true)
     private String chatId;
+    private SummaryObject summary;
     private Set<ParticipantObject> participants;
-    private SummaryObject<MessageObject<String>> summary;
     @CreatedDate
     private Instant createdAt;
 
-    public static ChatObject create(String chatId, SummaryObject<MessageObject<String>> summary, Set<ParticipantObject> participants) {
+    public static ChatObject create(String chatId, SummaryObject summary, Set<ParticipantObject> participants) {
         return new ChatObject()
                 .setChatId(chatId)
                 .setSummary(summary)
@@ -44,21 +44,21 @@ public class ChatObject {
         return this;
     }
 
+    public SummaryObject getSummary() {
+        return summary;
+    }
+
+    public ChatObject setSummary(SummaryObject summary) {
+        this.summary = summary;
+        return this;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
 
     public ChatObject setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
-        return this;
-    }
-
-    public SummaryObject<MessageObject<String>> getSummary() {
-        return summary;
-    }
-
-    public ChatObject setSummary(SummaryObject<MessageObject<String>> summary) {
-        this.summary = summary;
         return this;
     }
 

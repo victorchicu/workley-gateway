@@ -8,5 +8,5 @@ import java.security.Principal;
 
 public interface EventStore {
 
-    <T extends ApplicationEvent> Mono<EventObject<T>> save(Principal actor, T object);
+    <T extends ApplicationEvent> Mono<EventObject<T>> save(String actor, T object);
 }

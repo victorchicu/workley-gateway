@@ -24,7 +24,7 @@ public class CommandController {
     }
 
     @PostMapping
-    public <T extends Command> Mono<ResponseEntity<CommandResult>> execute(Principal actor, @Valid @RequestBody T command) {
+    public <T extends Command> Mono<ResponseEntity<CommandResult>> execute(String actor, @Valid @RequestBody T command) {
         return commandDispatcher.dispatch(actor, command)
                 .flatMap((CommandResult commandResult) ->
                         Mono.just(ResponseEntity.ok()

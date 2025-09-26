@@ -33,7 +33,7 @@ public class AddMessageWorkflow {
                         .jitter(0.25)
                         .doBeforeRetry(rs ->
                                 log.warn("Retrying save embedding (actor={}, type={}, reference={}) attempt #{} due to {}",
-                                        e.actor().getName(), e.getClass(), e.message().id(), rs.totalRetries() + 1, rs.failure().toString()));
+                                        e.actor(), e.getClass(), e.message().id(), rs.totalRetries() + 1, rs.failure().toString()));
 
         var replyRetry =
                 Retry.backoff(1, Duration.ofMillis(300))
@@ -41,7 +41,7 @@ public class AddMessageWorkflow {
                         .maxBackoff(Duration.ofSeconds(1))
                         .doBeforeRetry(retrySignal ->
                                 log.warn("Retrying generating reply (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.actor().getName(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
+                                        e.actor(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
 
         Mono<CommandResult> saveEmbedding =
                 commandDispatcher
@@ -50,10 +50,10 @@ public class AddMessageWorkflow {
                         .retryWhen(embeddingRetry)
                         .doOnSuccess(result ->
                                 log.info("Dispatch save embedding command (actor={}, type={}, reference={})",
-                                        e.actor().getName(), e.getClass(), e.message().id()))
+                                        e.actor(), e.getClass(), e.message().id()))
                         .onErrorResume(error -> {
                             log.error("Save embedding failed even after all retry attempts (actor={}, type={}, reference={})",
-                                    e.actor().getName(), e.getClass(), e.message().id(), error);
+                                    e.actor(), e.getClass(), e.message().id(), error);
                             return Mono.empty();
                         });
 
@@ -64,10 +64,10 @@ public class AddMessageWorkflow {
                         .retryWhen(replyRetry)
                         .doOnSuccess(v ->
                                 log.info("Dispatch generate reply command (actor={}, messageId={}, prompt={})",
-                                        e.actor().getName(), e.message().id(), e.message().content()))
+                                        e.actor(), e.message().id(), e.message().content()))
                         .onErrorResume(error -> {
                             log.error("Generate reply failed even after all retry attempts (actor={}, messageId={}, prompt={})",
-                                    e.actor().getName(), e.message().id(), e.message().content(), error);
+                                    e.actor(), e.message().id(), e.message().content(), error);
                             return Mono.empty();
                         });
 

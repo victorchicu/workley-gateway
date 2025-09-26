@@ -48,7 +48,7 @@ public class GenerateReplyProjection {
 
     @EventListener
     public Mono<Void> handle(GenerateReplyEvent e) {
-        Prompt prompt = Prompt.builder().content(e.prompt().content()).build();
+        Prompt prompt = Prompt.builder().content(e.prompt()).build();
 
         return Mono.defer(() -> Mono.just(new StreamContext(e, messageIdGenerator.generate())))
                 .flatMap(ctx ->
@@ -64,20 +64,20 @@ public class GenerateReplyProjection {
                                 .flatMap(content -> saveMessage(ctx, content))
                 )
                 .doOnError(error -> log.error("Failed to generate reply (actor={}, type={}, prompt={})",
-                        e.actor().getName(), e.chatId(), e.prompt(), error))
+                        e.actor(), e.chatId(), e.prompt(), error))
                 .onErrorResume(error -> Mono.empty())
                 .then();
     }
 
     private void emitChunk(StreamContext ctx, String chunk) {
         Message<String> message =
-                Message.create(ctx.messageId(), ctx.e().chatId(), ctx.e().actor().getName(), Role.ASSISTANT, Instant.now(), chunk);
+                Message.response(ctx.messageId(), ctx.e().chatId(), ctx.e().actor(), Role.ASSISTANT, Instant.now(), chunk);
 
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
 
         if (emitResult.isFailure()) {
             log.debug("Failed to emit chunk (actor={}, type={}, messageId={}) -> ({})",
-                    ctx.e.actor().getName(), ctx.e.chatId(), ctx.messageId, emitResult);
+                    ctx.e.actor(), ctx.e.chatId(), ctx.messageId, emitResult);
         }
     }
 
@@ -95,15 +95,15 @@ public class GenerateReplyProjection {
 
     private Mono<Message<String>> saveMessage(StreamContext ctx, String content) {
         MessageObject<String> mo = MessageObject.create(
-                Role.ASSISTANT, ctx.e.chatId(), ctx.messageId(), ctx.e.actor().getName(), Instant.now(), content);
+                Role.ASSISTANT, ctx.e.chatId(), ctx.e.actor(), ctx.messageId(), Instant.now(), content);
 
         return messageHistoryRepository.save(mo)
-                .map(saved -> Message.create(
-                        saved.getId(), saved.getChatId(), ctx.e.actor().getName(),
+                .map(saved -> Message.response(
+                        saved.getId(), saved.getChatId(), ctx.e.actor(),
                         saved.getRole(), saved.getCreatedAt(), saved.getContent()))
                 .onErrorResume(Exceptions::isDuplicateKey, error -> {
-                    log.error("Failed to save reply (actor={}, chatId={}, messageId={}, prompt={})",
-                            ctx.e.actor().getName(), ctx.e.chatId(), ctx.messageId(), ctx.e().prompt().content(), error);
+                    log.error("Failed to save reply (actor={}, chatId={}, prompt={}, prompt={})",
+                            ctx.e.actor(), ctx.e.chatId(), ctx.messageId(), ctx.e().prompt(), error);
                     return Mono.empty();
                 });
     }

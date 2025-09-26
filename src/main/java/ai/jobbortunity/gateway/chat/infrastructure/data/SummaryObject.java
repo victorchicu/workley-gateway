@@ -1,19 +1,19 @@
 package ai.jobbortunity.gateway.chat.infrastructure.data;
 
-public class SummaryObject<T> {
-    private T message;
+public class SummaryObject {
+    private String title;
 
-    public static <T> SummaryObject<T> create(T content) {
-        return new SummaryObject<T>()
-                .setMessage(content);
+    public static SummaryObject create(String content) {
+        return new SummaryObject()
+                .setTitle(content);
     }
 
-    public T getMessage() {
-        return message;
+    public String getTitle() {
+        return title;
     }
 
-    public SummaryObject<T> setMessage(T message) {
-        this.message = message;
+    public SummaryObject setTitle(String title) {
+        this.title = title;
         return this;
     }
 }

@@ -30,18 +30,18 @@ public class GenerateReplyWorkflow {
                 .jitter(0.25)
                 .doBeforeRetry(retrySignal ->
                         log.warn("Retrying save embedding (actor={}, type={}, reference={}) attempt #{} due to {}",
-                                e.actor().getName(), e.getClass(), e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString())
+                                e.actor(), e.getClass(), e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString())
                 );
         return commandDispatcher
-                .dispatch(e.actor(), new SaveEmbeddingCommand(e.getClass().getName(), e.chatId(), e.prompt().content()))
+                .dispatch(e.actor(), new SaveEmbeddingCommand(e.getClass().getName(), e.chatId(), e.prompt()))
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(embeddingRetry)
                 .doOnSuccess(result ->
                         log.info("Dispatch save embedding command (author={}, type={}, reference={})",
-                                e.actor().getName(), e.getClass(), e.chatId()))
+                                e.actor(), e.getClass(), e.chatId()))
                 .onErrorResume(error -> {
                     log.error("Save embedding failed even after all retry attempts (actor={}, type={}, reference={})",
-                            e.actor().getName(), e.getClass(), e.chatId(), error);
+                            e.actor(), e.getClass(), e.chatId(), error);
                     return Mono.empty();
                 })
                 .then();

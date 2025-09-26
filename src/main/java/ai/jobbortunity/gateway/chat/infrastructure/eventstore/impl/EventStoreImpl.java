@@ -19,7 +19,7 @@ public class EventStoreImpl implements EventStore {
     }
 
     @Override
-    public <T extends ApplicationEvent> Mono<EventObject<T>> save(Principal actor, T data) {
+    public <T extends ApplicationEvent> Mono<EventObject<T>> save(String actor, T data) {
         EventObject<T> eventObject =
                 new EventObject<T>()
                         .setEventData(data);

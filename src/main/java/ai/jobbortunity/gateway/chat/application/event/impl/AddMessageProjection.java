@@ -22,12 +22,12 @@ public class AddMessageProjection {
     }
 
     private static Message<String> toMessage(MessageObject<String> source) {
-        return Message.create(source.getId(), source.getChatId(), source.getAuthorId(), source.getRole(), source.getCreatedAt(), source.getContent());
+        return Message.response(source.getId(), source.getChatId(), source.getOwnedBy(), source.getRole(), source.getCreatedAt(), source.getContent());
     }
 
     private static MessageObject<String> createObject(AddMessageEvent source) {
         return MessageObject.create(
-                source.message().role(), source.message().chatId(), source.message().id(), source.actor().getName(), source.message().createdAt(), source.message().content()
+                source.message().role(), source.message().chatId(), source.actor(), source.message().id(), source.message().createdAt(), source.message().content()
         );
     }
 
@@ -37,12 +37,12 @@ public class AddMessageProjection {
         return messageHistoryRepository.save(createObject(e))
                 .map(message -> {
                     log.info("Message was saved successfully (actor={}, chatId={}, messageId={})",
-                            message.getAuthorId(), message.getChatId(), message.getMessageId());
+                            message.getOwnedBy(), message.getChatId(), message.getMessageId());
                     return toMessage(message);
                 })
                 .onErrorResume(Exceptions::isDuplicateKey, error -> {
-                    log.error("Failed to add message (actor={}, chatId={}, messageId={})",
-                            e.actor().getName(), e.chatId(), e.message().id(), error);
+                    log.error("Failed to add prompt (actor={}, chatId={}, messageId={})",
+                            e.actor(), e.chatId(), e.message().id(), error);
                     return Mono.empty();
                 })
                 .then();

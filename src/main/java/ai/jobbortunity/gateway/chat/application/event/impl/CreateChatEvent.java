@@ -5,5 +5,5 @@ import ai.jobbortunity.gateway.chat.application.event.ApplicationEvent;
 
 import java.security.Principal;
 
-public record CreateChatEvent(Principal actor, String chatId, Message<String> message) implements ApplicationEvent {
+public record CreateChatEvent(String actor, String chatId, String prompt) implements ApplicationEvent {
 }

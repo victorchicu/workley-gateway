@@ -21,7 +21,7 @@ public class CommandDispatcher {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Command, R extends CommandResult> Mono<R> dispatch(Principal actor, T command) {
+    public <T extends Command, R extends CommandResult> Mono<R> dispatch(String actor, T command) {
         CommandHandler<T, R> commandHandler = (CommandHandler<T, R>) handlers.get(command.getClass());
 
         if (commandHandler == null) {

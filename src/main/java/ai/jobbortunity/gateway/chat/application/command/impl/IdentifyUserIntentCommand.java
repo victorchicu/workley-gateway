@@ -1,4 +1,8 @@
 package ai.jobbortunity.gateway.chat.application.command.impl;
 
-public class IdentifyUserIntentCommand {
+import ai.jobbortunity.gateway.chat.application.command.Command;
+import ai.jobbortunity.gateway.chat.application.command.Message;
+
+public record IdentifyUserIntentCommand(String chatId, Message<String> prompt) implements Command {
+
 }

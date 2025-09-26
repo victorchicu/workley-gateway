@@ -2,11 +2,9 @@ package ai.jobbortunity.gateway.chat.application.command.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.CommandHandler;
 import ai.jobbortunity.gateway.chat.application.command.Message;
-import ai.jobbortunity.gateway.chat.application.command.Role;
 import ai.jobbortunity.gateway.chat.application.event.impl.CreateChatEvent;
 import ai.jobbortunity.gateway.chat.application.exception.ApplicationException;
 import ai.jobbortunity.gateway.chat.application.service.IdGenerator;
-import ai.jobbortunity.gateway.chat.infrastructure.data.EventObject;
 import ai.jobbortunity.gateway.chat.infrastructure.eventstore.EventStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +14,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
+import java.util.UUID;
 
 @Component
 public class CreateChatCommandHandler implements CommandHandler<CreateChatCommand, CreateChatCommandResult> {
@@ -39,31 +38,29 @@ public class CreateChatCommandHandler implements CommandHandler<CreateChatComman
     }
 
     @Override
-    public Mono<CreateChatCommandResult> handle(Principal actor, CreateChatCommand command) {
-        String chatId = randomIdGenerator.generate();
-
-        Message<String> message =
-                Message.create(randomIdGenerator.generate(), chatId, actor.getName(), Role.ANONYMOUS, command.prompt());
-
-        CreateChatEvent createChatEvent =
-                new CreateChatEvent(actor, chatId, message);
-
-        return Mono.defer(() ->
-                        eventStore.save(actor, createChatEvent)
-                                .map((EventObject<CreateChatEvent> eventObject) -> {
-                                    applicationEventPublisher.publishEvent(eventObject.getEventData());
-                                    return CreateChatCommandResult.response(chatId, message);
-                                })
-                )
-                .as(transactionalOperator::transactional)
-                .onErrorMap(error -> {
-                    log.error("Oops! Could not create chat.", error);
-                    return new ApplicationException("Oops! Could not create chat.");
-                });
+    public Class<CreateChatCommand> supported() {
+        return CreateChatCommand.class;
     }
 
     @Override
-    public Class<CreateChatCommand> supported() {
-        return CreateChatCommand.class;
+    public Mono<CreateChatCommandResult> handle(String actor, CreateChatCommand command) {
+        return Mono.defer(() -> {
+            String chatId = randomIdGenerator.generate();
+
+            Message<String> dummy =
+                    Message.anonymous(UUID.randomUUID().toString(), chatId, actor, command.prompt());
+
+            CreateChatEvent createChatEvent = new CreateChatEvent(actor, chatId, command.prompt());
+
+            Mono<CreateChatCommandResult> tx =
+                    transactionalOperator.transactional(
+                            eventStore.save(actor, createChatEvent)
+                                    .thenReturn(CreateChatCommandResult.response(chatId, dummy)));
+
+            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(createChatEvent));
+        }).onErrorMap(error -> {
+            log.error("Oops! Could not create chat.", error);
+            return new ApplicationException("Oops! Could not create chat.");
+        });
     }
 }

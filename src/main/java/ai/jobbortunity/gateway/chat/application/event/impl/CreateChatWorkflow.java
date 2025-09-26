@@ -1,7 +1,10 @@
 package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
+import ai.jobbortunity.gateway.chat.application.command.Message;
+import ai.jobbortunity.gateway.chat.application.command.Role;
 import ai.jobbortunity.gateway.chat.application.command.impl.AddMessageCommand;
+import ai.jobbortunity.gateway.chat.application.service.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -17,9 +20,14 @@ import java.time.Duration;
 public class CreateChatWorkflow {
     private static final Logger log = LoggerFactory.getLogger(CreateChatWorkflow.class);
 
+    private final IdGenerator randomIdGenerator;
     private final CommandDispatcher commandDispatcher;
 
-    CreateChatWorkflow(CommandDispatcher commandDispatcher) {
+    CreateChatWorkflow(
+            IdGenerator randomIdGenerator,
+            CommandDispatcher commandDispatcher
+    ) {
+        this.randomIdGenerator = randomIdGenerator;
         this.commandDispatcher = commandDispatcher;
     }
 
@@ -29,18 +37,21 @@ public class CreateChatWorkflow {
         RetryBackoffSpec addMessageRetry =
                 Retry.backoff(3, Duration.ofMillis(200))
                         .doBeforeRetry(retrySignal ->
-                                log.warn("Retrying adding message (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.actor().getName(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
+                                log.warn("Retrying adding prompt (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
+                                        e.actor(), e.chatId(), e.prompt(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
         return commandDispatcher
-                .dispatch(e.actor(), new AddMessageCommand(e.chatId(), e.message()))
+                .dispatch(e.actor(),
+                        new AddMessageCommand(e.chatId(),
+                                Message.anonymous(randomIdGenerator.generate(), e.chatId(), e.actor(), e.prompt()))
+                )
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(addMessageRetry)
                 .doOnSuccess(result ->
-                        log.info("Dispatch add message command (actor={}, chatId={}, messageId={})",
-                                e.actor().getName(), e.chatId(), e.message().id()))
+                        log.info("Dispatch add prompt command (actor={}, chatId={}, prompt={})",
+                                e.actor(), e.chatId(), e.prompt()))
                 .onErrorResume(error -> {
-                    log.error("Failed to add message even after all retry attempts (actor={}, chatId={}, messageId={})",
-                            e.actor().getName(), e.chatId(), e.message().id(), error);
+                    log.error("Failed to add prompt even after all retry attempts (actor={}, chatId={}, prompt={})",
+                            e.actor(), e.chatId(), e.prompt(), error);
                     return Mono.empty();
                 })
                 .then();

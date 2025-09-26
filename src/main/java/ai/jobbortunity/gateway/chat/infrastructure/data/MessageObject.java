@@ -13,18 +13,18 @@ public class MessageObject<T> {
     private String id;
     private Role role;
     private String chatId;
+    private String ownedBy;
     @Indexed(unique = true)
     private String messageId;
-    private String authorId;
     private Instant createdAt;
     private T content;
 
-    public static <T> MessageObject<T> create(Role role, String chatId, String messageId, String authorId, Instant createdAt, T content) {
+    public static <T> MessageObject<T> create(Role role, String chatId, String ownedBy, String messageId, Instant createdAt, T content) {
         return new MessageObject<T>()
                 .setRole(role)
                 .setChatId(chatId)
                 .setMessageId(messageId)
-                .setAuthorId(authorId)
+                .setOwnedBy(ownedBy)
                 .setCreatedAt(createdAt)
                 .setContent(content);
     }
@@ -65,12 +65,12 @@ public class MessageObject<T> {
         return this;
     }
 
-    public String getAuthorId() {
-        return authorId;
+    public String getOwnedBy() {
+        return ownedBy;
     }
 
-    public MessageObject<T> setAuthorId(String authorId) {
-        this.authorId = authorId;
+    public MessageObject<T> setOwnedBy(String ownedBy) {
+        this.ownedBy = ownedBy;
         return this;
     }
 
@@ -98,9 +98,9 @@ public class MessageObject<T> {
                 "id='" + id + '\'' +
                 ", role=" + role +
                 ", chatId='" + chatId + '\'' +
-                ", authorId='" + authorId + '\'' +
+                ", ownedBy='" + ownedBy + '\'' +
                 ", createdAt=" + createdAt +
-                ", message=" + content +
+                ", prompt=" + content +
                 '}';
     }
 }
