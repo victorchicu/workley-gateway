@@ -59,7 +59,8 @@ public class AddMessageCommandHandler implements CommandHandler<AddMessageComman
                         })
         ).onErrorMap(error -> {
             log.error("Oops! Could not add your prompt. chatId={}", command.chatId(), error);
-            return (error instanceof ApplicationException) ? error
+            return error instanceof ApplicationException
+                    ? error
                     : new ApplicationException("Oops! Could not add your prompt.", error);
         });
     }

@@ -1,6 +1,6 @@
 package ai.jobbortunity.gateway.chat.application.event.impl;
 
-import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
+import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.ChatSessionRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.ChatObject;
 import ai.jobbortunity.gateway.chat.infrastructure.data.ParticipantObject;
@@ -29,7 +29,7 @@ public class CreateChatProjection {
     public Mono<Void> on(CreateChatEvent e) {
         return chatSessionRepository.save(ChatObject.create(e.chatId(), SummaryObject.create(e.prompt()), Set.of(ParticipantObject.create(e.actor()))))
                 .doOnSuccess((ChatObject chatObject) -> log.info("Chat created (actor={}, chatId={})", e.actor(), e.chatId()))
-                .onErrorResume(Exceptions::isDuplicateKey, error -> {
+                .onErrorResume(InfrastructureExceptions::isDuplicateKey, error -> {
                     log.error("Failed to create chat (actor={}, chatId={})", e.actor(), e.chatId(), error);
                     return Mono.empty();
                 })

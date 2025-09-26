@@ -1,6 +1,6 @@
 package ai.jobbortunity.gateway.chat.application.event.impl;
 
-import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
+import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.EmbeddingsRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.EmbeddingObject;
 import org.slf4j.Logger;
@@ -66,7 +66,7 @@ public class SaveEmbeddingProjection {
                             .doOnSuccess(saved ->
                                     log.info("Embedding saved (actor={}, type={}, reference={})",
                                             saved.getActor(), saved.getType(), saved.getReference()))
-                            .onErrorResume(Exceptions::isDuplicateKey, error -> {
+                            .onErrorResume(InfrastructureExceptions::isDuplicateKey, error -> {
                                 log.info("Embedding already exists (actor={}, type={}, reference={})",
                                         e.actor(), e.type(), e.reference());
                                 return Mono.empty();

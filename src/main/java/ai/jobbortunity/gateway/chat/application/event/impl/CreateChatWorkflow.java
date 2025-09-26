@@ -34,8 +34,11 @@ public class CreateChatWorkflow {
     @EventListener
     @Order(1)
     public Mono<Void> on(CreateChatEvent e) {
-        RetryBackoffSpec addMessageRetry =
-                Retry.backoff(3, Duration.ofMillis(200))
+        RetryBackoffSpec retry =
+                Retry.backoff(5, Duration.ofMillis(500))
+                        .jitter(0.5)
+                        .filter(this::isRetryable)
+                        .maxBackoff(Duration.ofSeconds(5))
                         .doBeforeRetry(retrySignal ->
                                 log.warn("Retrying adding prompt (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
                                         e.actor(), e.chatId(), e.prompt(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
@@ -45,7 +48,7 @@ public class CreateChatWorkflow {
                                 Message.anonymous(randomIdGenerator.generate(), e.chatId(), e.actor(), e.prompt()))
                 )
                 .timeout(Duration.ofSeconds(5))
-                .retryWhen(addMessageRetry)
+                .retryWhen(retry)
                 .doOnSuccess(result ->
                         log.info("Dispatch add prompt command (actor={}, chatId={}, prompt={})",
                                 e.actor(), e.chatId(), e.prompt()))
@@ -55,5 +58,9 @@ public class CreateChatWorkflow {
                     return Mono.empty();
                 })
                 .then();
+    }
+
+    private boolean isRetryable(Throwable throwable) {
+        return true;
     }
 }

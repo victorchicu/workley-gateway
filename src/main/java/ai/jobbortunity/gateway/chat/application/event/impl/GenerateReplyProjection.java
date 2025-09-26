@@ -2,7 +2,7 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
 import ai.jobbortunity.gateway.chat.application.command.Role;
-import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
+import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.application.service.IdGenerator;
 import ai.jobbortunity.gateway.chat.infrastructure.MessageHistoryRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.MessageObject;
@@ -101,7 +101,7 @@ public class GenerateReplyProjection {
                 .map(saved -> Message.response(
                         saved.getId(), saved.getChatId(), ctx.e.actor(),
                         saved.getRole(), saved.getCreatedAt(), saved.getContent()))
-                .onErrorResume(Exceptions::isDuplicateKey, error -> {
+                .onErrorResume(InfrastructureExceptions::isDuplicateKey, error -> {
                     log.error("Failed to save reply (actor={}, chatId={}, prompt={}, prompt={})",
                             ctx.e.actor(), ctx.e.chatId(), ctx.messageId(), ctx.e().prompt(), error);
                     return Mono.empty();

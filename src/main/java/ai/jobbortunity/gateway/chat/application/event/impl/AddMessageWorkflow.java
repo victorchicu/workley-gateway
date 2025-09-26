@@ -3,6 +3,7 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
 import ai.jobbortunity.gateway.chat.application.command.CommandResult;
 import ai.jobbortunity.gateway.chat.application.command.impl.GenerateReplyCommand;
+import ai.jobbortunity.gateway.chat.application.command.impl.IdentifyIntentCommand;
 import ai.jobbortunity.gateway.chat.application.command.impl.SaveEmbeddingCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,52 +28,29 @@ public class AddMessageWorkflow {
     @EventListener
     @Order(1)
     public Mono<Void> on(AddMessageEvent e) {
-        var embeddingRetry =
-                Retry.backoff(3, Duration.ofMillis(200))
-                        .maxBackoff(Duration.ofSeconds(2))
-                        .jitter(0.25)
-                        .doBeforeRetry(rs ->
-                                log.warn("Retrying save embedding (actor={}, type={}, reference={}) attempt #{} due to {}",
-                                        e.actor(), e.getClass(), e.message().id(), rs.totalRetries() + 1, rs.failure().toString()));
-
-        var replyRetry =
-                Retry.backoff(1, Duration.ofMillis(300))
-                        .jitter(0.25)
-                        .maxBackoff(Duration.ofSeconds(1))
+        var intentRetry =
+                Retry.backoff(5, Duration.ofMillis(500))
+                        .jitter(0.50)
+                        .maxBackoff(Duration.ofSeconds(5))
                         .doBeforeRetry(retrySignal ->
-                                log.warn("Retrying generating reply (actor={}, chatId={}, messageId={}) attempt #{} due to {}",
-                                        e.actor(), e.chatId(), e.message().id(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
+                                log.warn("Retrying identify intent (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
+                                        e.actor(), e.chatId(), e.message().content(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
 
-        Mono<CommandResult> saveEmbedding =
+        Mono<CommandResult> identifyIntent =
                 commandDispatcher
-                        .dispatch(e.actor(), new SaveEmbeddingCommand(e.getClass().getName(), e.message().id(), e.message().content()))
+                        .dispatch(e.actor(), new IdentifyIntentCommand(e.chatId(), e.message()))
                         .timeout(Duration.ofSeconds(5))
-                        .retryWhen(embeddingRetry)
-                        .doOnSuccess(result ->
-                                log.info("Dispatch save embedding command (actor={}, type={}, reference={})",
-                                        e.actor(), e.getClass(), e.message().id()))
-                        .onErrorResume(error -> {
-                            log.error("Save embedding failed even after all retry attempts (actor={}, type={}, reference={})",
-                                    e.actor(), e.getClass(), e.message().id(), error);
-                            return Mono.empty();
-                        });
-
-        Mono<CommandResult> generateReply =
-                commandDispatcher
-                        .dispatch(e.actor(), new GenerateReplyCommand(e.chatId(), e.message()))
-                        .timeout(Duration.ofSeconds(30))
-                        .retryWhen(replyRetry)
+                        .retryWhen(intentRetry)
                         .doOnSuccess(v ->
-                                log.info("Dispatch generate reply command (actor={}, messageId={}, prompt={})",
-                                        e.actor(), e.message().id(), e.message().content()))
+                                log.info("Dispatch identify intent command (actor={}, chatId={}, prompt={})",
+                                        e.actor(), e.chatId(), e.message().content()))
                         .onErrorResume(error -> {
-                            log.error("Generate reply failed even after all retry attempts (actor={}, messageId={}, prompt={})",
-                                    e.actor(), e.message().id(), e.message().content(), error);
+                            log.error("Identify intent failed even after all retry attempts (actor={}, chatId={}, prompt={})",
+                                    e.actor(), e.chatId(), e.message().content(), error);
                             return Mono.empty();
                         });
 
-        return saveEmbedding
-                .then(generateReply)
+        return identifyIntent
                 .then();
     }
 }

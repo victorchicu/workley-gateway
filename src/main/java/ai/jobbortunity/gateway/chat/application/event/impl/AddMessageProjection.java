@@ -1,7 +1,7 @@
 package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
-import ai.jobbortunity.gateway.chat.application.exception.Exceptions;
+import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.MessageHistoryRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.MessageObject;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class AddMessageProjection {
                             message.getOwnedBy(), message.getChatId(), message.getMessageId());
                     return toMessage(message);
                 })
-                .onErrorResume(Exceptions::isDuplicateKey, error -> {
+                .onErrorResume(InfrastructureExceptions::isDuplicateKey, error -> {
                     log.error("Failed to add prompt (actor={}, chatId={}, messageId={})",
                             e.actor(), e.chatId(), e.message().id(), error);
                     return Mono.empty();
