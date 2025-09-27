@@ -3,6 +3,7 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
 import ai.jobbortunity.gateway.chat.application.command.CommandResult;
 import ai.jobbortunity.gateway.chat.application.command.impl.GenerateReplyCommand;
+import ai.jobbortunity.gateway.chat.application.command.impl.SaveEmbeddingCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -26,6 +27,28 @@ public class AddMessageWorkflow {
     @EventListener
     @Order(1)
     public Mono<Void> on(AddMessageEvent e) {
+        var embeddingRetry =
+                Retry.backoff(5, Duration.ofMillis(500))
+                        .jitter(0.50)
+                        .maxBackoff(Duration.ofSeconds(5))
+                        .doBeforeRetry(retrySignal ->
+                                log.warn("Retrying save embedding (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
+                                        e.actor(), e.chatId(), e.message(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
+
+        Mono<CommandResult> saveEmbedding =
+                commandDispatcher
+                        .dispatch(e.actor(), new SaveEmbeddingCommand(e.message().content()))
+                        .timeout(Duration.ofSeconds(5))
+                        .retryWhen(embeddingRetry)
+                        .doOnSuccess(v ->
+                                log.info("Dispatch save embedding command (actor={}, chatId={}, prompt={})",
+                                        e.actor(), e.chatId(), e.message().content()))
+                        .onErrorResume(error -> {
+                            log.error("Save embedding failed even after all retry attempts (actor={}, chatId={}, prompt={})",
+                                    e.actor(), e.chatId(), e.message().content(), error);
+                            return Mono.empty();
+                        });
+
         var replyRetry =
                 Retry.backoff(5, Duration.ofMillis(500))
                         .jitter(0.50)
@@ -48,7 +71,8 @@ public class AddMessageWorkflow {
                             return Mono.empty();
                         });
 
-        return generateReply
+        return saveEmbedding
+                .then(generateReply)
                 .then();
     }
 }

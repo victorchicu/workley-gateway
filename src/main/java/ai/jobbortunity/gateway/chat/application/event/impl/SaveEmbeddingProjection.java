@@ -44,7 +44,7 @@ public class SaveEmbeddingProjection {
     @EventListener
     @Order(0)
     public Mono<EmbeddingObject> handle(SaveEmbeddingEvent e) {
-        var document = new Document(e.reference(), e.text(), Collections.emptyMap());
+        var document = new Document(e.text(), e.metadata());
         return Mono.fromCallable(() -> openAiEmbeddingModel.embed(
                         List.of(document),
                         EmbeddingOptionsBuilder.builder()
@@ -58,19 +58,16 @@ public class SaveEmbeddingProjection {
                 .filter(Objects::nonNull)
                 .flatMap(vector -> {
                     var embedding = new EmbeddingObject()
-                            .setType(e.type())
                             .setActor(e.actor())
-                            .setReference(e.reference())
                             .setModel(openAiEmbeddingOption.getModel())
                             .setDimension(openAiEmbeddingOption.getDimension())
                             .setEmbedding(vector);
                     return embeddingsRepository.save(embedding)
                             .doOnSuccess(saved ->
-                                    log.info("Embedding saved (actor={}, type={}, reference={})",
-                                            saved.getActor(), saved.getType(), saved.getReference()))
+                                    log.info("Embedding saved (actor={})", saved.getActor())
+                            )
                             .onErrorResume(InfrastructureExceptions::isDuplicateKey, error -> {
-                                log.info("Embedding already exists (actor={}, type={}, reference={})",
-                                        e.actor(), e.type(), e.reference());
+                                log.info("Embedding already exists (actor={})", e.actor());
                                 return Mono.empty();
                             });
                 })
@@ -79,13 +76,11 @@ public class SaveEmbeddingProjection {
                                 .maxBackoff(java.time.Duration.ofSeconds(2))
                                 .jitter(0.25)
                                 .doBeforeRetry(retrySignal -> {
-                                    log.warn("Retrying embedding save (actor={}, type={}, reference={}) attempt #{} due to {}",
-                                            e.actor(), e.type(), e.reference(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
+                                    log.warn("Retrying embedding save (actor={}) attempt #{} due to {}",
+                                            e.actor(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
                                 })
                 )
-                .doOnError(error ->
-                        log.error("Embedding failed (actor={}, type={}, reference={})",
-                                e.actor(), e.type(), e.reference(), error))
+                .doOnError(error -> log.error("Embedding failed (actor={}})", e.actor(), error))
                 .onErrorResume(err -> Mono.empty());
     }
 

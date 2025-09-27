@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
-import java.security.Principal;
+import java.util.Collections;
 
 @Component
 public class SaveEmbeddingCommandHandler implements CommandHandler<SaveEmbeddingCommand, SaveEmbeddingCommandResult> {
@@ -40,7 +40,7 @@ public class SaveEmbeddingCommandHandler implements CommandHandler<SaveEmbedding
     public Mono<SaveEmbeddingCommandResult> handle(String actor, SaveEmbeddingCommand command) {
         return Mono.defer(() -> {
             SaveEmbeddingEvent saveEmbeddingEvent =
-                    new SaveEmbeddingEvent(actor, command.type(), command.reference(), command.text());
+                    new SaveEmbeddingEvent(actor, command.text(), Collections.emptyMap());
 
             Mono<SaveEmbeddingCommandResult> tx = transactionalOperator.transactional(
                     eventStore.save(actor, saveEmbeddingEvent)
@@ -49,7 +49,7 @@ public class SaveEmbeddingCommandHandler implements CommandHandler<SaveEmbedding
 
             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(saveEmbeddingEvent));
         }).onErrorMap(error -> {
-            log.error("Oops! Could not save embedding. type={}, reference={}", command.type(), command.reference(), error);
+            log.error("Oops! Could not save embedding. text={}", command.text(), error);
             return (error instanceof ApplicationException) ? error
                     : new ApplicationException("Oops! Something went wrong.", error);
         });

@@ -2,5 +2,7 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.event.ApplicationEvent;
 
-public record SaveEmbeddingEvent(String actor, String type, String reference, String text) implements ApplicationEvent {
+import java.util.Map;
+
+public record SaveEmbeddingEvent(String actor, String text, Map<String, Object> metadata) implements ApplicationEvent {
 }

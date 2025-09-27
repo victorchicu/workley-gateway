@@ -13,6 +13,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -32,12 +33,14 @@ public class GenerateReplyProjection {
     private final IdGenerator messageIdGenerator;
     private final OpenAiChatModel openAiChatModel;
     private final MessageHistoryRepository messageHistoryRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final Sinks.Many<Message<String>> chatSink;
 
     public GenerateReplyProjection(
             IdGenerator messageIdGenerator,
             OpenAiChatModel openAiChatModel,
             MessageHistoryRepository messageHistoryRepository,
+            ApplicationEventPublisher applicationEventPublisher,
             Sinks.Many<Message<String>> chatSink
 
     ) {
@@ -45,6 +48,7 @@ public class GenerateReplyProjection {
         this.openAiChatModel = openAiChatModel;
         this.messageIdGenerator = messageIdGenerator;
         this.messageHistoryRepository = messageHistoryRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @EventListener
@@ -63,9 +67,15 @@ public class GenerateReplyProjection {
                                 .reduce(new StringBuilder(), StringBuilder::append)
                                 .map(StringBuilder::toString)
                                 .filter(content -> !content.isEmpty())
-                                .flatMap(content -> saveMessage(ctx, content))
+                                .flatMap(content -> {
+                                    return saveMessage(ctx, content)
+                                            .doOnNext(message ->
+                                                    applicationEventPublisher.publishEvent(
+                                                            new ReplyGeneratedEvent(e.actor(), e.chatId(), message.content()))
+                                            );
+                                })
                 )
-                .doOnError(error -> log.error("Failed to generate reply (actor={}, type={}, prompt={})",
+                .doOnError(error -> log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
                         e.actor(), e.chatId(), e.prompt(), error))
                 .onErrorResume(error -> Mono.empty())
                 .then();
@@ -78,15 +88,15 @@ public class GenerateReplyProjection {
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
 
         if (emitResult.isFailure()) {
-            log.debug("Failed to emit chunk (actor={}, type={}, messageId={}) -> ({})",
-                    ctx.e.actor(), ctx.e.chatId(), ctx.messageId, emitResult);
+            log.debug("Failed to emit chunk (actor={}, chatId={}, chunk={}) -> ({})",
+                    ctx.e().actor(), ctx.e().chatId(), chunk, emitResult);
         }
     }
 
     private String extractText(ChatResponse response) {
         if (response == null) return "";
         List<Generation> generations = response.getResults();
-        if (generations.isEmpty()) return "";
+        if (generations == null || generations.isEmpty()) return "";
         return generations.stream()
                 .filter(Objects::nonNull)
                 .map(Generation::getOutput)
@@ -97,15 +107,15 @@ public class GenerateReplyProjection {
 
     private Mono<Message<String>> saveMessage(StreamContext ctx, String content) {
         MessageObject<String> mo = MessageObject.create(
-                Role.ASSISTANT, ctx.e.chatId(), ctx.e.actor(), ctx.messageId(), Instant.now(), content);
+                Role.ASSISTANT, ctx.e().chatId(), ctx.e().actor(), ctx.messageId(), Instant.now(), content);
 
         return messageHistoryRepository.save(mo)
                 .map(saved -> Message.response(
-                        saved.getId(), saved.getChatId(), ctx.e.actor(),
+                        saved.getId(), saved.getChatId(), ctx.e().actor(),
                         saved.getRole(), saved.getCreatedAt(), saved.getContent()))
                 .onErrorResume(InfrastructureExceptions::isDuplicateKey, error -> {
                     log.error("Failed to save reply (actor={}, chatId={}, prompt={}, prompt={})",
-                            ctx.e.actor(), ctx.e.chatId(), ctx.messageId(), ctx.e().prompt(), error);
+                            ctx.e().actor(), ctx.e().chatId(), ctx.messageId(), ctx.e().prompt(), error);
                     return Mono.empty();
                 });
     }

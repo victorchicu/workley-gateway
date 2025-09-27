@@ -12,8 +12,6 @@ public class EmbeddingObject {
     private String id;
     private String model;
     private String actor;
-    private String type;
-    private String reference;
     private Integer dimension;
     private float[] embedding;
     @CreatedDate
@@ -43,24 +41,6 @@ public class EmbeddingObject {
 
     public EmbeddingObject setActor(String actor) {
         this.actor = actor;
-        return this;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public EmbeddingObject setType(String type) {
-        this.type = type;
-        return this;
-    }
-
-    public String getReference() {
-        return reference;
-    }
-
-    public EmbeddingObject setReference(String reference) {
-        this.reference = reference;
         return this;
     }
 
