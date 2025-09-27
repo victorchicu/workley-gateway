@@ -4,6 +4,7 @@ import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
 import ai.jobbortunity.gateway.chat.application.command.CommandResult;
 import ai.jobbortunity.gateway.chat.application.command.impl.GenerateReplyCommand;
 import ai.jobbortunity.gateway.chat.application.command.impl.SaveEmbeddingCommand;
+import ai.jobbortunity.gateway.chat.application.service.IntentClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -18,9 +19,11 @@ import java.time.Duration;
 public class AddMessageWorkflow {
     private static final Logger log = LoggerFactory.getLogger(AddMessageWorkflow.class);
 
+    private final IntentClassifier intentClassifier;
     private final CommandDispatcher commandDispatcher;
 
-    public AddMessageWorkflow(CommandDispatcher commandDispatcher) {
+    public AddMessageWorkflow(IntentClassifier intentClassifier, CommandDispatcher commandDispatcher) {
+        this.intentClassifier = intentClassifier;
         this.commandDispatcher = commandDispatcher;
     }
 
@@ -56,6 +59,8 @@ public class AddMessageWorkflow {
                         .doBeforeRetry(retrySignal ->
                                 log.warn("Retrying generating reply (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
                                         e.actor(), e.chatId(), e.message(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
+
+
 
         Mono<CommandResult> generateReply =
                 commandDispatcher
