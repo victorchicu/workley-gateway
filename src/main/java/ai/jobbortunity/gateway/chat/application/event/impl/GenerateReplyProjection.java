@@ -54,7 +54,9 @@ public class GenerateReplyProjection {
     @EventListener
     @Order(0)
     public Mono<Void> handle(GenerateReplyEvent e) {
-        Prompt prompt = Prompt.builder().content(e.prompt()).build();
+        Prompt prompt = Prompt.builder()
+                .content(e.prompt())
+                .build();
 
         return Mono.defer(() -> Mono.just(new StreamContext(e, messageIdGenerator.generate())))
                 .flatMap(ctx ->
