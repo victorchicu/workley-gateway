@@ -38,23 +38,6 @@ public class AddMessageWorkflow {
                         .jitter(0.50)
                         .maxBackoff(Duration.ofSeconds(5));
 
-        Mono<CommandResult> saveEmbedding =
-                commandDispatcher
-                        .dispatch(e.actor(), new SaveEmbeddingCommand(e.message().content()))
-                        .timeout(Duration.ofSeconds(5))
-                        .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
-                                log.warn("Retrying save embedding (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
-                                        e.actor(), e.chatId(), e.message(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
-                        )
-                        .doOnSuccess(v ->
-                                log.info("Dispatch save embedding command (actor={}, chatId={}, prompt={})",
-                                        e.actor(), e.chatId(), e.message().content()))
-                        .onErrorResume(error -> {
-                            log.error("Save embedding failed even after all retryBackoffSpec attempts (actor={}, chatId={}, prompt={})",
-                                    e.actor(), e.chatId(), e.message().content(), error);
-                            return Mono.empty();
-                        });
-
         Mono<Intent> classifyIntent =
                 intentClassifier.classify(e.message())
                         .timeout(Duration.ofSeconds(5))
@@ -67,29 +50,25 @@ public class AddMessageWorkflow {
                                         e.actor(), e.chatId(), e.message().content(), err))
                         .onErrorReturn(new Intent(IntentType.OTHER));
 
-        Mono<CommandResult> generateReply =
-                classifyIntent
-                        .flatMap(intentType -> {
-                            return commandDispatcher
-                                    .dispatch(e.actor(),
-                                            new GenerateReplyCommand(e.chatId(), intentType, e.message()))
-                                    .timeout(Duration.ofSeconds(5))
-                                    .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
-                                            log.warn("Retrying generating reply (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
-                                                    e.actor(), e.chatId(), e.message().content(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
-                                    )
-                                    .doOnSuccess(v ->
-                                            log.info("Dispatch generate reply command (actor={}, chatId={}, prompt={})",
-                                                    e.actor(), e.chatId(), e.message().content()))
-                                    .onErrorResume(error -> {
-                                        log.error("Generate reply failed even after all retryBackoffSpec attempts (actor={}, chatId={}, prompt={})",
-                                                e.actor(), e.chatId(), e.message().content(), error);
-                                        return Mono.empty();
-                                    });
-                        });
-
-        return saveEmbedding
-                .then(generateReply)
+        return classifyIntent
+                .flatMap(intent -> {
+                    return commandDispatcher
+                            .dispatch(e.actor(),
+                                    new GenerateReplyCommand(e.chatId(), intent, e.message()))
+                            .timeout(Duration.ofSeconds(5))
+                            .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
+                                    log.warn("Retrying generating reply (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
+                                            e.actor(), e.chatId(), e.message().content(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
+                            )
+                            .doOnSuccess(v ->
+                                    log.info("Dispatch generate reply command (actor={}, chatId={}, prompt={})",
+                                            e.actor(), e.chatId(), e.message().content()))
+                            .onErrorResume(error -> {
+                                log.error("Generate reply failed even after all retryBackoffSpec attempts (actor={}, chatId={}, prompt={})",
+                                        e.actor(), e.chatId(), e.message().content(), error);
+                                return Mono.empty();
+                            });
+                })
                 .then();
     }
 }
