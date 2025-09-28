@@ -1,26 +1,20 @@
-package ai.jobbortunity.gateway.chat.application.service.impl;
+package ai.jobbortunity.gateway.chat.application.intent.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
+import ai.jobbortunity.gateway.chat.application.intent.IntentClassifier;
 import ai.jobbortunity.gateway.chat.application.intent.IntentType;
 import ai.jobbortunity.gateway.chat.application.service.Intent;
-import ai.jobbortunity.gateway.chat.application.service.IntentClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class OpenAiIntentClassifier implements IntentClassifier {

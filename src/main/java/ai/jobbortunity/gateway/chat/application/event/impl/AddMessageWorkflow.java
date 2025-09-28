@@ -1,12 +1,10 @@
 package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
-import ai.jobbortunity.gateway.chat.application.command.CommandResult;
 import ai.jobbortunity.gateway.chat.application.command.impl.GenerateReplyCommand;
-import ai.jobbortunity.gateway.chat.application.command.impl.SaveEmbeddingCommand;
 import ai.jobbortunity.gateway.chat.application.intent.IntentType;
 import ai.jobbortunity.gateway.chat.application.service.Intent;
-import ai.jobbortunity.gateway.chat.application.service.IntentClassifier;
+import ai.jobbortunity.gateway.chat.application.intent.IntentClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
