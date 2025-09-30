@@ -2,6 +2,7 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
 import ai.jobbortunity.gateway.chat.application.command.Role;
+import ai.jobbortunity.gateway.chat.application.intent.IntentAiChatOptions;
 import ai.jobbortunity.gateway.chat.application.intent.IntentType;
 import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.application.service.IdGenerator;
@@ -38,7 +39,7 @@ public class GenerateReplyProjection {
     private final IdGenerator messageIdGenerator;
     private final ObjectMapper objectMapper;
     private final OpenAiChatModel openAiChatModel;
-    private final OpenAiChatOptions openAiChatOptions;
+    private final IntentAiChatOptions intentAiChatOptions;
     private final MessageHistoryRepository messageHistoryRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final Sinks.Many<Message<String>> chatSink;
@@ -47,7 +48,7 @@ public class GenerateReplyProjection {
             IdGenerator messageIdGenerator,
             ObjectMapper objectMapper,
             OpenAiChatModel openAiChatModel,
-            OpenAiChatOptions openAiChatOptions,
+            IntentAiChatOptions intentAiChatOptions,
             MessageHistoryRepository messageHistoryRepository,
             ApplicationEventPublisher applicationEventPublisher,
             Sinks.Many<Message<String>> chatSink
@@ -56,7 +57,7 @@ public class GenerateReplyProjection {
         this.chatSink = chatSink;
         this.objectMapper = objectMapper;
         this.openAiChatModel = openAiChatModel;
-        this.openAiChatOptions = openAiChatOptions;
+        this.intentAiChatOptions = intentAiChatOptions;
         this.messageIdGenerator = messageIdGenerator;
         this.messageHistoryRepository = messageHistoryRepository;
         this.applicationEventPublisher = applicationEventPublisher;
@@ -93,16 +94,23 @@ public class GenerateReplyProjection {
     }
 
     private Prompt buildPromptByIntent(GenerateReplyEvent event) {
-        String systemPrompt = switch (event.intent().intentType()) {
-            case JOB_SEARCH -> jobSearchQuery();
-            case CANDIDATE_SEARCH -> candidateSearchQuery();
-            case OFF_TOPIC -> offTopicQuery();
-        };
+        String systemPrompt =
+                switch (event.intent().intentType()) {
+                    case JOB_SEARCH -> applyJobSearchPrompt();
+                    case CANDIDATE_SEARCH -> applyCandidateSearchPrompt();
+                    case OFF_TOPIC -> applyOfftopicPrompt();
+                };
+
         String prompt = buildUserPrompt(event);
-        return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(prompt)), openAiChatOptions);
+
+        OpenAiChatOptions chatOptions = OpenAiChatOptions.builder()
+                .model(intentAiChatOptions.getModel())
+                .build();
+
+        return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(prompt)), chatOptions);
     }
 
-    private String jobSearchQuery() {
+    private String applyJobSearchPrompt() {
         return """
                 You are Jobbortunity's AI assistant, specialized in helping users find job opportunities.
                 
@@ -115,16 +123,13 @@ public class GenerateReplyProjection {
                 Important guidelines:
                 - Be conversational and friendly
                 - Ask one question at a time to avoid overwhelming the user
-                - Always respond in JSON format with the following structure:
-                {
-                  "message": "Your conversational response here"
-                }
+                -
                 
                 Keep responses natural and helpful.
                 """;
     }
 
-    private String candidateSearchQuery() {
+    private String applyCandidateSearchPrompt() {
         return """
                 You are Jobbortunity's AI assistant, specialized in helping employers find suitable candidates.
                 
@@ -136,16 +141,12 @@ public class GenerateReplyProjection {
                 Important guidelines:
                 - Be professional and efficient
                 - Ask one question at a time
-                - Always respond in JSON format with the following structure:
-                {
-                  "message": "Your conversational response here"
-                }
                 
                 Keep responses focused on finding the right talent.
                 """;
     }
 
-    private String offTopicQuery() {
+    private String applyOfftopicPrompt() {
         return """
                 You are Jobbortunity's AI assistant. The user has asked something unrelated to job searching or candidate searching.
                 
@@ -153,12 +154,6 @@ public class GenerateReplyProjection {
                 - Politely redirect them back to Jobbortunity's core features
                 - Briefly explain what you can help with
                 - Be friendly but clear about your limitations
-                
-                Always respond in JSON format with the following structure:
-                {
-                  "message": "Your polite redirection message",
-                  "suggestion": "A helpful suggestion about how you can assist with job/candidate search"
-                }
                 
                 Keep it brief, friendly, and redirect to what you can do.
                 """;
@@ -210,7 +205,8 @@ public class GenerateReplyProjection {
 
     private Mono<Message<String>> saveMessage(StreamContext ctx, String content) {
         MessageObject<String> messageObject = MessageObject.create(
-                Role.ASSISTANT, ctx.e().chatId(), ctx.e().actor(), ctx.messageId(), Instant.now(), content);
+                Role.ASSISTANT, ctx.e().chatId(), ctx.e().actor(), ctx.messageId(), Instant.now(), content
+        );
 
         return messageHistoryRepository.save(messageObject)
                 .map(saved -> Message.response(
