@@ -18,27 +18,26 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 @Component
-@EnableConfigurationProperties(SaveEmbeddingProjection.OpenAiEmbeddingOption.class)
+@EnableConfigurationProperties(SaveEmbeddingProjection.OpenAiEmbeddingOptions.class)
 public class SaveEmbeddingProjection {
     private static final Logger log = LoggerFactory.getLogger(SaveEmbeddingProjection.class);
 
     private final EmbeddingsRepository embeddingsRepository;
     private final OpenAiEmbeddingModel openAiEmbeddingModel;
-    private final OpenAiEmbeddingOption openAiEmbeddingOption;
+    private final OpenAiEmbeddingOptions openAiEmbeddingOptions;
 
     public SaveEmbeddingProjection(
             EmbeddingsRepository embeddingsRepository,
             OpenAiEmbeddingModel openAiEmbeddingModel,
-            OpenAiEmbeddingOption openAiEmbeddingOption
+            OpenAiEmbeddingOptions openAiEmbeddingOptions
     ) {
         this.embeddingsRepository = embeddingsRepository;
         this.openAiEmbeddingModel = openAiEmbeddingModel;
-        this.openAiEmbeddingOption = openAiEmbeddingOption;
+        this.openAiEmbeddingOptions = openAiEmbeddingOptions;
     }
 
     @EventListener
@@ -48,8 +47,8 @@ public class SaveEmbeddingProjection {
         return Mono.fromCallable(() -> openAiEmbeddingModel.embed(
                         List.of(document),
                         EmbeddingOptionsBuilder.builder()
-                                .withModel(openAiEmbeddingOption.getModel())
-                                .withDimensions(openAiEmbeddingOption.getDimension())
+                                .withModel(openAiEmbeddingOptions.getModel())
+                                .withDimensions(openAiEmbeddingOptions.getDimension())
                                 .build(),
                         new TokenCountBatchingStrategy()
                 ))
@@ -59,8 +58,8 @@ public class SaveEmbeddingProjection {
                 .flatMap(vector -> {
                     var embedding = new EmbeddingObject()
                             .setActor(e.actor())
-                            .setModel(openAiEmbeddingOption.getModel())
-                            .setDimension(openAiEmbeddingOption.getDimension())
+                            .setModel(openAiEmbeddingOptions.getModel())
+                            .setDimension(openAiEmbeddingOptions.getDimension())
                             .setEmbedding(vector);
                     return embeddingsRepository.save(embedding)
                             .doOnSuccess(saved ->
@@ -85,7 +84,7 @@ public class SaveEmbeddingProjection {
     }
 
     @ConfigurationProperties("spring.ai.openai.embedding.options")
-    public static class OpenAiEmbeddingOption {
+    public static class OpenAiEmbeddingOptions {
         private String model;
         private Integer dimension;
 
@@ -93,7 +92,7 @@ public class SaveEmbeddingProjection {
             return model;
         }
 
-        public OpenAiEmbeddingOption setModel(String model) {
+        public OpenAiEmbeddingOptions setModel(String model) {
             this.model = model;
             return this;
         }
@@ -102,7 +101,7 @@ public class SaveEmbeddingProjection {
             return dimension;
         }
 
-        public OpenAiEmbeddingOption setDimension(Integer dimension) {
+        public OpenAiEmbeddingOptions setDimension(Integer dimension) {
             this.dimension = dimension;
             return this;
         }

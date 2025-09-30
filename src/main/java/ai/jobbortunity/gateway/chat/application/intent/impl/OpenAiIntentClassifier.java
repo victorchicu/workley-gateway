@@ -1,9 +1,12 @@
 package ai.jobbortunity.gateway.chat.application.intent.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
+import ai.jobbortunity.gateway.chat.application.exception.ApplicationException;
+import ai.jobbortunity.gateway.chat.application.intent.IntentAiChatOptions;
 import ai.jobbortunity.gateway.chat.application.intent.IntentClassifier;
 import ai.jobbortunity.gateway.chat.application.intent.IntentType;
 import ai.jobbortunity.gateway.chat.application.service.Intent;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -27,63 +30,78 @@ public class OpenAiIntentClassifier implements IntentClassifier {
             
             - JOB_SEARCH: User is looking for a job
             - CANDIDATE_SEARCH: User is looking to hire someone
-            - OTHER: Not related to jobs or hiring
+            - OFF_TOPIC: Not related to jobs or hiring
             
-            Respond with ONLY the intent type, nothing else.
-            
-            Examples:
-            "I want to work as a Java developer" → JOB_SEARCH
-            "Looking for a Python engineer" → CANDIDATE_SEARCH
-            "What's the weather?" → OTHER
+            Field descriptions:
+            - intentType: The classified intent (JOB_SEARCH, CANDIDATE_SEARCH, or OFF_TOPIC)
+            - reasoning: 1-2 sentence explanation of the classification.
+            - confidence: Float between 0 and 1 indicating classification confidence.
+            - offtopic: What the user is actually talking about in format UPPER_CASE with underscores.
             """;
 
+    private final ObjectMapper objectMapper;
     private final OpenAiChatModel openAiChatModel;
+    private final IntentAiChatOptions intentAiChatOptions;
 
-    public OpenAiIntentClassifier(OpenAiChatModel openAiChatModel) {
+    public OpenAiIntentClassifier(ObjectMapper objectMapper, OpenAiChatModel openAiChatModel, IntentAiChatOptions intentAiChatOptions) {
+        this.objectMapper = objectMapper;
         this.openAiChatModel = openAiChatModel;
+        this.intentAiChatOptions = intentAiChatOptions;
     }
 
     @Override
     public Mono<Intent> classify(Message<String> message) {
         log.debug("Classifying intent for: {}", message.content());
-
-        OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model("gpt-4o-mini")
-                .temperature(0.1)
-                .maxTokens(10)
+        OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(intentAiChatOptions.getModel())
+                .maxTokens(100)
+                .temperature(0.2)
+                .responseFormat(
+                        ResponseFormat.builder()
+                                .type(ResponseFormat.Type.JSON_SCHEMA)
+                                .jsonSchema(
+                                        ResponseFormat.JsonSchema.builder()
+                                                .name("reply_schema")
+                                                .schema("""
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "intentType": "string",
+                                                                "reasoning": "string",
+                                                                "confidence": "float",
+                                                                "offtopic": "string"
+                                                            },
+                                                            "required": ["intentType", "reasoning", "confidence", "offtopic"],
+                                                            "additionalProperties": false
+                                                        }
+                                                        """)
+                                                .build()
+                                )
+                                .build()
+                )
                 .build();
 
-        Prompt prompt = new Prompt(List.of(new SystemMessage(SYSTEM_PROMPT), new UserMessage(message.content())), options);
+        Prompt prompt = new Prompt(
+                List.of(new SystemMessage(SYSTEM_PROMPT),
+                        new UserMessage(message.content())), chatOptions);
 
         return openAiChatModel.stream(prompt)
-                .mapNotNull(response -> {
-                    String text = response.getResult().getOutput().getText();
-                    return text;
-                })
-                .filter(content -> {
-                    return content != null && !content.isEmpty();
-                })
-                .reduce("", (accumulator, chunk) -> {
-                    return accumulator + chunk;
-                })
-                .map(text -> {
-                    return text.trim();
-                })
+                .mapNotNull(response -> response.getResult().getOutput().getText())
+                .filter(content -> content != null && !content.isEmpty())
+                .reduce("", (accumulator, chunk) -> accumulator + chunk)
+                .map(String::trim)
                 .map(this::parseResponse)
-                .map(Intent::new)
-                .doOnSuccess(intent -> log.info("Classified as: {}", intent.type()))
+                .doOnSuccess(intent -> log.info("Classified as: {}", intent))
                 .onErrorResume(error -> {
                     log.error("Classification failed", error);
-                    return Mono.just(new Intent(IntentType.OTHER));
+                    return Mono.just(new Intent(IntentType.OFF_TOPIC, error.getMessage(), 0f, "CLASSIFICATION_FAILED"));
                 });
     }
 
-    private IntentType parseResponse(String response) {
+    private Intent parseResponse(String response) {
         try {
-            return IntentType.valueOf(response.toUpperCase().trim());
-        } catch (IllegalArgumentException e) {
-            log.warn("Unknown intent type: {}", response);
-            return IntentType.OTHER;
+            return objectMapper.readValue(response, Intent.class);
+        } catch (Exception e) {
+            throw new ApplicationException("Failed to parse GPT response", e);
         }
     }
 }

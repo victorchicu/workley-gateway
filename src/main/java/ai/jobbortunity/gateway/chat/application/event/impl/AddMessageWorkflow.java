@@ -43,10 +43,10 @@ public class AddMessageWorkflow {
                             log.warn("Retrying classify intent (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
                                     e.actor(), e.chatId(), e.message().content(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
                         }))
-                        .doOnError(err ->
-                                log.error("Intent classification failed (actor={}, chatId={}, prompt={})",
-                                        e.actor(), e.chatId(), e.message().content(), err))
-                        .onErrorReturn(new Intent(IntentType.OTHER));
+                        .doOnError(err -> {
+                            log.error("Intent classification failed (actor={}, chatId={}, prompt={})",
+                                    e.actor(), e.chatId(), e.message().content(), err);
+                        });
 
         return classifyIntent
                 .flatMap(intent -> {

@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "spring.ai.openai.chat.options.response-format.type",
+      "type": "java.lang.String",
+      "description": "Description for spring.ai.openai.chat.options.response-format.type."
+  }
+] }
