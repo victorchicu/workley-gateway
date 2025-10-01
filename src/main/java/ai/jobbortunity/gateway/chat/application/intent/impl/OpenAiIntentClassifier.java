@@ -6,8 +6,6 @@ import ai.jobbortunity.gateway.chat.application.intent.IntentAiChatOptions;
 import ai.jobbortunity.gateway.chat.application.intent.IntentClassifier;
 import ai.jobbortunity.gateway.chat.application.intent.IntentType;
 import ai.jobbortunity.gateway.chat.application.service.Intent;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +23,24 @@ import java.util.List;
 @Service
 public class OpenAiIntentClassifier implements IntentClassifier {
     private static final Logger log = LoggerFactory.getLogger(OpenAiIntentClassifier.class);
+
+    public static final ResponseFormat.JsonSchema INTENT_SCHEMA = ResponseFormat.JsonSchema.builder()
+            .name("intent")
+            .schema("""
+                    {
+                      "type": "object",
+                      "properties": {
+                        "intentType": { "type": "string", "enum": ["JOB_SEARCH","CANDIDATE_SEARCH","OFF_TOPIC"] },
+                        "reasoning":  { "type": "string" },
+                        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                        "offtopic":   { "type": "string" }
+                      },
+                      "required": ["intentType","reasoning","confidence","offtopic"],
+                      "additionalProperties": false
+                    }
+                    """)
+            .strict(true)
+            .build();
 
     private static final String SYSTEM_PROMPT = """
             You are an intent classifier for Jobbortunity job search platform.
@@ -55,31 +71,13 @@ public class OpenAiIntentClassifier implements IntentClassifier {
     public Mono<Intent> classify(Message<String> message) {
         log.debug("Classifying intent for: {}", message.content());
 
-        ResponseFormat.JsonSchema schema = ResponseFormat.JsonSchema.builder()
-                .name("intent")
-                .schema("""
-                        {
-                          "type": "object",
-                          "properties": {
-                            "intentType": { "type": "string", "enum": ["JOB_SEARCH","CANDIDATE_SEARCH","OFF_TOPIC"] },
-                            "reasoning":  { "type": "string" },
-                            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-                            "offtopic":   { "type": "string" }
-                          },
-                          "required": ["intentType","reasoning","confidence","offtopic"],
-                          "additionalProperties": false
-                        }
-                        """)
-                .strict(true)
-                .build();
-
         OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(intentAiChatOptions.getModel())
                 .maxTokens(500)
                 .temperature(0.2)
                 .responseFormat(
                         ResponseFormat.builder()
                                 .type(ResponseFormat.Type.JSON_SCHEMA)
-                                .jsonSchema(schema)
+                                .jsonSchema(INTENT_SCHEMA)
                                 .build()
                 )
                 .build();
@@ -103,7 +101,7 @@ public class OpenAiIntentClassifier implements IntentClassifier {
                 .doOnSuccess(intent -> log.info("Classified as: {}", intent))
                 .onErrorResume(error -> {
                     log.error("Classification failed", error);
-                    return Mono.just(new Intent(IntentType.OFF_TOPIC, error.getMessage(), 0f, "CLASSIFICATION_FAILED"));
+                    return Mono.just(new Intent(IntentType.UNRELATED, error.getMessage(), 0f, "CLASSIFICATION_FAILED"));
                 });
     }
 

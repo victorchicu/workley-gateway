@@ -2,13 +2,11 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
 import ai.jobbortunity.gateway.chat.application.command.Role;
-import ai.jobbortunity.gateway.chat.application.exception.ApplicationException;
 import ai.jobbortunity.gateway.chat.application.intent.IntentAiChatOptions;
 import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.application.service.IdGenerator;
 import ai.jobbortunity.gateway.chat.infrastructure.MessageHistoryRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.MessageObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -38,7 +36,6 @@ public class GenerateReplyProjection {
     private static final Logger log = LoggerFactory.getLogger(GenerateReplyProjection.class);
 
     private final IdGenerator messageIdGenerator;
-    private final ObjectMapper objectMapper;
     private final OpenAiChatModel openAiChatModel;
     private final IntentAiChatOptions intentAiChatOptions;
     private final MessageHistoryRepository messageHistoryRepository;
@@ -47,7 +44,6 @@ public class GenerateReplyProjection {
 
     public GenerateReplyProjection(
             IdGenerator messageIdGenerator,
-            ObjectMapper objectMapper,
             OpenAiChatModel openAiChatModel,
             IntentAiChatOptions intentAiChatOptions,
             MessageHistoryRepository messageHistoryRepository,
@@ -56,7 +52,6 @@ public class GenerateReplyProjection {
 
     ) {
         this.chatSink = chatSink;
-        this.objectMapper = objectMapper;
         this.openAiChatModel = openAiChatModel;
         this.intentAiChatOptions = intentAiChatOptions;
         this.messageIdGenerator = messageIdGenerator;
@@ -69,39 +64,18 @@ public class GenerateReplyProjection {
     public Mono<Void> handle(GenerateReplyEvent e) {
         return Mono.defer(() -> Mono.just(new StreamContext(e, messageIdGenerator.generate())))
                 .flatMap(ctx -> {
-                    ResponseFormat.JsonSchema schema = ResponseFormat.JsonSchema.builder()
-                            .name("intent")
-                            .schema("""
-                                    {
-                                      "type": "object",
-                                      "properties": {
-                                        "message":  { "type": "string" },
-                                      },
-                                      "required": ["message"],
-                                      "additionalProperties": false
-                                    }
-                                    """)
-                            .strict(true)
-                            .build();
-
                     OpenAiChatOptions chatOptions = OpenAiChatOptions.builder()
                             .model(intentAiChatOptions.getModel())
                             .maxTokens(1000)
                             .temperature(0.2)
                             .responseFormat(
                                     ResponseFormat.builder()
-                                            .type(ResponseFormat.Type.JSON_SCHEMA)
-                                            .jsonSchema(schema)
+                                            .type(ResponseFormat.Type.TEXT)
                                             .build()
                             )
                             .build();
 
-                    String systemPrompt =
-                            switch (e.intent().intentType()) {
-                                case JOB_SEARCH -> applyJobSearchPrompt();
-                                case CANDIDATE_SEARCH -> applyCandidateSearchPrompt();
-                                case OFF_TOPIC -> applyOfftopicPrompt();
-                            };
+                    String systemPrompt = e.intent().type().getSystemPrompt();
 
                     Prompt prompt =
                             new Prompt(List.of(
@@ -116,9 +90,8 @@ public class GenerateReplyProjection {
                             .reduce(new StringBuilder(), StringBuilder::append)
                             .map(StringBuilder::toString)
                             .filter(content -> !content.isEmpty())
-                            .map(this::parseResponse)
-                            .flatMap(reply -> {
-                                return saveMessage(ctx, reply.message())
+                            .flatMap(content -> {
+                                return saveMessage(ctx, content)
                                         .doOnNext(message ->
                                                 applicationEventPublisher.publishEvent(
                                                         new ReplyGeneratedEvent(e.actor(), e.chatId(), message.content()))
@@ -143,14 +116,6 @@ public class GenerateReplyProjection {
         }
     }
 
-    private Reply parseResponse(String response) {
-        try {
-            return objectMapper.readValue(response, Reply.class);
-        } catch (Exception e) {
-            throw new ApplicationException("Failed to parse GPT response", e);
-        }
-    }
-
     private String extractText(ChatResponse response) {
         if (response == null) return "";
         List<Generation> generations = response.getResults();
@@ -161,54 +126,6 @@ public class GenerateReplyProjection {
                 .map(AbstractMessage::getText)
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining());
-    }
-
-    private String applyJobSearchPrompt() {
-        return """
-                You are Jobbortunity's AI assistant, specialized in helping users find job opportunities.
-                
-                Your role is to:
-                - Understand the user's job search requirements
-                - Ask clarifying questions when needed (experience level, location preferences, salary expectations, etc.)
-                - Provide relevant job recommendations in a conversational manner
-                - Guide users through their job search journey
-                
-                Important guidelines:
-                - Be conversational and friendly
-                - Ask one question at a time to avoid overwhelming the user
-                
-                Keep responses natural and helpful.
-                """;
-    }
-
-    private String applyCandidateSearchPrompt() {
-        return """
-                You are Jobbortunity's AI assistant, specialized in helping employers find suitable candidates.
-                
-                Your role is to:
-                - Understand the employer's hiring requirements
-                - Ask clarifying questions about the role, required skills, and candidate preferences
-                - Help refine search criteria to find the best matching candidates
-                
-                Important guidelines:
-                - Be professional and efficient
-                - Ask one question at a time
-                
-                Keep responses focused on finding the right talent.
-                """;
-    }
-
-    private String applyOfftopicPrompt() {
-        return """
-                You are Jobbortunity's AI assistant. The user has asked something unrelated to job searching or candidate searching.
-                
-                Your role is to:
-                - Politely redirect them back to Jobbortunity's core features
-                - Briefly explain what you can help with
-                - Be friendly but clear about your limitations
-                
-                Keep it brief, friendly, and redirect to what you can do.
-                """;
     }
 
     private Mono<Message<String>> saveMessage(StreamContext ctx, String content) {
@@ -225,10 +142,6 @@ public class GenerateReplyProjection {
                             ctx.e().actor(), ctx.e().chatId(), ctx.messageId(), ctx.e().prompt(), error);
                     return Mono.empty();
                 });
-    }
-
-    private record Reply(String message) {
-
     }
 
     private record StreamContext(GenerateReplyEvent e, String messageId) {

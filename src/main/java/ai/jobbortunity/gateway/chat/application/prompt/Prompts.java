@@ -1,7 +1,7 @@
-package ai.jobbortunity.gateway.chat.application.intent;
+package ai.jobbortunity.gateway.chat.application.prompt;
 
-public enum IntentType {
-    SEARCH_JOB("""
+public class Prompts {
+    public static final String JOB_SEARCH_PROMPT = """
             You are Jobbortunity's AI assistant, specialized in helping users find job opportunities.
             
             Your role is to:
@@ -15,8 +15,8 @@ public enum IntentType {
             - Ask one question at a time to avoid overwhelming the user
             
             Keep responses natural and helpful.
-            """),
-    SEARCH_CANDIDATE("""
+            """;
+    public static final String CANDIDATE_SEARCH_PROMPT = """
             You are Jobbortunity's AI assistant, specialized in helping employers find suitable candidates.
             
             Your role is to:
@@ -29,10 +29,8 @@ public enum IntentType {
             - Ask one question at a time
             
             Keep responses focused on finding the right talent.
-            """),
-    CREATE_RESUME("""
-            """),
-    UNRELATED("""
+            """;
+    public static final String UNRELATED_PROMPT = """
             You are Jobbortunity's AI assistant. The user has asked something unrelated to job searching or candidate searching.
             
             Your role is to:
@@ -41,15 +39,5 @@ public enum IntentType {
             - Be friendly but clear about your limitations
             
             Keep it brief, friendly, and redirect to what you can do.
-            """);
-
-    private final String systemPrompt;
-
-    IntentType(String systemPrompt) {
-        this.systemPrompt = systemPrompt;
-    }
-
-    public String getSystemPrompt() {
-        return systemPrompt;
-    }
+            """;
 }
