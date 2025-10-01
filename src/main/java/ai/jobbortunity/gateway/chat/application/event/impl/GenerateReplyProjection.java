@@ -62,57 +62,53 @@ public class GenerateReplyProjection {
     @EventListener
     @Order(0)
     public Mono<Void> handle(GenerateReplyEvent e) {
-        return Mono.defer(() -> Mono.just(new StreamContext(e, messageIdGenerator.generate())))
-                .flatMap(ctx -> {
-                    OpenAiChatOptions chatOptions = OpenAiChatOptions.builder()
-                            .model(intentAiChatOptions.getModel())
-                            .maxTokens(1000)
-                            .temperature(0.2)
-                            .responseFormat(
-                                    ResponseFormat.builder()
-                                            .type(ResponseFormat.Type.TEXT)
-                                            .build()
-                            )
-                            .build();
+        final String messageId = messageIdGenerator.generate();
 
-                    String systemPrompt = e.intent().type().getSystemPrompt();
+        OpenAiChatOptions chatOptions = OpenAiChatOptions.builder()
+                .model(intentAiChatOptions.getModel())
+                .maxTokens(1000)
+                .temperature(0.2)
+                .responseFormat(ResponseFormat.builder().type(ResponseFormat.Type.TEXT).build())
+                .build();
 
-                    Prompt prompt =
-                            new Prompt(List.of(
-                                    new SystemMessage(systemPrompt), new UserMessage(e.prompt())), chatOptions);
+        String systemPrompt = e.classificationResult().intent().getSystemPrompt();
+        Prompt prompt = new Prompt(
+                List.of(new SystemMessage(systemPrompt), new UserMessage(e.prompt())),
+                chatOptions
+        );
 
-                    return openAiChatModel.stream(prompt)
-                            .timeout(Duration.ofSeconds(60))
-                            .map(this::extractText)
-                            .filter(Objects::nonNull)
-                            .filter(s -> !s.isEmpty())
-                            .doOnNext(chunk -> emitChunk(ctx, chunk))
-                            .reduce(new StringBuilder(), StringBuilder::append)
-                            .map(StringBuilder::toString)
-                            .filter(content -> !content.isEmpty())
-                            .flatMap(content -> {
-                                return saveMessage(ctx, content)
-                                        .doOnNext(message ->
-                                                applicationEventPublisher.publishEvent(
-                                                        new ReplyGeneratedEvent(e.actor(), e.chatId(), message.content()))
-                                        );
-                            });
-                })
-                .doOnError(error -> log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
+        return openAiChatModel.stream(prompt)
+                .timeout(Duration.ofSeconds(60))
+                .map(this::extractText)
+                .filter(Objects::nonNull)
+                .filter(s -> !s.isEmpty())
+                .doOnNext(chunk -> emitChunk(e, messageId, chunk))   // ← no context object
+                .reduce(new StringBuilder(), StringBuilder::append)
+                .map(StringBuilder::toString)
+                .filter(content -> !content.isEmpty())
+                .flatMap(content ->
+                        saveMessage(e, messageId, content)
+                                .doOnNext(message ->
+                                        applicationEventPublisher.publishEvent(
+                                                new ReplyGeneratedEvent(e.actor(), e.chatId(), message.content())
+                                        )
+                                )
+                )
+                .doOnError(error -> log.error(
+                        "Failed to generate reply (actor={}, chatId={}, prompt={})",
                         e.actor(), e.chatId(), e.prompt(), error))
                 .onErrorResume(error -> Mono.empty())
                 .then();
     }
 
-    private void emitChunk(StreamContext ctx, String chunk) {
-        Message<String> message =
-                Message.response(ctx.messageId(), ctx.e().chatId(), ctx.e().actor(), Role.ASSISTANT, Instant.now(), chunk);
+    private void emitChunk(GenerateReplyEvent e, String messageId, String chunk) {
+        Message<String> message = Message.response(
+                messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
 
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
-
         if (emitResult.isFailure()) {
             log.debug("Failed to emit chunk (actor={}, chatId={}, chunk={}) -> ({})",
-                    ctx.e().actor(), ctx.e().chatId(), chunk, emitResult);
+                    e.actor(), e.chatId(), chunk, emitResult);
         }
     }
 
@@ -128,22 +124,18 @@ public class GenerateReplyProjection {
                 .collect(Collectors.joining());
     }
 
-    private Mono<Message<String>> saveMessage(StreamContext ctx, String content) {
+    private Mono<Message<String>> saveMessage(GenerateReplyEvent e, String messageId, String content) {
         MessageObject<String> messageObject = MessageObject.create(
-                Role.ASSISTANT, ctx.e().chatId(), ctx.e().actor(), ctx.messageId(), Instant.now(), content
-        );
+                Role.ASSISTANT, e.chatId(), e.actor(), messageId, Instant.now(), content);
 
         return messageHistoryRepository.save(messageObject)
                 .map(saved -> Message.response(
-                        saved.getId(), saved.getChatId(), ctx.e().actor(),
+                        saved.getId(), saved.getChatId(), e.actor(),
                         saved.getRole(), saved.getCreatedAt(), saved.getContent()))
                 .onErrorResume(InfrastructureExceptions::isDuplicateKey, error -> {
-                    log.error("Failed to save reply (actor={}, chatId={}, prompt={}, prompt={})",
-                            ctx.e().actor(), ctx.e().chatId(), ctx.messageId(), ctx.e().prompt(), error);
+                    log.error("Failed to save reply (actor={}, chatId={}, messageId={}, prompt={})",
+                            e.actor(), e.chatId(), messageId, e.prompt(), error);
                     return Mono.empty();
                 });
-    }
-
-    private record StreamContext(GenerateReplyEvent e, String messageId) {
     }
 }

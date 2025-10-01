@@ -2,8 +2,7 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
 import ai.jobbortunity.gateway.chat.application.command.impl.GenerateReplyCommand;
-import ai.jobbortunity.gateway.chat.application.intent.IntentType;
-import ai.jobbortunity.gateway.chat.application.service.Intent;
+import ai.jobbortunity.gateway.chat.application.service.ClassificationResult;
 import ai.jobbortunity.gateway.chat.application.intent.IntentClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,7 @@ public class AddMessageWorkflow {
                         .jitter(0.50)
                         .maxBackoff(Duration.ofSeconds(5));
 
-        Mono<Intent> classifyIntent =
+        Mono<ClassificationResult> classifyIntent =
                 intentClassifier.classify(e.message())
                         .timeout(Duration.ofSeconds(5))
                         .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
