@@ -6,6 +6,8 @@ import ai.jobbortunity.gateway.chat.application.intent.IntentAiChatOptions;
 import ai.jobbortunity.gateway.chat.application.intent.IntentClassifier;
 import ai.jobbortunity.gateway.chat.application.intent.IntentType;
 import ai.jobbortunity.gateway.chat.application.service.Intent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,42 +54,50 @@ public class OpenAiIntentClassifier implements IntentClassifier {
     @Override
     public Mono<Intent> classify(Message<String> message) {
         log.debug("Classifying intent for: {}", message.content());
+
+        ResponseFormat.JsonSchema schema = ResponseFormat.JsonSchema.builder()
+                .name("intent")
+                .schema("""
+                        {
+                          "type": "object",
+                          "properties": {
+                            "intentType": { "type": "string", "enum": ["JOB_SEARCH","CANDIDATE_SEARCH","OFF_TOPIC"] },
+                            "reasoning":  { "type": "string" },
+                            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                            "offtopic":   { "type": "string" }
+                          },
+                          "required": ["intentType","reasoning","confidence","offtopic"],
+                          "additionalProperties": false
+                        }
+                        """)
+                .strict(true)
+                .build();
+
         OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(intentAiChatOptions.getModel())
-                .maxTokens(100)
+                .maxTokens(500)
                 .temperature(0.2)
                 .responseFormat(
                         ResponseFormat.builder()
                                 .type(ResponseFormat.Type.JSON_SCHEMA)
-                                .jsonSchema(
-                                        ResponseFormat.JsonSchema.builder()
-                                                .name("reply_schema")
-                                                .schema("""
-                                                        {
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "intentType": "string",
-                                                                "reasoning": "string",
-                                                                "confidence": "float",
-                                                                "offtopic": "string"
-                                                            },
-                                                            "required": ["intentType", "reasoning", "confidence", "offtopic"],
-                                                            "additionalProperties": false
-                                                        }
-                                                        """)
-                                                .build()
-                                )
+                                .jsonSchema(schema)
                                 .build()
                 )
                 .build();
 
-        Prompt prompt = new Prompt(
-                List.of(new SystemMessage(SYSTEM_PROMPT),
-                        new UserMessage(message.content())), chatOptions);
+        Prompt prompt =
+                new Prompt(List.of(
+                        new SystemMessage(SYSTEM_PROMPT), new UserMessage(message.content())), chatOptions);
 
         return openAiChatModel.stream(prompt)
-                .mapNotNull(response -> response.getResult().getOutput().getText())
-                .filter(content -> content != null && !content.isEmpty())
-                .reduce("", (accumulator, chunk) -> accumulator + chunk)
+                .mapNotNull(response -> {
+                    return response.getResult().getOutput().getText();
+                })
+                .filter(content -> {
+                    return content != null && !content.isEmpty();
+                })
+                .reduce("", (accumulator, chunk) -> {
+                    return accumulator + chunk;
+                })
                 .map(String::trim)
                 .map(this::parseResponse)
                 .doOnSuccess(intent -> log.info("Classified as: {}", intent))
@@ -96,6 +106,7 @@ public class OpenAiIntentClassifier implements IntentClassifier {
                     return Mono.just(new Intent(IntentType.OFF_TOPIC, error.getMessage(), 0f, "CLASSIFICATION_FAILED"));
                 });
     }
+
 
     private Intent parseResponse(String response) {
         try {

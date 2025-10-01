@@ -2,8 +2,8 @@ package ai.jobbortunity.gateway.chat.application.event.impl;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
 import ai.jobbortunity.gateway.chat.application.command.Role;
+import ai.jobbortunity.gateway.chat.application.exception.ApplicationException;
 import ai.jobbortunity.gateway.chat.application.intent.IntentAiChatOptions;
-import ai.jobbortunity.gateway.chat.application.intent.IntentType;
 import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.application.service.IdGenerator;
 import ai.jobbortunity.gateway.chat.infrastructure.MessageHistoryRepository;
@@ -19,6 +19,7 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
@@ -68,7 +69,43 @@ public class GenerateReplyProjection {
     public Mono<Void> handle(GenerateReplyEvent e) {
         return Mono.defer(() -> Mono.just(new StreamContext(e, messageIdGenerator.generate())))
                 .flatMap(ctx -> {
-                    Prompt prompt = buildPromptByIntent(e);
+                    ResponseFormat.JsonSchema schema = ResponseFormat.JsonSchema.builder()
+                            .name("intent")
+                            .schema("""
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "message":  { "type": "string" },
+                                      },
+                                      "required": ["message"],
+                                      "additionalProperties": false
+                                    }
+                                    """)
+                            .strict(true)
+                            .build();
+
+                    OpenAiChatOptions chatOptions = OpenAiChatOptions.builder()
+                            .model(intentAiChatOptions.getModel())
+                            .maxTokens(1000)
+                            .temperature(0.2)
+                            .responseFormat(
+                                    ResponseFormat.builder()
+                                            .type(ResponseFormat.Type.JSON_SCHEMA)
+                                            .jsonSchema(schema)
+                                            .build()
+                            )
+                            .build();
+
+                    String systemPrompt =
+                            switch (e.intent().intentType()) {
+                                case JOB_SEARCH -> applyJobSearchPrompt();
+                                case CANDIDATE_SEARCH -> applyCandidateSearchPrompt();
+                                case OFF_TOPIC -> applyOfftopicPrompt();
+                            };
+
+                    Prompt prompt =
+                            new Prompt(List.of(
+                                    new SystemMessage(systemPrompt), new UserMessage(e.prompt())), chatOptions);
 
                     return openAiChatModel.stream(prompt)
                             .timeout(Duration.ofSeconds(60))
@@ -79,8 +116,9 @@ public class GenerateReplyProjection {
                             .reduce(new StringBuilder(), StringBuilder::append)
                             .map(StringBuilder::toString)
                             .filter(content -> !content.isEmpty())
-                            .flatMap(content -> {
-                                return saveMessage(ctx, content)
+                            .map(this::parseResponse)
+                            .flatMap(reply -> {
+                                return saveMessage(ctx, reply.message())
                                         .doOnNext(message ->
                                                 applicationEventPublisher.publishEvent(
                                                         new ReplyGeneratedEvent(e.actor(), e.chatId(), message.content()))
@@ -93,21 +131,36 @@ public class GenerateReplyProjection {
                 .then();
     }
 
-    private Prompt buildPromptByIntent(GenerateReplyEvent event) {
-        String systemPrompt =
-                switch (event.intent().intentType()) {
-                    case JOB_SEARCH -> applyJobSearchPrompt();
-                    case CANDIDATE_SEARCH -> applyCandidateSearchPrompt();
-                    case OFF_TOPIC -> applyOfftopicPrompt();
-                };
+    private void emitChunk(StreamContext ctx, String chunk) {
+        Message<String> message =
+                Message.response(ctx.messageId(), ctx.e().chatId(), ctx.e().actor(), Role.ASSISTANT, Instant.now(), chunk);
 
-        String prompt = buildUserPrompt(event);
+        Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
 
-        OpenAiChatOptions chatOptions = OpenAiChatOptions.builder()
-                .model(intentAiChatOptions.getModel())
-                .build();
+        if (emitResult.isFailure()) {
+            log.debug("Failed to emit chunk (actor={}, chatId={}, chunk={}) -> ({})",
+                    ctx.e().actor(), ctx.e().chatId(), chunk, emitResult);
+        }
+    }
 
-        return new Prompt(List.of(new SystemMessage(systemPrompt), new UserMessage(prompt)), chatOptions);
+    private Reply parseResponse(String response) {
+        try {
+            return objectMapper.readValue(response, Reply.class);
+        } catch (Exception e) {
+            throw new ApplicationException("Failed to parse GPT response", e);
+        }
+    }
+
+    private String extractText(ChatResponse response) {
+        if (response == null) return "";
+        List<Generation> generations = response.getResults();
+        if (generations == null || generations.isEmpty()) return "";
+        return generations.stream()
+                .filter(Objects::nonNull)
+                .map(Generation::getOutput)
+                .map(AbstractMessage::getText)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining());
     }
 
     private String applyJobSearchPrompt() {
@@ -123,7 +176,6 @@ public class GenerateReplyProjection {
                 Important guidelines:
                 - Be conversational and friendly
                 - Ask one question at a time to avoid overwhelming the user
-                -
                 
                 Keep responses natural and helpful.
                 """;
@@ -159,50 +211,6 @@ public class GenerateReplyProjection {
                 """;
     }
 
-    private String buildUserPrompt(GenerateReplyEvent event) {
-        StringBuilder prompt = new StringBuilder();
-
-        prompt.append("User message: ").append(event.prompt()).append("\n\n");
-
-        if (event.intent() != null) {
-            prompt.append("Intent Analysis:\n");
-            prompt.append("- Type: ").append(event.intent().intentType()).append("\n");
-            prompt.append("- Reasoning: ").append(event.intent().reasoning()).append("\n");
-            prompt.append("- Confidence: ").append(event.intent().confidence()).append("\n");
-
-            if (event.intent().intentType() == IntentType.OFF_TOPIC &&
-                    event.intent().offtopic() != null && !event.intent().offtopic().isEmpty()) {
-                prompt.append("- Off-topic reason: ").append(event.intent().offtopic()).append("\n");
-            }
-        }
-
-        return prompt.toString();
-    }
-
-    private void emitChunk(StreamContext ctx, String chunk) {
-        Message<String> message =
-                Message.response(ctx.messageId(), ctx.e().chatId(), ctx.e().actor(), Role.ASSISTANT, Instant.now(), chunk);
-
-        Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
-
-        if (emitResult.isFailure()) {
-            log.debug("Failed to emit chunk (actor={}, chatId={}, chunk={}) -> ({})",
-                    ctx.e().actor(), ctx.e().chatId(), chunk, emitResult);
-        }
-    }
-
-    private String extractText(ChatResponse response) {
-        if (response == null) return "";
-        List<Generation> generations = response.getResults();
-        if (generations == null || generations.isEmpty()) return "";
-        return generations.stream()
-                .filter(Objects::nonNull)
-                .map(Generation::getOutput)
-                .map(AbstractMessage::getText)
-                .filter(Objects::nonNull)
-                .collect(Collectors.joining());
-    }
-
     private Mono<Message<String>> saveMessage(StreamContext ctx, String content) {
         MessageObject<String> messageObject = MessageObject.create(
                 Role.ASSISTANT, ctx.e().chatId(), ctx.e().actor(), ctx.messageId(), Instant.now(), content
@@ -217,6 +225,10 @@ public class GenerateReplyProjection {
                             ctx.e().actor(), ctx.e().chatId(), ctx.messageId(), ctx.e().prompt(), error);
                     return Mono.empty();
                 });
+    }
+
+    private record Reply(String message) {
+
     }
 
     private record StreamContext(GenerateReplyEvent e, String messageId) {
