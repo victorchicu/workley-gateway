@@ -47,6 +47,8 @@ public class AddMessageWorkflow {
                                     e.actor(), e.chatId(), e.message().content(), err);
                         });
 
+        //TODO: Determine which command to call depending on the type of intent
+
         return classifyIntent
                 .flatMap(intent -> {
                     return commandDispatcher
