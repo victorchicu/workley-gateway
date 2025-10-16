@@ -3,7 +3,6 @@ package ai.jobbortunity.gateway.chat.application.event.workflow;
 import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
 import ai.jobbortunity.gateway.chat.application.command.impl.GenerateReplyCommand;
 import ai.jobbortunity.gateway.chat.application.event.impl.AddMessageEvent;
-import ai.jobbortunity.gateway.chat.application.service.Intent;
 import ai.jobbortunity.gateway.chat.application.service.ClassificationResult;
 import ai.jobbortunity.gateway.chat.application.intent.IntentClassifier;
 import org.slf4j.Logger;
