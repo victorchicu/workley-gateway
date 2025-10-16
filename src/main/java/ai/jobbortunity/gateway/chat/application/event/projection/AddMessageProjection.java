@@ -1,6 +1,7 @@
-package ai.jobbortunity.gateway.chat.application.event.impl;
+package ai.jobbortunity.gateway.chat.application.event.projection;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
+import ai.jobbortunity.gateway.chat.application.event.impl.AddMessageEvent;
 import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.MessageHistoryRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.MessageObject;

@@ -1,5 +1,6 @@
-package ai.jobbortunity.gateway.chat.application.event.impl;
+package ai.jobbortunity.gateway.chat.application.event.projection;
 
+import ai.jobbortunity.gateway.chat.application.event.impl.CreateChatEvent;
 import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.ChatSessionRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.ChatObject;

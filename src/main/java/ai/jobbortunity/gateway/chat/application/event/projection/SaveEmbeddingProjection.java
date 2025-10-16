@@ -1,5 +1,6 @@
-package ai.jobbortunity.gateway.chat.application.event.impl;
+package ai.jobbortunity.gateway.chat.application.event.projection;
 
+import ai.jobbortunity.gateway.chat.application.event.impl.SaveEmbeddingEvent;
 import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
 import ai.jobbortunity.gateway.chat.infrastructure.EmbeddingsRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.data.EmbeddingObject;

@@ -1,4 +1,4 @@
-package ai.jobbortunity.gateway.chat.application.event.impl;
+package ai.jobbortunity.gateway.chat.application.event.workflow;
 
 import org.springframework.stereotype.Component;
 

@@ -1,9 +1,9 @@
-package ai.jobbortunity.gateway.chat.application.event.impl;
+package ai.jobbortunity.gateway.chat.application.event.workflow;
 
 import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
 import ai.jobbortunity.gateway.chat.application.command.Message;
-import ai.jobbortunity.gateway.chat.application.command.Role;
 import ai.jobbortunity.gateway.chat.application.command.impl.AddMessageCommand;
+import ai.jobbortunity.gateway.chat.application.event.impl.CreateChatEvent;
 import ai.jobbortunity.gateway.chat.application.service.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

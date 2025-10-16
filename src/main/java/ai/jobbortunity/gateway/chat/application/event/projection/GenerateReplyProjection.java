@@ -1,7 +1,9 @@
-package ai.jobbortunity.gateway.chat.application.event.impl;
+package ai.jobbortunity.gateway.chat.application.event.projection;
 
 import ai.jobbortunity.gateway.chat.application.command.Message;
 import ai.jobbortunity.gateway.chat.application.command.Role;
+import ai.jobbortunity.gateway.chat.application.event.impl.GenerateReplyEvent;
+import ai.jobbortunity.gateway.chat.application.event.impl.ReplyGeneratedEvent;
 import ai.jobbortunity.gateway.chat.application.intent.IntentAiChatOptions;
 import ai.jobbortunity.gateway.chat.application.intent.IntentType;
 import ai.jobbortunity.gateway.chat.infrastructure.exception.InfrastructureExceptions;
