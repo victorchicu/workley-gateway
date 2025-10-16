@@ -11,8 +11,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
-import java.security.Principal;
-
 @Component
 public class GenerateReplyCommandHandler implements CommandHandler<GenerateReplyCommand, GenerateReplyCommandResult> {
     private static final Logger log = LoggerFactory.getLogger(GenerateReplyCommandHandler.class);
@@ -40,7 +38,7 @@ public class GenerateReplyCommandHandler implements CommandHandler<GenerateReply
     public Mono<GenerateReplyCommandResult> handle(String actor, GenerateReplyCommand command) {
         return Mono.defer(() -> {
             GenerateReplyEvent generateReplyEvent =
-                    new GenerateReplyEvent(actor, command.chatId(), command.intent(), command.prompt().content());
+                    new GenerateReplyEvent(actor, command.chatId(), command.classificationResult(), command.prompt().content());
 
             Mono<GenerateReplyCommandResult> tx = transactionalOperator.transactional(
                     eventStore.save(actor, generateReplyEvent)

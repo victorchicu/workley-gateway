@@ -4,6 +4,7 @@ import ai.jobbortunity.gateway.chat.application.command.CommandDispatcher;
 import ai.jobbortunity.gateway.chat.application.command.impl.GenerateReplyCommand;
 import ai.jobbortunity.gateway.chat.application.event.impl.AddMessageEvent;
 import ai.jobbortunity.gateway.chat.application.service.Intent;
+import ai.jobbortunity.gateway.chat.application.service.ClassificationResult;
 import ai.jobbortunity.gateway.chat.application.intent.IntentClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public class AddMessageWorkflow {
                         .jitter(0.50)
                         .maxBackoff(Duration.ofSeconds(5));
 
-        Mono<Intent> classifyIntent =
+        Mono<ClassificationResult> classifyIntent =
                 intentClassifier.classify(e.message())
                         .timeout(Duration.ofSeconds(5))
                         .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
@@ -47,6 +48,8 @@ public class AddMessageWorkflow {
                             log.error("Intent classification failed (actor={}, chatId={}, prompt={})",
                                     e.actor(), e.chatId(), e.message().content(), err);
                         });
+
+        //TODO: Determine which command to call depending on the type of intent
 
         return classifyIntent
                 .flatMap(intent -> {

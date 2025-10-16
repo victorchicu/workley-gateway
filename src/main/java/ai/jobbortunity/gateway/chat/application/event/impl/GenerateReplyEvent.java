@@ -1,11 +1,8 @@
 package ai.jobbortunity.gateway.chat.application.event.impl;
 
-import ai.jobbortunity.gateway.chat.application.command.Message;
 import ai.jobbortunity.gateway.chat.application.event.ApplicationEvent;
-import ai.jobbortunity.gateway.chat.application.service.Intent;
+import ai.jobbortunity.gateway.chat.application.service.ClassificationResult;
 
-import java.security.Principal;
-
-public record GenerateReplyEvent(String actor, String chatId, Intent intent, String prompt) implements ApplicationEvent {
+public record GenerateReplyEvent(String actor, String chatId, ClassificationResult classificationResult, String prompt) implements ApplicationEvent {
 
 }
