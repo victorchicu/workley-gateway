@@ -70,7 +70,7 @@ public class OpenAiIntentClassifier implements IntentClassifier {
 
     @Override
     public Mono<ClassificationResult> classify(Message<String> message) {
-        log.debug("Classifying classificationResult for: {}", message.content());
+        log.debug("Classifying intent for: {}", message.content());
 
         OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(intentAiChatOptions.getModel())
                 .maxTokens(500)

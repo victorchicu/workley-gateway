@@ -36,7 +36,7 @@ public class AddMessageWorkflow {
                         .jitter(0.50)
                         .maxBackoff(Duration.ofSeconds(5));
 
-        Mono<ClassificationResult> classifyIntent =
+        Mono<ClassificationResult> classificationResult =
                 intentClassifier.classify(e.message())
                         .timeout(Duration.ofSeconds(5))
                         .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
@@ -50,11 +50,11 @@ public class AddMessageWorkflow {
 
         //TODO: Determine which command to call depending on the type of intent
 
-        return classifyIntent
-                .flatMap(intent -> {
+        return classificationResult
+                .flatMap(result -> {
                     return commandDispatcher
                             .dispatch(e.actor(),
-                                    new GenerateReplyCommand(e.chatId(), intent, e.message()))
+                                    new GenerateReplyCommand(e.chatId(), e.message(), result))
                             .timeout(Duration.ofSeconds(5))
                             .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
                                     log.warn("Retrying generating reply (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
