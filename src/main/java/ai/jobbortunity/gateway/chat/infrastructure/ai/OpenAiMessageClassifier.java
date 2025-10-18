@@ -4,7 +4,7 @@ import ai.jobbortunity.gateway.chat.domain.model.Message;
 import ai.jobbortunity.gateway.chat.application.error.ApplicationError;
 import ai.jobbortunity.gateway.chat.application.result.ClassificationResult;
 import ai.jobbortunity.gateway.chat.infrastructure.config.props.OpenAiChatOptions;
-import ai.jobbortunity.gateway.chat.domain.model.IntentClassifier;
+import ai.jobbortunity.gateway.chat.domain.model.MessageClassifier;
 import ai.jobbortunity.gateway.chat.domain.model.IntentType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -20,8 +20,8 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Service
-public class OpenAiIntentClassifier implements IntentClassifier {
-    private static final Logger log = LoggerFactory.getLogger(OpenAiIntentClassifier.class);
+public class OpenAiMessageClassifier implements MessageClassifier {
+    private static final Logger log = LoggerFactory.getLogger(OpenAiMessageClassifier.class);
 
     public static final ResponseFormat.JsonSchema INTENT_SCHEMA = ResponseFormat.JsonSchema.builder()
             .name("classificationResult")
@@ -61,7 +61,7 @@ public class OpenAiIntentClassifier implements IntentClassifier {
     private final OpenAiChatModel openAiChatModel;
     private final OpenAiChatOptions intentAiOpenAiChatOptions;
 
-    public OpenAiIntentClassifier(ObjectMapper objectMapper, OpenAiChatModel openAiChatModel, OpenAiChatOptions intentAiOpenAiChatOptions) {
+    public OpenAiMessageClassifier(ObjectMapper objectMapper, OpenAiChatModel openAiChatModel, OpenAiChatOptions intentAiOpenAiChatOptions) {
         this.objectMapper = objectMapper;
         this.openAiChatModel = openAiChatModel;
         this.intentAiOpenAiChatOptions = intentAiOpenAiChatOptions;

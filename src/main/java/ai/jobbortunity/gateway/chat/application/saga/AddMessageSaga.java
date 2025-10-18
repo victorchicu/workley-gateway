@@ -4,7 +4,7 @@ import ai.jobbortunity.gateway.chat.application.bus.CommandBus;
 import ai.jobbortunity.gateway.chat.application.command.GenerateReply;
 import ai.jobbortunity.gateway.chat.domain.event.MessageAdded;
 import ai.jobbortunity.gateway.chat.application.result.ClassificationResult;
-import ai.jobbortunity.gateway.chat.domain.model.IntentClassifier;
+import ai.jobbortunity.gateway.chat.domain.model.MessageClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -21,11 +21,11 @@ public class AddMessageSaga {
     private static final Logger log = LoggerFactory.getLogger(AddMessageSaga.class);
 
     private final CommandBus commandBus;
-    private final IntentClassifier intentClassifier;
+    private final MessageClassifier messageClassifier;
 
-    public AddMessageSaga(CommandBus commandBus, IntentClassifier intentClassifier) {
+    public AddMessageSaga(CommandBus commandBus, MessageClassifier messageClassifier) {
         this.commandBus = commandBus;
-        this.intentClassifier = intentClassifier;
+        this.messageClassifier = messageClassifier;
     }
 
     @EventListener
@@ -37,7 +37,7 @@ public class AddMessageSaga {
                         .maxBackoff(Duration.ofSeconds(5));
 
         Mono<ClassificationResult> classificationResult =
-                intentClassifier.classify(e.message())
+                messageClassifier.classify(e.message())
                         .timeout(Duration.ofSeconds(5))
                         .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
                             log.warn("Retrying classify intent (actor={}, chatId={}, prompt={}) attempt #{} due to {}",

@@ -23,7 +23,7 @@ public class CreateChatSaga {
     private final CommandBus commandBus;
     private final IdGenerator randomIdGenerator;
 
-    CreateChatSaga(CommandBus commandBus, IdGenerator randomIdGenerator) {
+    public CreateChatSaga(CommandBus commandBus, IdGenerator randomIdGenerator) {
         this.commandBus = commandBus;
         this.randomIdGenerator = randomIdGenerator;
     }
