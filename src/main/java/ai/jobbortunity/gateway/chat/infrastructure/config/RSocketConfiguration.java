@@ -1,4 +1,4 @@
-package ai.jobbortunity.gateway.chat.presentation.socket;
+package ai.jobbortunity.gateway.chat.infrastructure.config;
 
 import ai.jobbortunity.gateway.chat.domain.model.Message;
 import org.springframework.context.annotation.Bean;

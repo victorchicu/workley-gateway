@@ -1,4 +1,4 @@
-package ai.jobbortunity.gateway.chat.presentation.socket;
+package ai.jobbortunity.gateway.chat.presentation.websocket;
 
 
 import ai.jobbortunity.gateway.chat.domain.model.Message;
