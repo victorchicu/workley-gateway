@@ -20,12 +20,12 @@ import java.time.Duration;
 public class AddMessageSaga {
     private static final Logger log = LoggerFactory.getLogger(AddMessageSaga.class);
 
-    private final IntentClassifier intentClassifier;
     private final CommandBus commandBus;
+    private final IntentClassifier intentClassifier;
 
-    public AddMessageSaga(IntentClassifier intentClassifier, CommandBus commandBus) {
-        this.intentClassifier = intentClassifier;
+    public AddMessageSaga(CommandBus commandBus, IntentClassifier intentClassifier) {
         this.commandBus = commandBus;
+        this.intentClassifier = intentClassifier;
     }
 
     @EventListener

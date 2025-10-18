@@ -20,15 +20,12 @@ import java.time.Duration;
 public class CreateChatSaga {
     private static final Logger log = LoggerFactory.getLogger(CreateChatSaga.class);
 
-    private final IdGenerator randomIdGenerator;
     private final CommandBus commandBus;
+    private final IdGenerator randomIdGenerator;
 
-    CreateChatSaga(
-            IdGenerator randomIdGenerator,
-            CommandBus commandBus
-    ) {
-        this.randomIdGenerator = randomIdGenerator;
+    CreateChatSaga(CommandBus commandBus, IdGenerator randomIdGenerator) {
         this.commandBus = commandBus;
+        this.randomIdGenerator = randomIdGenerator;
     }
 
     @EventListener
