@@ -1,5 +1,6 @@
 package ai.jobbortunity.gateway.chat.application.query;
 
+import ai.jobbortunity.gateway.chat.application.result.QueryResult;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
