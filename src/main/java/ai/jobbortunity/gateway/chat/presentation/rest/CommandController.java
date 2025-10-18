@@ -3,7 +3,7 @@ package ai.jobbortunity.gateway.chat.presentation.rest;
 import ai.jobbortunity.gateway.chat.application.command.Command;
 import ai.jobbortunity.gateway.chat.application.bus.CommandBus;
 import ai.jobbortunity.gateway.chat.application.result.BadRequestResult;
-import ai.jobbortunity.gateway.chat.application.result.CommandResult;
+import ai.jobbortunity.gateway.chat.application.result.Result;
 import ai.jobbortunity.gateway.chat.application.error.ApplicationError;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -24,12 +24,12 @@ public class CommandController {
     }
 
     @PostMapping
-    public <T extends Command> Mono<ResponseEntity<CommandResult>> execute(Principal actor, @Valid @RequestBody T command) {
+    public <T extends Command> Mono<ResponseEntity<Result>> execute(Principal actor, @Valid @RequestBody T command) {
         return commandBus.execute(actor.getName(), command)
-                .flatMap((CommandResult commandResult) ->
+                .flatMap((Result result) ->
                         Mono.just(ResponseEntity.ok()
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .body(commandResult))
+                                .body(result))
                 )
                 .onErrorResume(ApplicationError.class,
                         (ApplicationError error) ->

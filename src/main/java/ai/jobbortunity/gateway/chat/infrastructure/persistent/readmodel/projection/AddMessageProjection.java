@@ -1,7 +1,7 @@
 package ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.projection;
 
 import ai.jobbortunity.gateway.chat.domain.event.MessageAdded;
-import ai.jobbortunity.gateway.chat.application.error.InfrastructureErrors;
+import ai.jobbortunity.gateway.chat.infrastructure.error.InfrastructureErrors;
 import ai.jobbortunity.gateway.chat.domain.model.Message;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.repository.MessageReadRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.entity.MessageModel;

@@ -1,7 +1,7 @@
 package ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.projection;
 
 import ai.jobbortunity.gateway.chat.domain.event.EmbeddingSaved;
-import ai.jobbortunity.gateway.chat.application.error.InfrastructureErrors;
+import ai.jobbortunity.gateway.chat.infrastructure.error.InfrastructureErrors;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.repository.EmbeddingReadRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.entity.EmbeddingModel;
 import org.slf4j.Logger;

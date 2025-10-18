@@ -1,10 +1,10 @@
 package ai.jobbortunity.gateway.chat.presentation.rest;
 
 import ai.jobbortunity.gateway.chat.application.result.BadRequestResult;
-import ai.jobbortunity.gateway.chat.application.result.QueryResult;
 import ai.jobbortunity.gateway.chat.application.error.ApplicationError;
 import ai.jobbortunity.gateway.chat.application.bus.QueryBus;
 import ai.jobbortunity.gateway.chat.application.query.GetChat;
+import ai.jobbortunity.gateway.chat.application.result.Result;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,12 +23,12 @@ public class GetChatController {
     }
 
     @GetMapping
-    public Mono<ResponseEntity<QueryResult>> query(Principal actor, @PathVariable String chatId) {
+    public Mono<ResponseEntity<Result>> query(Principal actor, @PathVariable String chatId) {
         return queryBus.execute(actor, new GetChat(chatId))
-                .flatMap((QueryResult queryResult) ->
+                .flatMap((Result result) ->
                         Mono.just(ResponseEntity.ok()
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .body(queryResult))
+                                .body(result))
                 )
                 .onErrorResume(ApplicationError.class,
                         (ApplicationError error) ->

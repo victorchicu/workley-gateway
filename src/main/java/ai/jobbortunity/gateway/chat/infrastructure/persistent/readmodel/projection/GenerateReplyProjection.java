@@ -4,7 +4,7 @@ import ai.jobbortunity.gateway.chat.domain.model.Role;
 import ai.jobbortunity.gateway.chat.domain.event.ReplyInitiated;
 import ai.jobbortunity.gateway.chat.domain.event.ReplyGenerated;
 import ai.jobbortunity.gateway.chat.infrastructure.config.props.OpenAiChatOptions;
-import ai.jobbortunity.gateway.chat.application.error.InfrastructureErrors;
+import ai.jobbortunity.gateway.chat.infrastructure.error.InfrastructureErrors;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.entity.MessageModel;
 import ai.jobbortunity.gateway.chat.infrastructure.service.IdGenerator;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.repository.MessageReadRepository;

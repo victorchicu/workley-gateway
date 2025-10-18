@@ -1,4 +1,4 @@
-package ai.jobbortunity.gateway.chat.application.error;
+package ai.jobbortunity.gateway.chat.infrastructure.error;
 
 public class InfrastructureError extends RuntimeException {
 
