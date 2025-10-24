@@ -7,7 +7,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = CreateChatResult.class, name = "CreateChatResult"),
         @JsonSubTypes.Type(value = AddMessageResult.class, name = "AddMessageResult"),
-        @JsonSubTypes.Type(value = BadRequestResult.class, name = "BadRequestResult")
+        @JsonSubTypes.Type(value = BadRequestResult.class, name = "BadRequestResult"),
+        @JsonSubTypes.Type(value = ClassificationResult.class, name = "ClassificationResult")
 })
 public interface Result {
 

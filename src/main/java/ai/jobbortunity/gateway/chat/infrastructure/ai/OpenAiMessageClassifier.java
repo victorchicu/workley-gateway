@@ -1,11 +1,11 @@
 package ai.jobbortunity.gateway.chat.infrastructure.ai;
 
 import ai.jobbortunity.gateway.chat.domain.model.Message;
-import ai.jobbortunity.gateway.chat.application.error.ApplicationError;
 import ai.jobbortunity.gateway.chat.application.result.ClassificationResult;
-import ai.jobbortunity.gateway.chat.infrastructure.config.props.OpenAiChatOptions;
+import ai.jobbortunity.gateway.chat.infrastructure.config.props.ExtendedOpenAiChatOptions;
 import ai.jobbortunity.gateway.chat.domain.model.MessageClassifier;
 import ai.jobbortunity.gateway.chat.domain.model.IntentType;
+import ai.jobbortunity.gateway.chat.infrastructure.error.InfrastructureErrors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +13,7 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -42,13 +43,8 @@ public class OpenAiMessageClassifier implements MessageClassifier {
             .build();
 
     private static final String SYSTEM_PROMPT = """
-            You are an classificationResult classifier for Jobbortunity job search platform.
-            Classify the user messageModel into one of these categories:
-            
-            - JOB_SEARCH: User is looking for a job
-            - SEARCH_CANDIDATE: User is looking to hire someone
-            - CREATE_RESUME: User wants to create a resume
-            - UNRELATED: Not related to jobs or hiring
+            You are an intent classifier for job/talent search platform.
+            Classify the user message into one of these categories:
             
             Field descriptions:
             - intent: The classified intent (SEARCH_JOB, SEARCH_CANDIDATE, CREATE_RESUME or UNRELATED)
@@ -59,19 +55,19 @@ public class OpenAiMessageClassifier implements MessageClassifier {
 
     private final ObjectMapper objectMapper;
     private final OpenAiChatModel openAiChatModel;
-    private final OpenAiChatOptions intentAiOpenAiChatOptions;
+    private final ExtendedOpenAiChatOptions openAiChatOptions;
 
-    public OpenAiMessageClassifier(ObjectMapper objectMapper, OpenAiChatModel openAiChatModel, OpenAiChatOptions intentAiOpenAiChatOptions) {
+    public OpenAiMessageClassifier(ObjectMapper objectMapper, OpenAiChatModel openAiChatModel, ExtendedOpenAiChatOptions openAiChatOptions) {
         this.objectMapper = objectMapper;
         this.openAiChatModel = openAiChatModel;
-        this.intentAiOpenAiChatOptions = intentAiOpenAiChatOptions;
+        this.openAiChatOptions = openAiChatOptions;
     }
 
     @Override
-    public Mono<ClassificationResult> classify(Message<String> messageModel) {
-        log.debug("Classifying intent for: {}", messageModel.content());
+    public Mono<ClassificationResult> classify(Message<String> message) {
+        log.debug("Classifying intent for: {}", message.content());
 
-        org.springframework.ai.openai.OpenAiChatOptions openAiChatOptions = org.springframework.ai.openai.OpenAiChatOptions.builder().model(intentAiOpenAiChatOptions.getModel())
+        OpenAiChatOptions openAiChatOptions = OpenAiChatOptions.builder().model(this.openAiChatOptions.getModel())
                 .maxTokens(500)
                 .temperature(0.2)
                 .responseFormat(
@@ -84,7 +80,7 @@ public class OpenAiMessageClassifier implements MessageClassifier {
 
         Prompt prompt =
                 new Prompt(List.of(
-                        new SystemMessage(SYSTEM_PROMPT), new UserMessage(messageModel.content())), openAiChatOptions);
+                        new SystemMessage(SYSTEM_PROMPT), new UserMessage(message.content())), openAiChatOptions);
 
         return openAiChatModel.stream(prompt)
                 .mapNotNull(response -> {
@@ -100,6 +96,7 @@ public class OpenAiMessageClassifier implements MessageClassifier {
                 .map(this::parseResponse)
                 .doOnSuccess(intent -> log.info("Classified as: {}", intent))
                 .onErrorResume(error -> {
+                    //TODO: Save a message that could not be classified
                     log.error("Classification failed", error);
                     return Mono.just(new ClassificationResult(IntentType.UNRELATED, error.getMessage(), 0f, "CLASSIFICATION_FAILED"));
                 });
@@ -110,7 +107,8 @@ public class OpenAiMessageClassifier implements MessageClassifier {
         try {
             return objectMapper.readValue(response, ClassificationResult.class);
         } catch (Exception e) {
-            throw new ApplicationError("Failed to parse GPT response", e);
+            throw InfrastructureErrors.runtimeException("Failed to parse GPT response: " + response,
+                    e);
         }
     }
 }

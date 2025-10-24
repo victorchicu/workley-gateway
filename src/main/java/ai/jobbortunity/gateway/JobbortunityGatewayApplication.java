@@ -1,6 +1,6 @@
 package ai.jobbortunity.gateway;
 
-import ai.jobbortunity.gateway.chat.infrastructure.config.props.OpenAiChatOptions;
+import ai.jobbortunity.gateway.chat.infrastructure.config.props.ExtendedOpenAiChatOptions;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,7 +13,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 @EnableReactiveMethodSecurity
 @EnableReactiveMongoAuditing
 @EnableReactiveMongoRepositories
-@EnableConfigurationProperties({OpenAiChatOptions.class})
+@EnableConfigurationProperties({ExtendedOpenAiChatOptions.class})
 @SpringBootApplication
 public class JobbortunityGatewayApplication {
 

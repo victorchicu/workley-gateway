@@ -26,7 +26,7 @@ public class AddMessageProjection {
         return Message.response(source.getId(), source.getChatId(), source.getOwnedBy(), source.getRole(), source.getCreatedAt(), source.getContent());
     }
 
-    private static MessageModel<String> toMessageObject(MessageAdded source) {
+    private static MessageModel<String> toMessageModel(MessageAdded source) {
         return MessageModel.create(
                 source.message().role(), source.message().chatId(), source.actor(), source.message().id(), source.message().createdAt(), source.message().content()
         );
@@ -35,7 +35,7 @@ public class AddMessageProjection {
     @EventListener
     @Order(0)
     public Mono<Void> handle(MessageAdded e) {
-        return messageReadRepository.save(toMessageObject(e))
+        return messageReadRepository.save(toMessageModel(e))
                 .map(message -> {
                     log.info("Message was saved successfully (actor={}, chatId={}, messageId={})",
                             message.getOwnedBy(), message.getChatId(), message.getMessageId());

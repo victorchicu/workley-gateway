@@ -1,9 +1,10 @@
 package ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.projection;
 
+import ai.jobbortunity.gateway.chat.domain.model.Message;
 import ai.jobbortunity.gateway.chat.domain.model.Role;
-import ai.jobbortunity.gateway.chat.domain.event.ReplyInitiated;
+import ai.jobbortunity.gateway.chat.domain.event.QuestionAsked;
 import ai.jobbortunity.gateway.chat.domain.event.ReplyGenerated;
-import ai.jobbortunity.gateway.chat.infrastructure.config.props.OpenAiChatOptions;
+import ai.jobbortunity.gateway.chat.infrastructure.config.props.ExtendedOpenAiChatOptions;
 import ai.jobbortunity.gateway.chat.infrastructure.error.InfrastructureErrors;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.entity.MessageModel;
 import ai.jobbortunity.gateway.chat.infrastructure.service.IdGenerator;
@@ -37,15 +38,15 @@ public class GenerateReplyProjection {
 
     private final IdGenerator messageIdGenerator;
     private final OpenAiChatModel openAiChatModel;
-    private final OpenAiChatOptions openAiChatOptions;
+    private final ExtendedOpenAiChatOptions openAiChatOptions;
     private final MessageReadRepository messageReadRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final Sinks.Many<ai.jobbortunity.gateway.chat.domain.model.Message<String>> chatSink;
+    private final Sinks.Many<Message<String>> chatSink;
 
     public GenerateReplyProjection(
             IdGenerator messageIdGenerator,
             OpenAiChatModel openAiChatModel,
-            OpenAiChatOptions openAiChatOptions,
+            ExtendedOpenAiChatOptions openAiChatOptions,
             MessageReadRepository messageReadRepository,
             ApplicationEventPublisher applicationEventPublisher,
             Sinks.Many<ai.jobbortunity.gateway.chat.domain.model.Message<String>> chatSink
@@ -61,7 +62,7 @@ public class GenerateReplyProjection {
 
     @EventListener
     @Order(0)
-    public Mono<Void> handle(ReplyInitiated e) {
+    public Mono<Void> handle(QuestionAsked e) {
         final String messageId = messageIdGenerator.generate();
 
         org.springframework.ai.openai.OpenAiChatOptions openAiChatOptions = org.springframework.ai.openai.OpenAiChatOptions.builder()
@@ -101,7 +102,7 @@ public class GenerateReplyProjection {
                 .then();
     }
 
-    private void emitChunk(ReplyInitiated e, String messageId, String chunk) {
+    private void emitChunk(QuestionAsked e, String messageId, String chunk) {
         ai.jobbortunity.gateway.chat.domain.model.Message<String> message = ai.jobbortunity.gateway.chat.domain.model.Message.response(
                 messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
 
@@ -124,7 +125,7 @@ public class GenerateReplyProjection {
                 .collect(Collectors.joining());
     }
 
-    private Mono<ai.jobbortunity.gateway.chat.domain.model.Message<String>> saveMessage(ReplyInitiated e, String messageId, String content) {
+    private Mono<ai.jobbortunity.gateway.chat.domain.model.Message<String>> saveMessage(QuestionAsked e, String messageId, String content) {
         MessageModel<String> messageModel = MessageModel.create(
                 Role.ASSISTANT, e.chatId(), e.actor(), messageId, Instant.now(), content);
 

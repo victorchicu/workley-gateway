@@ -2,7 +2,7 @@ package ai.jobbortunity.gateway.chat.application.handler;
 
 import ai.jobbortunity.gateway.chat.application.command.GenerateReply;
 import ai.jobbortunity.gateway.chat.application.result.GenerateReplyResult;
-import ai.jobbortunity.gateway.chat.domain.event.ReplyInitiated;
+import ai.jobbortunity.gateway.chat.domain.event.QuestionAsked;
 import ai.jobbortunity.gateway.chat.application.error.ApplicationError;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.eventstore.EventStore;
 import org.slf4j.Logger;
@@ -38,14 +38,14 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
     @Override
     public Mono<GenerateReplyResult> handle(String actor, GenerateReply command) {
         return Mono.defer(() -> {
-            ReplyInitiated replyInitiated =
-                    new ReplyInitiated(actor, command.chatId(), command.classificationResult(), command.prompt().content());
+            QuestionAsked questionAsked =
+                    new QuestionAsked(actor, command.chatId(), command.prompt().content(), command.classificationResult());
 
             Mono<GenerateReplyResult> tx = transactionalOperator.transactional(
-                    eventStore.save(actor, replyInitiated)
+                    eventStore.save(actor, questionAsked)
                             .thenReturn(GenerateReplyResult.empty()));
 
-            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyInitiated));
+            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(questionAsked));
         }).onErrorMap(error -> {
             log.error("Oops! Could not generate reply. chatId={}", command.chatId(), error);
             return (error instanceof ApplicationError) ? error

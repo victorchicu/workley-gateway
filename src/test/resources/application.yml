@@ -14,7 +14,7 @@ server:
 spring:
   ai:
     openai:
-      api-key: api-key
+      api-key: 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
       chat:
         options:
           model: gpt-5-nano

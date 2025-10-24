@@ -53,8 +53,7 @@ public class AddMessageSaga {
         return classificationResult
                 .flatMap(result -> {
                     return commandBus
-                            .execute(e.actor(),
-                                    new GenerateReply(e.chatId(), e.message(), result))
+                            .execute(e.actor(), new GenerateReply(e.chatId(), e.message(), result))
                             .timeout(Duration.ofSeconds(5))
                             .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
                                     log.warn("Retrying generating reply (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
@@ -64,7 +63,7 @@ public class AddMessageSaga {
                                     log.info("Execute generate reply command (actor={}, chatId={}, prompt={})",
                                             e.actor(), e.chatId(), e.message().content()))
                             .onErrorResume(error -> {
-                                log.error("Generate reply failed even after all retryBackoffSpec attempts (actor={}, chatId={}, prompt={})",
+                                log.error("Generate reply failed even after all retry attempts (actor={}, chatId={}, prompt={})",
                                         e.actor(), e.chatId(), e.message().content(), error);
                                 return Mono.empty();
                             });
