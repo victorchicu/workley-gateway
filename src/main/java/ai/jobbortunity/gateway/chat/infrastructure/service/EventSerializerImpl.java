@@ -1,12 +1,13 @@
 package ai.jobbortunity.gateway.chat.infrastructure.service;
 
+import ai.jobbortunity.gateway.chat.domain.model.EventSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.PayloadApplicationEvent;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 
-@Component
+@Service
 public class EventSerializerImpl implements EventSerializer {
     private final ObjectMapper objectMapper;
 

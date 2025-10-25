@@ -1,4 +1,4 @@
-package ai.jobbortunity.gateway.chat.infrastructure.service;
+package ai.jobbortunity.gateway.chat.domain.model;
 
 import org.springframework.context.PayloadApplicationEvent;
 

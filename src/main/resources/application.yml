@@ -20,11 +20,20 @@ spring:
       observations:
         log-prompt: true
         log-completion: true
+    ollama:
+      chat:
+        options:
+          model: llama3.2:1b
+          max-tokens: 1000
+          temperature: 0.2
+      base-url: http://localhost:7869
     openai:
       api-key: ${SPRING_AI_OPENAI_API_KEY}
       chat:
         options:
           model: gpt-4o-mini
+          max-tokens: 1000
+          temperature: 0.2
       embedding:
         options:
           model: text-embedding-3-small

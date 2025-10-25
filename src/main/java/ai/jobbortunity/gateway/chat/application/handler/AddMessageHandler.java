@@ -5,7 +5,7 @@ import ai.jobbortunity.gateway.chat.application.result.AddMessageResult;
 import ai.jobbortunity.gateway.chat.domain.model.Message;
 import ai.jobbortunity.gateway.chat.domain.event.MessageAdded;
 import ai.jobbortunity.gateway.chat.application.error.ApplicationError;
-import ai.jobbortunity.gateway.chat.infrastructure.service.IdGenerator;
+import ai.jobbortunity.gateway.chat.domain.model.IdGenerator;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.readmodel.repository.ChatReadRepository;
 import ai.jobbortunity.gateway.chat.infrastructure.persistent.eventstore.EventStore;
 import org.slf4j.Logger;

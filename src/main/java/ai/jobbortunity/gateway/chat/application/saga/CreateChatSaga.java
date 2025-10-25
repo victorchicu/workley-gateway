@@ -4,7 +4,7 @@ import ai.jobbortunity.gateway.chat.application.bus.CommandBus;
 import ai.jobbortunity.gateway.chat.domain.model.Message;
 import ai.jobbortunity.gateway.chat.application.command.AddMessage;
 import ai.jobbortunity.gateway.chat.domain.event.ChatCreated;
-import ai.jobbortunity.gateway.chat.infrastructure.service.IdGenerator;
+import ai.jobbortunity.gateway.chat.domain.model.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
