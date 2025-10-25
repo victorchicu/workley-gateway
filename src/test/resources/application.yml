@@ -21,13 +21,13 @@ spring:
           temperature: 0.8
   data:
     mongodb:
-      uri: mongodb://root:QAZwsx123@mongo:27017/jobbortunity?authSource=admin
+      uri: mongodb://root:QAZwsx123@mongo:27017/workley?authSource=admin
   cloud:
     gateway:
       server:
         webflux:
           routes:
-            - id: jobbortunity-gateway
+            - id: workley-gateway
               uri: http://localhost:8443
               predicates:
                 - Path=/api/command/**
