@@ -2,8 +2,8 @@ package ai.workley.gateway.chat.infrastructure.persistent.readmodel.projection;
 
 import ai.workley.gateway.chat.domain.model.Message;
 import ai.workley.gateway.chat.domain.model.Role;
-import ai.workley.gateway.chat.domain.event.PromptSubmitted;
 import ai.workley.gateway.chat.domain.event.ReplyGenerated;
+import ai.workley.gateway.chat.domain.event.ReplyCompleted;
 import ai.workley.gateway.chat.infrastructure.ai.AiModel;
 import ai.workley.gateway.chat.infrastructure.error.InfrastructureErrors;
 import ai.workley.gateway.chat.infrastructure.persistent.readmodel.entity.MessageModel;
@@ -56,7 +56,7 @@ public class GenerateReplyProjection {
 
     @EventListener
     @Order(0)
-    public Mono<Void> handle(PromptSubmitted e) {
+    public Mono<Void> handle(ReplyGenerated e) {
         Prompt prompt =
                 new Prompt(List.of(
                         new UserMessage(e.prompt())));
@@ -76,7 +76,7 @@ public class GenerateReplyProjection {
                         saveMessage(e, messageId, content)
                                 .doOnNext(message ->
                                         applicationEventPublisher.publishEvent(
-                                                new ReplyGenerated(e.actor(), e.chatId(), message.content())
+                                                new ReplyCompleted(e.actor(), e.chatId(), message.content())
                                         )
                                 )
                 )
@@ -87,7 +87,7 @@ public class GenerateReplyProjection {
                 .then();
     }
 
-    private void emitChunk(PromptSubmitted e, String messageId, String chunk) {
+    private void emitChunk(ReplyGenerated e, String messageId, String chunk) {
         Message<String> message = Message.response(
                 messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
 
@@ -110,7 +110,7 @@ public class GenerateReplyProjection {
                 .collect(Collectors.joining());
     }
 
-    private Mono<Message<String>> saveMessage(PromptSubmitted e, String messageId, String content) {
+    private Mono<Message<String>> saveMessage(ReplyGenerated e, String messageId, String content) {
         MessageModel<String> messageModel = MessageModel.create(
                 Role.ASSISTANT, e.chatId(), e.actor(), messageId, Instant.now(), content);
 

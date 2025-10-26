@@ -2,7 +2,7 @@ package ai.workley.gateway.chat.application.handler;
 
 import ai.workley.gateway.chat.application.command.GenerateReply;
 import ai.workley.gateway.chat.application.result.GenerateReplyResult;
-import ai.workley.gateway.chat.domain.event.PromptSubmitted;
+import ai.workley.gateway.chat.domain.event.ReplyGenerated;
 import ai.workley.gateway.chat.application.error.ApplicationError;
 import ai.workley.gateway.chat.infrastructure.persistent.eventstore.EventStore;
 import org.slf4j.Logger;
@@ -38,14 +38,14 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
     @Override
     public Mono<GenerateReplyResult> handle(String actor, GenerateReply command) {
         return Mono.defer(() -> {
-            PromptSubmitted promptSubmitted =
-                    new PromptSubmitted(actor, command.chatId(), command.prompt().content());
+            ReplyGenerated replyGenerated =
+                    new ReplyGenerated(actor, command.chatId(), command.prompt().content());
 
             Mono<GenerateReplyResult> tx = transactionalOperator.transactional(
-                    eventStore.save(actor, promptSubmitted)
+                    eventStore.save(actor, replyGenerated)
                             .thenReturn(GenerateReplyResult.empty()));
 
-            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(promptSubmitted));
+            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyGenerated));
         }).onErrorMap(error -> {
             log.error("Oops! Could not generate reply. chatId={}", command.chatId(), error);
             return (error instanceof ApplicationError) ? error

@@ -26,8 +26,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-public class MessageIntentClassifier implements IntentClassifier {
-    private static final Logger log = LoggerFactory.getLogger(MessageIntentClassifier.class);
+public class PromptIntentClassifier implements IntentClassifier {
+    private static final Logger log = LoggerFactory.getLogger(PromptIntentClassifier.class);
 
     private static final String ASSISTANT_PROMPT = """
             You are an intent classifier for a job and talent search platform.
@@ -53,7 +53,7 @@ public class MessageIntentClassifier implements IntentClassifier {
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
 
-    public MessageIntentClassifier(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
+    public PromptIntentClassifier(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
         this.aiModel = aiModel;
         this.objectMapper = objectMapper;
         this.meterRegistry = meterRegistry;
