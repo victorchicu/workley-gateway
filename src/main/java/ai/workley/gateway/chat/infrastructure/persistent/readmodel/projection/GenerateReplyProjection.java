@@ -59,7 +59,6 @@ public class GenerateReplyProjection {
     public Mono<Void> handle(PromptSubmitted e) {
         Prompt prompt =
                 new Prompt(List.of(
-//                        new SystemMessage(e.classificationResult().intent().getSystemPrompt()),
                         new UserMessage(e.prompt())));
 
         final String messageId = messageIdGenerator.generate();

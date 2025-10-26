@@ -49,7 +49,7 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
         }).onErrorMap(error -> {
             log.error("Oops! Could not generate reply. chatId={}", command.chatId(), error);
             return (error instanceof ApplicationError) ? error
-                    : new ApplicationError("Oops! Could not generate reply.", error);
+                    : new ApplicationError("Oops! Something went wrong, please try again.", error);
         });
     }
 }

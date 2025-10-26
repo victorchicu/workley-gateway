@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.domain.model;
 
 public enum IntentType {
-    SEARCH_JOB("""
+    FIND_JOB("""
             You are Workley's AI assistant, specialized in helping users find job opportunities.
             
             Your role is to:
@@ -16,7 +16,7 @@ public enum IntentType {
             
             Keep responses natural and helpful.
             """),
-    SEARCH_CANDIDATE("""
+    FIND_TALENT("""
             You are Workley's AI assistant, specialized in helping employers find suitable candidates.
             
             Your role is to:

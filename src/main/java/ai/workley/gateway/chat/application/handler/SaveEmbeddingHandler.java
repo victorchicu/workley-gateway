@@ -52,7 +52,7 @@ public class SaveEmbeddingHandler implements CommandHandler<SaveEmbedding, SaveE
         }).onErrorMap(error -> {
             log.error("Oops! Could not save embedding. text={}", command.text(), error);
             return (error instanceof ApplicationError) ? error
-                    : new ApplicationError("Oops! Something went wrong.", error);
+                    : new ApplicationError("Oops! Something went wrong, please try again.", error);
         });
     }
 }

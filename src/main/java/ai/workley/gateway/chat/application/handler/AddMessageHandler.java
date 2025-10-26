@@ -66,10 +66,10 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageR
                             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(messageAdded));
                         })
         ).onErrorMap(error -> {
-            log.error("Oops! Could not add your prompt. chatId={}", command.chatId(), error);
+            log.error("Oops! Could not add your message. chatId={}", command.chatId(), error);
             return error instanceof ApplicationError
                     ? error
-                    : new ApplicationError("Oops! Could not add your prompt.", error);
+                    : new ApplicationError("Oops! Something went wrong, please try again.", error);
         });
     }
 }
