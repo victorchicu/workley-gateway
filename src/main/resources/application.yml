@@ -63,3 +63,18 @@ gateway:
     anonymous:
       jwt:
         secret: ${GATEWAY_SECURITY_ANONYMOUS_JWT_SECRET}
+management:
+  health:
+    rabbit:
+      enabled: false
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
+  metrics:
+    tags:
+      application: workley-gateway
+

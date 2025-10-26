@@ -7,6 +7,7 @@ import ai.workley.gateway.chat.domain.model.IntentClassifier;
 import ai.workley.gateway.chat.domain.model.IntentType;
 import ai.workley.gateway.chat.infrastructure.error.InfrastructureErrors;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -16,6 +17,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
+import reactor.core.observability.micrometer.Micrometer;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -49,10 +51,12 @@ public class MessageIntentClassifier implements IntentClassifier {
 
     private final AiModel aiModel;
     private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry;
 
-    public MessageIntentClassifier(AiModel aiModel, ObjectMapper objectMapper) {
+    public MessageIntentClassifier(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
         this.aiModel = aiModel;
         this.objectMapper = objectMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -61,8 +65,7 @@ public class MessageIntentClassifier implements IntentClassifier {
 
         Prompt prompt =
                 new Prompt(
-                        new SystemMessage(ASSISTANT_PROMPT),
-                        new UserMessage(message.content()));
+                        new SystemMessage(ASSISTANT_PROMPT), new UserMessage(message.content()));
 
         return aiModel.stream(prompt)
                 .timeout(Duration.ofSeconds(60))
@@ -73,6 +76,9 @@ public class MessageIntentClassifier implements IntentClassifier {
                 .map(StringBuilder::toString)
                 .filter(content -> !content.isEmpty())
                 .map(this::parseText)
+                .name("intent.classify")
+                .tag("operation", "classification")
+                .tap(Micrometer.metrics(meterRegistry))
                 .doOnSuccess(classification -> log.info("Classified as: {}", classification))
                 .onErrorResume(error -> {
                     //TODO: Save a message that could not be classified
