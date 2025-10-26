@@ -18,8 +18,9 @@ spring:
   ai:
     chat:
       observations:
-        log-prompt: true
-        log-completion: true
+        log-prompt: false
+        log-completion: false
+        include-error-logging: true
     ollama:
       chat:
         options:
