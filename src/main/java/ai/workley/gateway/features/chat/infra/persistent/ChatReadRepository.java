@@ -1,0 +1,16 @@
+package ai.workley.gateway.features.chat.infra.persistent;
+
+import ai.workley.gateway.features.chat.infra.readmodel.ChatModel;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
+
+import java.util.Collection;
+
+@Repository
+public interface ChatReadRepository extends ReactiveMongoRepository<ChatModel, String> {
+
+    @Query("{ 'chatId': ?0, 'participants.participantId': { $all: ?1 } }")
+    Mono<ChatModel> findChat(String id, Collection<String> participants);
+}

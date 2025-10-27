@@ -1,11 +1,11 @@
 package ai.workley.gateway.chat.presentation.rest;
 
 import ai.workley.gateway.chat.TestRunner;
-import ai.workley.gateway.chat.application.command.AddMessage;
-import ai.workley.gateway.chat.application.result.AddMessageResult;
-import ai.workley.gateway.chat.application.command.CreateChat;
-import ai.workley.gateway.chat.domain.model.Message;
-import ai.workley.gateway.chat.application.result.CreateChatResult;
+import ai.workley.gateway.features.chat.domain.command.AddMessage;
+import ai.workley.gateway.features.chat.domain.command.results.AddMessageResult;
+import ai.workley.gateway.features.chat.domain.command.CreateChat;
+import ai.workley.gateway.features.chat.domain.Message;
+import ai.workley.gateway.features.chat.domain.command.results.CreateChatResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseCookie;
