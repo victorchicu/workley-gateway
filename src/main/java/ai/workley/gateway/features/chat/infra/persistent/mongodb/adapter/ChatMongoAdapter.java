@@ -12,10 +12,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
-public class ChatAdapter implements ChatPort {
+public class ChatMongoAdapter implements ChatPort {
     private final ChatRepository chatRepository;
 
-    public ChatAdapter(ChatRepository chatRepository) {
+    public ChatMongoAdapter(ChatRepository chatRepository) {
         this.chatRepository = chatRepository;
     }
 

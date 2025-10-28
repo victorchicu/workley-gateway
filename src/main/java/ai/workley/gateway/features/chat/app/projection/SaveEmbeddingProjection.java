@@ -2,7 +2,6 @@ package ai.workley.gateway.features.chat.app.projection;
 
 import ai.workley.gateway.features.chat.app.port.EmbeddingPort;
 import ai.workley.gateway.features.chat.domain.Embedding;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.EmbeddingDocument;
 import ai.workley.gateway.features.chat.domain.event.EmbeddingSaved;
 import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
 import org.slf4j.Logger;
@@ -29,6 +28,7 @@ public class SaveEmbeddingProjection {
     private static final Logger log = LoggerFactory.getLogger(SaveEmbeddingProjection.class);
 
     private final EmbeddingPort embeddingPort;
+    //TODO: Add EmbeddingService and wrap to OpenAiEmbeddingService and OllamaEmbeddingService
     private final OpenAiEmbeddingModel openAiEmbeddingModel;
     private final OpenAiEmbeddingOptions openAiEmbeddingOptions;
 

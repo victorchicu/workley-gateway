@@ -9,10 +9,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
-public class MessageAdapter implements MessagePort {
+public class MessageMongoAdapter implements MessagePort {
     private final MessageRepository messageRepository;
 
-    public MessageAdapter(MessageRepository messageRepository) {
+    public MessageMongoAdapter(MessageRepository messageRepository) {
         this.messageRepository = messageRepository;
     }
 

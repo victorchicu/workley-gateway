@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class EmbeddingAdapter implements EmbeddingPort {
+public class EmbeddingMongoAdapter implements EmbeddingPort {
     private final EmbeddingRepository embeddingRepository;
 
-    public EmbeddingAdapter(EmbeddingRepository embeddingRepository) {
+    public EmbeddingMongoAdapter(EmbeddingRepository embeddingRepository) {
         this.embeddingRepository = embeddingRepository;
     }
 
