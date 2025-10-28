@@ -1,9 +1,9 @@
 package ai.workley.gateway.features.chat.app.saga;
 
-import ai.workley.gateway.features.chat.domain.command.AddMessage;
+import ai.workley.gateway.features.chat.domain.command.AddMessageInput;
 import ai.workley.gateway.features.chat.domain.event.ChatCreated;
-import ai.workley.gateway.features.chat.infra.eventbus.CommandBus;
-import ai.workley.gateway.features.chat.infra.component.IdGenerator;
+import ai.workley.gateway.features.chat.app.command.bus.CommandBus;
+import ai.workley.gateway.features.chat.infra.id.IdGenerator;
 import ai.workley.gateway.features.chat.domain.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,7 @@ public class CreateChatSaga {
                                         e.actor(), e.chatId(), e.prompt(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
         return commandBus
                 .execute(e.actor(),
-                        new AddMessage(e.chatId(),
+                        new AddMessageInput(e.chatId(),
                                 Message.anonymous(randomIdGenerator.generate(), e.chatId(), e.actor(), e.prompt()))
                 )
                 .timeout(Duration.ofSeconds(5))

@@ -1,11 +1,10 @@
 package ai.workley.gateway.features.chat.app.saga;
 
-import ai.workley.gateway.features.chat.domain.command.results.ClassificationResult;
-import ai.workley.gateway.features.chat.domain.command.GenerateReply;
-import ai.workley.gateway.features.chat.application.*;
+import ai.workley.gateway.features.chat.infra.prompt.ClassificationResult;
+import ai.workley.gateway.features.chat.domain.command.GenerateReplyInput;
 import ai.workley.gateway.features.chat.domain.event.MessageAdded;
-import ai.workley.gateway.features.chat.infra.component.IntentClassifier;
-import ai.workley.gateway.features.chat.infra.eventbus.CommandBus;
+import ai.workley.gateway.features.chat.infra.prompt.IntentClassifier;
+import ai.workley.gateway.features.chat.app.command.bus.CommandBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -50,7 +49,7 @@ public class AddMessageSaga {
 
         return classificationResult.flatMap(result -> {
             return commandBus
-                    .execute(e.actor(), new GenerateReply(e.chatId(), e.message()))
+                    .execute(e.actor(), new GenerateReplyInput(e.chatId(), e.message()))
                     .timeout(Duration.ofSeconds(5))
                     .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
                             log.warn("Retrying generating reply (actor={}, chatId={}, prompt={}) attempt #{} due to {}",

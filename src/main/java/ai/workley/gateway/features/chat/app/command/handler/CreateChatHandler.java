@@ -1,14 +1,13 @@
 package ai.workley.gateway.features.chat.app.command.handler;
 
-import ai.workley.gateway.features.chat.application.*;
-import ai.workley.gateway.features.chat.domain.error.ApplicationError;
+import ai.workley.gateway.features.chat.app.error.ApplicationError;
 import ai.workley.gateway.features.chat.domain.Message;
-import ai.workley.gateway.features.chat.domain.command.CreateChat;
-import ai.workley.gateway.features.chat.domain.command.results.CreateChatResult;
+import ai.workley.gateway.features.chat.domain.command.CreateChatInput;
+import ai.workley.gateway.features.chat.domain.command.CreateChatOutput;
 import ai.workley.gateway.features.chat.domain.event.ChatCreated;
-import ai.workley.gateway.features.chat.infra.component.IdGenerator;
+import ai.workley.gateway.features.chat.infra.id.IdGenerator;
 import ai.workley.gateway.features.chat.infra.eventstore.EventStore;
-import ai.workley.gateway.features.shared.app.command.CommandHandler;
+import ai.workley.gateway.features.shared.app.command.handler.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,7 +18,7 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @Component
-public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatResult> {
+public class CreateChatHandler implements CommandHandler<CreateChatInput, CreateChatOutput> {
     private static final Logger log = LoggerFactory.getLogger(CreateChatHandler.class);
 
     private final EventStore eventStore;
@@ -40,12 +39,12 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatR
     }
 
     @Override
-    public Class<CreateChat> supported() {
-        return CreateChat.class;
+    public Class<CreateChatInput> supported() {
+        return CreateChatInput.class;
     }
 
     @Override
-    public Mono<CreateChatResult> handle(String actor, CreateChat command) {
+    public Mono<CreateChatOutput> handle(String actor, CreateChatInput command) {
         return Mono.defer(() -> {
             String chatId = randomIdGenerator.generate();
 
@@ -54,10 +53,10 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatR
 
             ChatCreated chatCreated = new ChatCreated(actor, chatId, command.prompt());
 
-            Mono<CreateChatResult> tx =
+            Mono<CreateChatOutput> tx =
                     transactionalOperator.transactional(
                             eventStore.save(actor, chatCreated)
-                                    .thenReturn(CreateChatResult.response(chatId, dummy)));
+                                    .thenReturn(CreateChatOutput.response(chatId, dummy)));
 
             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(chatCreated));
         }).onErrorMap(error -> {

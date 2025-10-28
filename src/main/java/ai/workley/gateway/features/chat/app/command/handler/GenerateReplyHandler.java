@@ -1,11 +1,11 @@
 package ai.workley.gateway.features.chat.app.command.handler;
 
-import ai.workley.gateway.features.chat.domain.command.GenerateReply;
-import ai.workley.gateway.features.chat.domain.command.results.GenerateReplyResult;
-import ai.workley.gateway.features.chat.domain.error.ApplicationError;
+import ai.workley.gateway.features.chat.domain.command.GenerateReplyInput;
+import ai.workley.gateway.features.chat.domain.command.GenerateReplyOutput;
+import ai.workley.gateway.features.chat.app.error.ApplicationError;
 import ai.workley.gateway.features.chat.infra.eventstore.EventStore;
 import ai.workley.gateway.features.chat.domain.event.ReplyGenerated;
-import ai.workley.gateway.features.shared.app.command.CommandHandler;
+import ai.workley.gateway.features.shared.app.command.handler.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -14,7 +14,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
 @Component
-public class GenerateReplyHandler implements CommandHandler<GenerateReply, GenerateReplyResult> {
+public class GenerateReplyHandler implements CommandHandler<GenerateReplyInput, GenerateReplyOutput> {
     private static final Logger log = LoggerFactory.getLogger(GenerateReplyHandler.class);
 
     private final EventStore eventStore;
@@ -32,19 +32,19 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
     }
 
     @Override
-    public Class<GenerateReply> supported() {
-        return GenerateReply.class;
+    public Class<GenerateReplyInput> supported() {
+        return GenerateReplyInput.class;
     }
 
     @Override
-    public Mono<GenerateReplyResult> handle(String actor, GenerateReply command) {
+    public Mono<GenerateReplyOutput> handle(String actor, GenerateReplyInput command) {
         return Mono.defer(() -> {
             ReplyGenerated replyGenerated =
                     new ReplyGenerated(actor, command.chatId(), command.prompt().content());
 
-            Mono<GenerateReplyResult> tx = transactionalOperator.transactional(
+            Mono<GenerateReplyOutput> tx = transactionalOperator.transactional(
                     eventStore.save(actor, replyGenerated)
-                            .thenReturn(GenerateReplyResult.empty()));
+                            .thenReturn(GenerateReplyOutput.empty()));
 
             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyGenerated));
         }).onErrorMap(error -> {

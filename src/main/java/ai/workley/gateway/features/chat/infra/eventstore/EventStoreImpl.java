@@ -1,7 +1,7 @@
 package ai.workley.gateway.features.chat.infra.eventstore;
 
-import ai.workley.gateway.features.chat.domain.event.DomainEvent;
-import ai.workley.gateway.features.chat.infra.readmodel.EventModel;
+import ai.workley.gateway.features.shared.domain.event.DomainEvent;
+import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.EventDocument;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -15,11 +15,11 @@ public class EventStoreImpl implements EventStore {
     }
 
     @Override
-    public <T extends DomainEvent> Mono<EventModel<T>> save(String actor, T data) {
-        EventModel<T> eventModel =
-                new EventModel<T>()
+    public <T extends DomainEvent> Mono<EventDocument<T>> save(String actor, T data) {
+        EventDocument<T> eventDocument =
+                new EventDocument<T>()
                         .setEventData(data);
 
-        return eventRepository.save(eventModel);
+        return eventRepository.save(eventDocument);
     }
 }

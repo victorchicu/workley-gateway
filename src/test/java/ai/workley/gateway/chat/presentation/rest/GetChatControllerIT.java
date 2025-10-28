@@ -1,9 +1,9 @@
 package ai.workley.gateway.chat.presentation.rest;
 
 import ai.workley.gateway.chat.TestRunner;
-import ai.workley.gateway.features.chat.domain.command.CreateChat;
-import ai.workley.gateway.features.chat.domain.command.results.CreateChatResult;
-import ai.workley.gateway.features.chat.domain.query.results.GetChatResult;
+import ai.workley.gateway.features.chat.domain.command.CreateChatInput;
+import ai.workley.gateway.features.chat.domain.command.CreateChatOutput;
+import ai.workley.gateway.features.chat.domain.query.GetChatOutput;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseCookie;
@@ -29,27 +29,27 @@ public class GetChatControllerIT extends TestRunner {
     @Test
     void getChatQuery() {
         WebTestClient.ResponseSpec createChatSpec = post(
-                new CreateChat("I'm Developer"), API_COMMAND_URL);
+                new CreateChatInput("I'm Developer"), API_COMMAND_URL);
 
-        EntityExchangeResult<CreateChatResult> exchange =
+        EntityExchangeResult<CreateChatOutput> exchange =
                 createChatSpec.expectStatus()
                         .isOk()
-                        .expectBody(CreateChatResult.class)
+                        .expectBody(CreateChatOutput.class)
                         .returnResult();
 
-        CreateChatResult createChatResult = exchange.getResponseBody();
-        Assertions.assertNotNull(createChatResult);
+        CreateChatOutput createChatView = exchange.getResponseBody();
+        Assertions.assertNotNull(createChatView);
 
         ResponseCookie cookie = exchange.getResponseCookies().getFirst("__HOST-anonymousToken");
         Assertions.assertNotNull(cookie);
 
         WebTestClient.ResponseSpec getChatQuerySpec =
-                get(cookie.getValue(), API_CHATS_URL, createChatResult.chatId());
+                get(cookie.getValue(), API_CHATS_URL, createChatView.chatId());
 
-        GetChatResult getChatResult =
+        GetChatOutput getChatResult =
                 getChatQuerySpec.expectStatus()
                         .isOk()
-                        .expectBody(GetChatResult.class)
+                        .expectBody(GetChatOutput.class)
                         .returnResult()
                         .getResponseBody();
 

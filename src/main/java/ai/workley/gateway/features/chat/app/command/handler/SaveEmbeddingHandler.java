@@ -1,11 +1,11 @@
 package ai.workley.gateway.features.chat.app.command.handler;
 
-import ai.workley.gateway.features.chat.domain.error.ApplicationError;
-import ai.workley.gateway.features.chat.domain.command.SaveEmbedding;
-import ai.workley.gateway.features.chat.domain.command.results.SaveEmbeddingResult;
+import ai.workley.gateway.features.chat.app.error.ApplicationError;
+import ai.workley.gateway.features.chat.domain.command.SaveEmbeddingInput;
+import ai.workley.gateway.features.chat.domain.command.SaveEmbeddingOutput;
 import ai.workley.gateway.features.chat.domain.event.EmbeddingSaved;
 import ai.workley.gateway.features.chat.infra.eventstore.EventStore;
-import ai.workley.gateway.features.shared.app.command.CommandHandler;
+import ai.workley.gateway.features.shared.app.command.handler.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 
 @Component
-public class SaveEmbeddingHandler implements CommandHandler<SaveEmbedding, SaveEmbeddingResult> {
+public class SaveEmbeddingHandler implements CommandHandler<SaveEmbeddingInput, SaveEmbeddingOutput> {
     private static final Logger log = LoggerFactory.getLogger(SaveEmbeddingHandler.class);
 
     private final EventStore eventStore;
@@ -34,19 +34,19 @@ public class SaveEmbeddingHandler implements CommandHandler<SaveEmbedding, SaveE
     }
 
     @Override
-    public Class<SaveEmbedding> supported() {
-        return SaveEmbedding.class;
+    public Class<SaveEmbeddingInput> supported() {
+        return SaveEmbeddingInput.class;
     }
 
     @Override
-    public Mono<SaveEmbeddingResult> handle(String actor, SaveEmbedding command) {
+    public Mono<SaveEmbeddingOutput> handle(String actor, SaveEmbeddingInput command) {
         return Mono.defer(() -> {
             EmbeddingSaved embeddingSaved =
                     new EmbeddingSaved(actor, command.text(), Collections.emptyMap());
 
-            Mono<SaveEmbeddingResult> tx = transactionalOperator.transactional(
+            Mono<SaveEmbeddingOutput> tx = transactionalOperator.transactional(
                     eventStore.save(actor, embeddingSaved)
-                            .thenReturn(SaveEmbeddingResult.empty())
+                            .thenReturn(SaveEmbeddingOutput.empty())
             );
 
             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(embeddingSaved));
