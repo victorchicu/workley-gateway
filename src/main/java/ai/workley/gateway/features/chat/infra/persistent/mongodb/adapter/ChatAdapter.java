@@ -32,6 +32,7 @@ public class ChatAdapter implements ChatPort {
                 .map(this::toChat);
     }
 
+
     private Chat toChat(ChatDocument source) {
         throw new UnsupportedOperationException("Not yet implemented");
     }

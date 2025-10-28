@@ -6,7 +6,6 @@ import ai.workley.gateway.features.chat.domain.Chat;
 import ai.workley.gateway.features.chat.domain.query.GetChatInput;
 import ai.workley.gateway.features.chat.domain.query.GetChatOutput;
 import ai.workley.gateway.features.chat.app.error.ApplicationError;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.ChatDocument;
 import ai.workley.gateway.features.shared.app.query.handler.QueryHandler;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

@@ -29,6 +29,7 @@ public class MessageAdapter implements MessagePort {
                 .map(this::toMessage);
     }
 
+
     private Message<String> toMessage(MessageDocument<String> source) {
         return Message.create(
                 source.getId(), source.getChatId(), source.getOwnedBy(), source.getRole(), source.getCreatedAt(), source.getContent()

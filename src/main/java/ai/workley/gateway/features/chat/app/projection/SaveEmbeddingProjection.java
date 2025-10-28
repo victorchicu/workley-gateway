@@ -1,6 +1,7 @@
 package ai.workley.gateway.features.chat.app.projection;
 
 import ai.workley.gateway.features.chat.app.port.EmbeddingPort;
+import ai.workley.gateway.features.chat.domain.Embedding;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.EmbeddingDocument;
 import ai.workley.gateway.features.chat.domain.event.EmbeddingSaved;
 import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
@@ -43,7 +44,7 @@ public class SaveEmbeddingProjection {
 
     @EventListener
     @Order(0)
-    public Mono<EmbeddingDocument> handle(EmbeddingSaved e) {
+    public Mono<Embedding> handle(EmbeddingSaved e) {
         var document = new Document(e.text(), e.metadata());
         return Mono.fromCallable(() -> openAiEmbeddingModel.embed(
                         List.of(document),
@@ -57,14 +58,11 @@ public class SaveEmbeddingProjection {
                 .map(list -> list.isEmpty() ? null : list.getFirst())
                 .filter(Objects::nonNull)
                 .flatMap(vector -> {
-                    var embedding = new EmbeddingDocument()
-                            .setActor(e.actor())
-                            .setModel(openAiEmbeddingOptions.getModel())
-                            .setDimension(openAiEmbeddingOptions.getDimension())
-                            .setEmbedding(vector);
+                    var embedding =
+                            Embedding.create(openAiEmbeddingOptions.getModel(), e.actor(), openAiEmbeddingOptions.getDimension(), vector);
                     return embeddingPort.save(embedding)
                             .doOnSuccess(saved ->
-                                    log.info("Embedding saved (actor={})", saved.getActor())
+                                    log.info("Embedding saved (actor={})", saved.actor())
                             )
                             .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
                                 log.warn("Embedding already exists (actor={})", e.actor());
