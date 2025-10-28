@@ -1,5 +1,6 @@
 package ai.workley.gateway.features.chat.app.projection;
 
+import ai.workley.gateway.features.chat.app.port.MessagePort;
 import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
 import ai.workley.gateway.features.chat.domain.Message;
 import ai.workley.gateway.features.chat.domain.Role;
@@ -7,7 +8,6 @@ import ai.workley.gateway.features.chat.domain.event.ReplyCompleted;
 import ai.workley.gateway.features.chat.domain.event.ReplyGenerated;
 import ai.workley.gateway.features.shared.infra.ai.AiModel;
 import ai.workley.gateway.features.chat.infra.id.IdGenerator;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.MessageRepository;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.MessageDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,22 +35,22 @@ public class GenerateReplyProjection {
 
     private final AiModel aiModel;
     private final IdGenerator messageIdGenerator;
-    private final MessageRepository messageRepository;
+    private final MessagePort messagePort;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final Sinks.Many<Message<String>> chatSink;
 
     public GenerateReplyProjection(
             AiModel aiModel,
+            MessagePort messagePort,
             IdGenerator messageIdGenerator,
-            MessageRepository messageRepository,
             ApplicationEventPublisher applicationEventPublisher,
             Sinks.Many<Message<String>> chatSink
 
     ) {
         this.chatSink = chatSink;
         this.aiModel = aiModel;
+        this.messagePort = messagePort;
         this.messageIdGenerator = messageIdGenerator;
-        this.messageRepository = messageRepository;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
@@ -114,7 +114,7 @@ public class GenerateReplyProjection {
         MessageDocument<String> messageDocument = MessageDocument.create(
                 Role.ASSISTANT, e.chatId(), e.actor(), messageId, Instant.now(), content);
 
-        return messageRepository.save(messageDocument)
+        return messagePort.save(messageDocument)
                 .map(saved -> Message.response(
                         saved.getId(), saved.getChatId(), e.actor(),
                         saved.getRole(), saved.getCreatedAt(), saved.getContent()))

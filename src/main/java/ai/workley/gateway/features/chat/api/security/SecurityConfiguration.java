@@ -1,7 +1,7 @@
 package ai.workley.gateway.features.chat.api.security;
 
-import ai.workley.gateway.features.chat.api.anonymous.AnonymousJwtSecret;
-import ai.workley.gateway.features.chat.api.anonymous.CookieAnonymousAuthenticationWebFilter;
+import ai.workley.gateway.features.chat.api.rest.anonymous.AnonymousJwtSecret;
+import ai.workley.gateway.features.chat.api.rest.anonymous.CookieAnonymousAuthenticationWebFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;

@@ -1,7 +1,7 @@
 package ai.workley.gateway.features.chat.app.projection;
 
+import ai.workley.gateway.features.chat.app.port.EmbeddingPort;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.EmbeddingDocument;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.EmbeddingRepository;
 import ai.workley.gateway.features.chat.domain.event.EmbeddingSaved;
 import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
 import org.slf4j.Logger;
@@ -27,16 +27,16 @@ import java.util.Objects;
 public class SaveEmbeddingProjection {
     private static final Logger log = LoggerFactory.getLogger(SaveEmbeddingProjection.class);
 
-    private final EmbeddingRepository embeddingRepository;
+    private final EmbeddingPort embeddingPort;
     private final OpenAiEmbeddingModel openAiEmbeddingModel;
     private final OpenAiEmbeddingOptions openAiEmbeddingOptions;
 
     public SaveEmbeddingProjection(
-            EmbeddingRepository embeddingRepository,
+            EmbeddingPort embeddingPort,
             OpenAiEmbeddingModel openAiEmbeddingModel,
             OpenAiEmbeddingOptions openAiEmbeddingOptions
     ) {
-        this.embeddingRepository = embeddingRepository;
+        this.embeddingPort = embeddingPort;
         this.openAiEmbeddingModel = openAiEmbeddingModel;
         this.openAiEmbeddingOptions = openAiEmbeddingOptions;
     }
@@ -62,7 +62,7 @@ public class SaveEmbeddingProjection {
                             .setModel(openAiEmbeddingOptions.getModel())
                             .setDimension(openAiEmbeddingOptions.getDimension())
                             .setEmbedding(vector);
-                    return embeddingRepository.save(embedding)
+                    return embeddingPort.save(embedding)
                             .doOnSuccess(saved ->
                                     log.info("Embedding saved (actor={})", saved.getActor())
                             )

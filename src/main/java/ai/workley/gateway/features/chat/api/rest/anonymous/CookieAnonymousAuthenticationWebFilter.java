@@ -1,4 +1,4 @@
-package ai.workley.gateway.features.chat.api.anonymous;
+package ai.workley.gateway.features.chat.api.rest.anonymous;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.*;

@@ -1,10 +1,10 @@
 package ai.workley.gateway.features.chat.app.projection;
 
+import ai.workley.gateway.features.chat.app.port.MessagePort;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.MessageDocument;
 import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
 import ai.workley.gateway.features.chat.domain.Message;
 import ai.workley.gateway.features.chat.domain.event.MessageAdded;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.MessageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -16,10 +16,10 @@ import reactor.core.publisher.Mono;
 public class AddMessageProjection {
     private static final Logger log = LoggerFactory.getLogger(AddMessageProjection.class);
 
-    private final MessageRepository messageRepository;
+    private final MessagePort messagePort;
 
-    public AddMessageProjection(MessageRepository messageRepository) {
-        this.messageRepository = messageRepository;
+    public AddMessageProjection(MessagePort messagePort) {
+        this.messagePort = messagePort;
     }
 
     private static Message<String> toMessage(MessageDocument<String> source) {
@@ -35,7 +35,7 @@ public class AddMessageProjection {
     @EventListener
     @Order(0)
     public Mono<Void> handle(MessageAdded e) {
-        return messageRepository.save(toMessageDocument(e))
+        return messagePort.save(toMessageDocument(e))
                 .map(message -> {
                     log.info("Message was saved successfully (actor={}, chatId={}, messageId={})",
                             message.getOwnedBy(), message.getChatId(), message.getMessageId());

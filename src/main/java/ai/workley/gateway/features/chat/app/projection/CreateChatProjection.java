@@ -1,8 +1,8 @@
 package ai.workley.gateway.features.chat.app.projection;
 
+import ai.workley.gateway.features.chat.app.port.ChatPort;
 import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
 import ai.workley.gateway.features.chat.domain.event.ChatCreated;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.ChatRepository;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.ChatDocument;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.Participant;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.Summary;
@@ -19,16 +19,16 @@ import java.util.Set;
 public class CreateChatProjection {
     private static final Logger log = LoggerFactory.getLogger(CreateChatProjection.class);
 
-    private final ChatRepository chatRepository;
+    private final ChatPort chatPort;
 
-    public CreateChatProjection(ChatRepository chatRepository) {
-        this.chatRepository = chatRepository;
+    public CreateChatProjection(ChatPort chatPort) {
+        this.chatPort = chatPort;
     }
 
     @EventListener
     @Order(0)
     public Mono<Void> on(ChatCreated e) {
-        return chatRepository.save(ChatDocument.create(e.chatId(), Summary.create(e.prompt()), Set.of(Participant.create(e.actor()))))
+        return chatPort.save(ChatDocument.create(e.chatId(), Summary.create(e.prompt()), Set.of(Participant.create(e.actor()))))
                 .doOnSuccess((ChatDocument chatDocument) -> log.info("Chat created (actor={}, chatId={})", e.actor(), e.chatId()))
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
                     log.error("Failed to create chat (actor={}, chatId={})", e.actor(), e.chatId(), error);

@@ -1,6 +1,7 @@
 package ai.workley.gateway.features.chat.app.command.handler;
 
 import ai.workley.gateway.features.chat.app.error.ApplicationError;
+import ai.workley.gateway.features.chat.app.port.ChatPort;
 import ai.workley.gateway.features.chat.domain.Message;
 import ai.workley.gateway.features.chat.domain.command.AddMessageInput;
 import ai.workley.gateway.features.chat.domain.command.AddMessageOutput;
@@ -22,22 +23,22 @@ import java.util.Set;
 public class AddMessageHandler implements CommandHandler<AddMessageInput, AddMessageOutput> {
     private static final Logger log = LoggerFactory.getLogger(AddMessageHandler.class);
 
+    private final ChatPort chatPort;
     private final EventStore eventStore;
     private final IdGenerator randomIdGenerator;
-    private final ChatRepository chatRepository;
     private final TransactionalOperator transactionalOperator;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public AddMessageHandler(
+            ChatPort chatPort,
             EventStore eventStore,
             IdGenerator randomIdGenerator,
-            ChatRepository chatRepository,
             TransactionalOperator transactionalOperator,
             ApplicationEventPublisher applicationEventPublisher
     ) {
+        this.chatPort = chatPort;
         this.eventStore = eventStore;
         this.randomIdGenerator = randomIdGenerator;
-        this.chatRepository = chatRepository;
         this.transactionalOperator = transactionalOperator;
         this.applicationEventPublisher = applicationEventPublisher;
     }
@@ -50,7 +51,7 @@ public class AddMessageHandler implements CommandHandler<AddMessageInput, AddMes
     @Override
     public Mono<AddMessageOutput> handle(String actor, AddMessageInput command) {
         return Mono.defer(() ->
-                chatRepository.findChat(command.chatId(), Set.of(actor))
+                chatPort.findChat(command.chatId(), Set.of(actor))
                         .switchIfEmpty(Mono.error(new ApplicationError("Oops! Chat not found.")))
                         .flatMap(chat -> {
                             Message<String> message =

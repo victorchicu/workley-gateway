@@ -1,5 +1,7 @@
 package ai.workley.gateway.features.chat.app.query.handler;
 
+import ai.workley.gateway.features.chat.app.port.ChatPort;
+import ai.workley.gateway.features.chat.app.port.MessagePort;
 import ai.workley.gateway.features.chat.domain.query.GetChatInput;
 import ai.workley.gateway.features.chat.domain.query.GetChatOutput;
 import ai.workley.gateway.features.chat.app.error.ApplicationError;
@@ -17,12 +19,12 @@ import java.util.Set;
 
 @Component
 public class GetChatHandler implements QueryHandler<GetChatInput, GetChatOutput> {
-    private final ChatRepository chatRepository;
-    private final MessageRepository messageRepository;
+    private final ChatPort chatPort;
+    private final MessagePort messagePort;
 
-    public GetChatHandler(ChatRepository chatRepository, MessageRepository messageRepository) {
-        this.chatRepository = chatRepository;
-        this.messageRepository = messageRepository;
+    public GetChatHandler(ChatPort chatPort, MessagePort messagePort) {
+        this.chatPort = chatPort;
+        this.messagePort = messagePort;
     }
 
     @Override
@@ -33,10 +35,10 @@ public class GetChatHandler implements QueryHandler<GetChatInput, GetChatOutput>
     @Override
     public Mono<GetChatOutput> handle(Principal actor, GetChatInput query) {
         Set<String> participants = Set.of(actor.getName());
-        return chatRepository.findChat(query.chatId(), participants)
+        return chatPort.findChat(query.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationError("Oops. Chat not found.")))
                 .flatMap((ChatDocument chatDocument) ->
-                        messageRepository.findAllByChatId(chatDocument.getChatId())
+                        messagePort.findAll(chatDocument.getChatId())
                                 .map(GetChatHandler::toMessage)
                                 .collectList()
                                 .map(messages -> new GetChatOutput(chatDocument.getChatId(), messages))

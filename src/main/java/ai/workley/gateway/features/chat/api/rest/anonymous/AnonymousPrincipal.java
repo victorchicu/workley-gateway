@@ -1,4 +1,4 @@
-package ai.workley.gateway.features.chat.api.anonymous;
+package ai.workley.gateway.features.chat.api.rest.anonymous;
 
 import java.security.Principal;
 
