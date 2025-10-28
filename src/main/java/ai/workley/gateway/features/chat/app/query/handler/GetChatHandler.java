@@ -2,6 +2,7 @@ package ai.workley.gateway.features.chat.app.query.handler;
 
 import ai.workley.gateway.features.chat.app.port.ChatPort;
 import ai.workley.gateway.features.chat.app.port.MessagePort;
+import ai.workley.gateway.features.chat.domain.Chat;
 import ai.workley.gateway.features.chat.domain.query.GetChatInput;
 import ai.workley.gateway.features.chat.domain.query.GetChatOutput;
 import ai.workley.gateway.features.chat.app.error.ApplicationError;
@@ -33,9 +34,9 @@ public class GetChatHandler implements QueryHandler<GetChatInput, GetChatOutput>
         Set<String> participants = Set.of(actor.getName());
         return chatPort.findChat(query.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationError("Oops. Chat not found.")))
-                .flatMap((ChatDocument chatDocument) ->
-                        messagePort.findAll(chatDocument.getChatId()).collectList()
-                                .map(messages -> new GetChatOutput(chatDocument.getChatId(), messages))
+                .flatMap((Chat chat) ->
+                        messagePort.findAll(chat.id()).collectList()
+                                .map(messages -> new GetChatOutput(chat.id(), messages))
                 );
     }
 }

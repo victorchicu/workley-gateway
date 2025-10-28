@@ -70,4 +70,40 @@ public class ChatDocument {
         this.participants = participants;
         return this;
     }
+
+    static public class Summary {
+        private String title;
+
+        public static Summary create(String content) {
+            return new Summary()
+                    .setTitle(content);
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public Summary setTitle(String title) {
+            this.title = title;
+            return this;
+        }
+    }
+
+    static public class Participant {
+        private String participantId;
+
+        public static Participant create(String id) {
+            return new Participant()
+                    .setParticipantId(id);
+        }
+
+        public String getParticipantId() {
+            return participantId;
+        }
+
+        public Participant setParticipantId(String participantId) {
+            this.participantId = participantId;
+            return this;
+        }
+    }
 }

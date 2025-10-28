@@ -54,15 +54,15 @@ public class AddMessageHandler implements CommandHandler<AddMessageInput, AddMes
                         .switchIfEmpty(Mono.error(new ApplicationError("Oops! Chat not found.")))
                         .flatMap(chat -> {
                             Message<String> message =
-                                    Message.create(randomIdGenerator.generate(), chat.getChatId(), actor, command.message().content());
+                                    Message.create(randomIdGenerator.generate(), chat.id(), actor, command.message().content());
 
                             MessageAdded messageAdded =
-                                    new MessageAdded(actor, chat.getChatId(), message);
+                                    new MessageAdded(actor, chat.id(), message);
 
                             Mono<AddMessageOutput> tx =
                                     transactionalOperator.transactional(
                                             eventStore.save(actor, messageAdded)
-                                                    .thenReturn(AddMessageOutput.response(chat.getChatId(), message)));
+                                                    .thenReturn(AddMessageOutput.response(chat.id(), message)));
 
                             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(messageAdded));
                         })
