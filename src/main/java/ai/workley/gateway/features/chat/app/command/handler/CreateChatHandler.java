@@ -5,7 +5,7 @@ import ai.workley.gateway.features.chat.domain.Message;
 import ai.workley.gateway.features.chat.domain.command.CreateChatInput;
 import ai.workley.gateway.features.chat.domain.command.CreateChatOutput;
 import ai.workley.gateway.features.chat.domain.event.ChatCreated;
-import ai.workley.gateway.features.chat.infra.id.IdGenerator;
+import ai.workley.gateway.features.chat.infra.generators.IdGenerator;
 import ai.workley.gateway.features.chat.infra.eventstore.EventStore;
 import ai.workley.gateway.features.shared.app.command.handler.CommandHandler;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public class CreateChatHandler implements CommandHandler<CreateChatInput, Create
             String chatId = randomIdGenerator.generate();
 
             Message<String> dummy =
-                    Message.anonymous(UUID.randomUUID().toString(), chatId, actor, command.prompt());
+                    Message.create(UUID.randomUUID().toString(), chatId, actor, command.prompt());
 
             ChatCreated chatCreated = new ChatCreated(actor, chatId, command.prompt());
 

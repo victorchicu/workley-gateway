@@ -7,8 +7,7 @@ import ai.workley.gateway.features.chat.domain.Role;
 import ai.workley.gateway.features.chat.domain.event.ReplyCompleted;
 import ai.workley.gateway.features.chat.domain.event.ReplyGenerated;
 import ai.workley.gateway.features.shared.infra.ai.AiModel;
-import ai.workley.gateway.features.chat.infra.id.IdGenerator;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.MessageDocument;
+import ai.workley.gateway.features.chat.infra.generators.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -68,7 +67,7 @@ public class GenerateReplyProjection {
                 .map(this::extractText)
                 .filter(Objects::nonNull)
                 .filter(s -> !s.isEmpty())
-                .doOnNext(chunk -> emitChunk(e, messageId, chunk))   // ← no context object
+                .doOnNext(chunk -> emitChunk(e, messageId, chunk))
                 .reduce(new StringBuilder(), StringBuilder::append)
                 .map(StringBuilder::toString)
                 .filter(content -> !content.isEmpty())
@@ -80,15 +79,15 @@ public class GenerateReplyProjection {
                                         )
                                 )
                 )
-                .doOnError(error -> log.error(
-                        "Failed to generate reply (actor={}, chatId={}, prompt={})",
-                        e.actor(), e.chatId(), e.prompt(), error))
+                .doOnError(error ->
+                        log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
+                                e.actor(), e.chatId(), e.prompt(), error))
                 .onErrorResume(error -> Mono.empty())
                 .then();
     }
 
     private void emitChunk(ReplyGenerated e, String messageId, String chunk) {
-        Message<String> message = Message.response(
+        Message<String> message = Message.create(
                 messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
 
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
@@ -111,15 +110,15 @@ public class GenerateReplyProjection {
     }
 
     private Mono<Message<String>> saveMessage(ReplyGenerated e, String messageId, String content) {
-        MessageDocument<String> messageDocument = MessageDocument.create(
-                Role.ASSISTANT, e.chatId(), e.actor(), messageId, Instant.now(), content);
+        Message<String> message =
+                Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), content);
 
-        return messagePort.save(messageDocument)
-                .map(saved -> Message.response(
-                        saved.getId(), saved.getChatId(), e.actor(),
-                        saved.getRole(), saved.getCreatedAt(), saved.getContent()))
+        return messagePort.save(message)
+                .map(saved ->
+                        Message.create(
+                                saved.id(), saved.chatId(), e.actor(), saved.role(), saved.createdAt(), saved.content()))
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
-                    log.error("Failed to save reply (actor={}, chatId={}, messageId={}, prompt={})",
+                    log.warn("Reply already exists (actor={}, chatId={}, messageId={}, prompt={})",
                             e.actor(), e.chatId(), messageId, e.prompt(), error);
                     return Mono.empty();
                 });

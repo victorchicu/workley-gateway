@@ -67,7 +67,7 @@ public class SaveEmbeddingProjection {
                                     log.info("Embedding saved (actor={})", saved.getActor())
                             )
                             .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
-                                log.info("Embedding already exists (actor={})", e.actor());
+                                log.warn("Embedding already exists (actor={})", e.actor());
                                 return Mono.empty();
                             });
                 })

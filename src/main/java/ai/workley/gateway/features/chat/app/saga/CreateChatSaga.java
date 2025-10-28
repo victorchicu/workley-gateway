@@ -3,7 +3,7 @@ package ai.workley.gateway.features.chat.app.saga;
 import ai.workley.gateway.features.chat.domain.command.AddMessageInput;
 import ai.workley.gateway.features.chat.domain.event.ChatCreated;
 import ai.workley.gateway.features.chat.app.command.bus.CommandBus;
-import ai.workley.gateway.features.chat.infra.id.IdGenerator;
+import ai.workley.gateway.features.chat.infra.generators.IdGenerator;
 import ai.workley.gateway.features.chat.domain.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class CreateChatSaga {
         return commandBus
                 .execute(e.actor(),
                         new AddMessageInput(e.chatId(),
-                                Message.anonymous(randomIdGenerator.generate(), e.chatId(), e.actor(), e.prompt()))
+                                Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), e.prompt()))
                 )
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(retry)

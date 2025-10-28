@@ -8,11 +8,11 @@ public record Message<T>(String id, String chatId, String ownedBy, Role role, In
         return new Message<>(null, null, null, Role.UNKNOWN, Instant.now(), content);
     }
 
-    public static Message<String> anonymous(String id, String chatId, String ownedBy, String content) {
+    public static Message<String> create(String id, String chatId, String ownedBy, String content) {
         return new Message<>(id, chatId, ownedBy, Role.ANONYMOUS, Instant.now(), content);
     }
 
-    public static Message<String> response(String id, String chatId, String ownedBy, Role role, Instant createdAt, String content) {
+    public static Message<String> create(String id, String chatId, String ownedBy, Role role, Instant createdAt, String content) {
         return new Message<>(id, chatId, ownedBy, role, createdAt, content);
     }
 }

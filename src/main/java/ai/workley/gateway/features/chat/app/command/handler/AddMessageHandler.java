@@ -6,9 +6,8 @@ import ai.workley.gateway.features.chat.domain.Message;
 import ai.workley.gateway.features.chat.domain.command.AddMessageInput;
 import ai.workley.gateway.features.chat.domain.command.AddMessageOutput;
 import ai.workley.gateway.features.chat.domain.event.MessageAdded;
-import ai.workley.gateway.features.chat.infra.id.IdGenerator;
+import ai.workley.gateway.features.chat.infra.generators.IdGenerator;
 import ai.workley.gateway.features.chat.infra.eventstore.EventStore;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.ChatRepository;
 import ai.workley.gateway.features.shared.app.command.handler.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +54,7 @@ public class AddMessageHandler implements CommandHandler<AddMessageInput, AddMes
                         .switchIfEmpty(Mono.error(new ApplicationError("Oops! Chat not found.")))
                         .flatMap(chat -> {
                             Message<String> message =
-                                    Message.anonymous(randomIdGenerator.generate(), chat.getChatId(), actor, command.message().content());
+                                    Message.create(randomIdGenerator.generate(), chat.getChatId(), actor, command.message().content());
 
                             MessageAdded messageAdded =
                                     new MessageAdded(actor, chat.getChatId(), message);

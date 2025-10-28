@@ -1,4 +1,4 @@
-package ai.workley.gateway.features.chat.infra.id;
+package ai.workley.gateway.features.chat.infra.generators;
 
 import org.springframework.stereotype.Service;
 

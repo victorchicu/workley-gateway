@@ -31,7 +31,7 @@ public class CreateChatProjection {
         return chatPort.save(ChatDocument.create(e.chatId(), Summary.create(e.prompt()), Set.of(Participant.create(e.actor()))))
                 .doOnSuccess((ChatDocument chatDocument) -> log.info("Chat created (actor={}, chatId={})", e.actor(), e.chatId()))
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
-                    log.error("Failed to create chat (actor={}, chatId={})", e.actor(), e.chatId(), error);
+                    log.warn("Chat already exists (actor={}, chatId={})", e.actor(), e.chatId(), error);
                     return Mono.empty();
                 })
                 .then();

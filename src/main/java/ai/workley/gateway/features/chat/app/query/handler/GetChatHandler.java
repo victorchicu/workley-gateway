@@ -5,11 +5,7 @@ import ai.workley.gateway.features.chat.app.port.MessagePort;
 import ai.workley.gateway.features.chat.domain.query.GetChatInput;
 import ai.workley.gateway.features.chat.domain.query.GetChatOutput;
 import ai.workley.gateway.features.chat.app.error.ApplicationError;
-import ai.workley.gateway.features.chat.domain.Message;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.ChatRepository;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.MessageRepository;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.ChatDocument;
-import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.MessageDocument;
 import ai.workley.gateway.features.shared.app.query.handler.QueryHandler;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -38,21 +34,8 @@ public class GetChatHandler implements QueryHandler<GetChatInput, GetChatOutput>
         return chatPort.findChat(query.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationError("Oops. Chat not found.")))
                 .flatMap((ChatDocument chatDocument) ->
-                        messagePort.findAll(chatDocument.getChatId())
-                                .map(GetChatHandler::toMessage)
-                                .collectList()
+                        messagePort.findAll(chatDocument.getChatId()).collectList()
                                 .map(messages -> new GetChatOutput(chatDocument.getChatId(), messages))
                 );
-    }
-
-    private static Message<String> toMessage(MessageDocument<String> messageDocument) {
-        return Message.response(
-                messageDocument.getId(),
-                messageDocument.getChatId(),
-                messageDocument.getOwnedBy(),
-                messageDocument.getRole(),
-                messageDocument.getCreatedAt(),
-                messageDocument.getContent()
-        );
     }
 }
