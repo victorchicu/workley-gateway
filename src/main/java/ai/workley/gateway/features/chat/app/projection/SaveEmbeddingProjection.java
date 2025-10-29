@@ -14,6 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -28,7 +29,6 @@ public class SaveEmbeddingProjection {
     private static final Logger log = LoggerFactory.getLogger(SaveEmbeddingProjection.class);
 
     private final EmbeddingPort embeddingPort;
-    //TODO: Add EmbeddingService and wrap to OpenAiEmbeddingService and OllamaEmbeddingService
     private final OpenAiEmbeddingModel openAiEmbeddingModel;
     private final OpenAiEmbeddingOptions openAiEmbeddingOptions;
 
@@ -42,11 +42,12 @@ public class SaveEmbeddingProjection {
         this.openAiEmbeddingOptions = openAiEmbeddingOptions;
     }
 
+    @Async
     @EventListener
     @Order(0)
-    public Mono<Embedding> handle(EmbeddingSaved e) {
+    public void handle(EmbeddingSaved e) {
         var document = new Document(e.text(), e.metadata());
-        return Mono.fromCallable(() -> openAiEmbeddingModel.embed(
+        Mono.fromCallable(() -> openAiEmbeddingModel.embed(
                         List.of(document),
                         EmbeddingOptionsBuilder.builder()
                                 .withModel(openAiEmbeddingOptions.getModel())
@@ -79,7 +80,8 @@ public class SaveEmbeddingProjection {
                                 })
                 )
                 .doOnError(error -> log.error("Embedding failed (actor={}})", e.actor(), error))
-                .onErrorResume(err -> Mono.empty());
+                .onErrorResume(err -> Mono.empty())
+                .subscribe();
     }
 
     @ConfigurationProperties("spring.ai.openai.embedding.options")

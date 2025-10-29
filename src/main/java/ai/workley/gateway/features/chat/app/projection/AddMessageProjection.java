@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -20,10 +21,11 @@ public class AddMessageProjection {
         this.messagePort = messagePort;
     }
 
+    @Async
     @EventListener
     @Order(0)
-    public Mono<Void> handle(MessageAdded e) {
-        return messagePort.save(e.message())
+    public void handle(MessageAdded e) {
+        messagePort.save(e.message())
                 .doOnSuccess(message -> {
                     log.info("Message saved (actor={}, chatId={}, messageId={})",
                             message.ownedBy(), message.chatId(), message.id());
@@ -33,6 +35,6 @@ public class AddMessageProjection {
                             e.actor(), e.chatId(), e.message().id(), error);
                     return Mono.empty();
                 })
-                .then();
+                .subscribe();
     }
 }

@@ -18,6 +18,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -53,16 +54,18 @@ public class GenerateReplyProjection {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
+    @Async
     @EventListener
     @Order(0)
-    public Mono<Void> handle(ReplyGenerated e) {
+
+    public void handle(ReplyGenerated e) {
         Prompt prompt =
                 new Prompt(List.of(
                         new UserMessage(e.prompt())));
 
         final String messageId = messageIdGenerator.generate();
 
-        return aiModel.stream(prompt)
+        aiModel.stream(prompt)
                 .timeout(Duration.ofSeconds(60))
                 .map(this::extractText)
                 .filter(Objects::nonNull)
@@ -83,7 +86,7 @@ public class GenerateReplyProjection {
                         log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
                                 e.actor(), e.chatId(), e.prompt(), error))
                 .onErrorResume(error -> Mono.empty())
-                .then();
+                .subscribe();
     }
 
     private void emitChunk(ReplyGenerated e, String messageId, String chunk) {
