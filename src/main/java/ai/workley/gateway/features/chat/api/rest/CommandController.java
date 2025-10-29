@@ -1,6 +1,6 @@
 package ai.workley.gateway.features.chat.api.rest;
 
-import ai.workley.gateway.features.chat.domain.error.ApplicationErrorOutput;
+import ai.workley.gateway.features.chat.domain.error.ErrorOutput;
 import ai.workley.gateway.features.shared.app.command.results.Output;
 import ai.workley.gateway.features.shared.domain.command.Command;
 import ai.workley.gateway.features.chat.app.error.ApplicationError;
@@ -35,7 +35,7 @@ public class CommandController {
                         (ApplicationError error) ->
                                 Mono.just(ResponseEntity.badRequest()
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .body(new ApplicationErrorOutput(error.getMessage())))
+                                        .body(new ErrorOutput(error.getMessage())))
                 );
     }
 }

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -28,9 +29,10 @@ public class CreateChatSaga {
         this.randomIdGenerator = randomIdGenerator;
     }
 
+    @Async
     @EventListener
     @Order(1)
-    public Mono<Void> on(ChatCreated e) {
+    public void handle(ChatCreated e) {
         RetryBackoffSpec retry =
                 Retry.backoff(5, Duration.ofMillis(500))
                         .jitter(0.5)
@@ -39,11 +41,9 @@ public class CreateChatSaga {
                         .doBeforeRetry(retrySignal ->
                                 log.warn("Retrying adding prompt (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
                                         e.actor(), e.chatId(), e.prompt(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
-        return commandBus
-                .execute(e.actor(),
-                        new AddMessageInput(e.chatId(),
-                                Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), e.prompt()))
-                )
+
+        commandBus.execute(e.actor(),
+                        new AddMessageInput(e.chatId(), Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), e.prompt())))
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(retry)
                 .doOnSuccess(result ->
@@ -54,7 +54,7 @@ public class CreateChatSaga {
                             e.actor(), e.chatId(), e.prompt(), error);
                     return Mono.empty();
                 })
-                .then();
+                .subscribe();
     }
 
     private boolean isRetryable(Throwable throwable) {

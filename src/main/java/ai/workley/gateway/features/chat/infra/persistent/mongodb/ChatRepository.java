@@ -11,6 +11,6 @@ import java.util.Collection;
 @Repository
 public interface ChatRepository extends ReactiveMongoRepository<ChatDocument, String> {
 
-    @Query("{ 'chatId': ?0, 'participants.participantId': { $all: ?1 } }")
+    @Query("{ 'chatId': ?0, 'participants.id': { $all: ?1 } }")
     Mono<ChatDocument> findChat(String id, Collection<String> participants);
 }

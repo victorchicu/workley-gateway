@@ -90,19 +90,19 @@ public class ChatDocument {
     }
 
     static public class Participant {
-        private String participantId;
+        private String id;
 
         public static Participant create(String id) {
             return new Participant()
-                    .setParticipantId(id);
+                    .setId(id);
         }
 
-        public String getParticipantId() {
-            return participantId;
+        public String getId() {
+            return id;
         }
 
-        public Participant setParticipantId(String participantId) {
-            this.participantId = participantId;
+        public Participant setId(String id) {
+            this.id = id;
             return this;
         }
     }

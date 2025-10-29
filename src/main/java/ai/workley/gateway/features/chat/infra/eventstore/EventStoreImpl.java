@@ -2,12 +2,14 @@ package ai.workley.gateway.features.chat.infra.eventstore;
 
 import ai.workley.gateway.features.shared.domain.event.DomainEvent;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.EventDocument;
+import com.github.f4b6a3.tsid.Tsid;
 import com.github.f4b6a3.tsid.TsidCreator;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
 public class EventStoreImpl implements EventStore {
+    private static final Tsid tsid = TsidCreator.getTsid();
 
     private final EventRepository eventRepository;
 
@@ -22,7 +24,7 @@ public class EventStoreImpl implements EventStore {
                         .setEventType(data.eventType())
                         .setAggregateId(data.aggregateId())
                         .setAggregateType(data.aggregateType())
-                        .setVersion(TsidCreator.getTsid().toLong())
+                        .setVersion(tsid.toLong())
                         .setEventData(data);
 
         return eventRepository.save(eventDocument);

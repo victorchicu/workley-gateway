@@ -57,7 +57,6 @@ public class GenerateReplyProjection {
     @Async
     @EventListener
     @Order(0)
-
     public void handle(ReplyGenerated e) {
         Prompt prompt =
                 new Prompt(List.of(
@@ -93,9 +92,11 @@ public class GenerateReplyProjection {
         Message<String> message = Message.create(
                 messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
 
+        log.info("Emitting reply chunk: {}", message);
+
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
         if (emitResult.isFailure()) {
-            log.debug("Failed to emit chunk (actor={}, chatId={}, chunk={}) -> ({})",
+            log.warn("Failed to emit chunk (actor={}, chatId={}, chunk={}) -> ({})",
                     e.actor(), e.chatId(), chunk, emitResult);
         }
     }
@@ -120,6 +121,7 @@ public class GenerateReplyProjection {
                 .map(saved ->
                         Message.create(
                                 saved.id(), saved.chatId(), e.actor(), saved.role(), saved.createdAt(), saved.content()))
+                .doOnSuccess(reply -> log.info("Reply saved: {}", message))
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
                     log.warn("Reply already exists (actor={}, chatId={}, messageId={}, prompt={})",
                             e.actor(), e.chatId(), messageId, e.prompt(), error);

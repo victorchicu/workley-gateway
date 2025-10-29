@@ -34,7 +34,12 @@ public class ChatMongoAdapter implements ChatPort {
 
 
     private Chat toChat(ChatDocument source) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        Set<Chat.Participant> participants =
+                source.getParticipants().stream()
+                        .map(participant -> Chat.Participant.create(participant.getId()))
+                        .collect(Collectors.toSet());
+
+        return Chat.create(source.getId(), Chat.Summary.create(source.getSummary().getTitle()), participants);
     }
 
     private ChatDocument toChatDocument(Chat source) {
