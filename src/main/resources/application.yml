@@ -28,8 +28,6 @@ spring:
           max-tokens: 1000
           temperature: 0.2
       base-url: http://localhost:7869
-      embedding:
-        model: text-embedding-3-small
     openai:
       api-key: ${SPRING_AI_OPENAI_API_KEY}
       chat:
