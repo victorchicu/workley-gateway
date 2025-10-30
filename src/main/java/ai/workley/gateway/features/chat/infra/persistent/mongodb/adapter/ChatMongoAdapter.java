@@ -39,7 +39,7 @@ public class ChatMongoAdapter implements ChatPort {
                         .map(participant -> Chat.Participant.create(participant.getId()))
                         .collect(Collectors.toSet());
 
-        return Chat.create(source.getId(), Chat.Summary.create(source.getSummary().getTitle()), participants);
+        return Chat.create(source.getChatId(), Chat.Summary.create(source.getSummary().getTitle()), participants);
     }
 
     private ChatDocument toChatDocument(Chat source) {
