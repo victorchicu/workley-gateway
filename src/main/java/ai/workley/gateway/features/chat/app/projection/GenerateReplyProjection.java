@@ -60,27 +60,24 @@ public class GenerateReplyProjection {
     public void handle(ReplyGenerated e) {
         Prompt prompt =
                 new Prompt(List.of(
-                        new UserMessage(e.prompt())));
+                        new UserMessage(e.prompt().content())));
 
-        final String messageId = messageIdGenerator.generate();
+        final String id = messageIdGenerator.generate();
 
         aiModel.stream(prompt)
                 .timeout(Duration.ofSeconds(60))
                 .map(this::extractText)
                 .filter(Objects::nonNull)
                 .filter(s -> !s.isEmpty())
-                .doOnNext(chunk -> emitChunk(e, messageId, chunk))
+                .doOnNext(chunk -> emitChunk(e, id, chunk))
                 .reduce(new StringBuilder(), StringBuilder::append)
                 .map(StringBuilder::toString)
-                .filter(content -> !content.isEmpty())
-                .flatMap(content ->
-                        saveMessage(e, messageId, content)
+                .filter(reply -> !reply.isEmpty())
+                .flatMap(reply ->
+                        saveMessage(e, id, reply)
                                 .doOnNext(message ->
                                         applicationEventPublisher.publishEvent(
-                                                new ReplyCompleted(e.actor(), e.chatId(), message.content())
-                                        )
-                                )
-                )
+                                                new ReplyCompleted(e.actor(), e.chatId(), message))))
                 .doOnError(error ->
                         log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
                                 e.actor(), e.chatId(), e.prompt(), error))
@@ -88,9 +85,9 @@ public class GenerateReplyProjection {
                 .subscribe();
     }
 
-    private void emitChunk(ReplyGenerated e, String messageId, String chunk) {
-        Message<String> message = Message.create(
-                messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
+    private void emitChunk(ReplyGenerated e, String id, String chunk) {
+        Message<String> message =
+                Message.create(id, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
 
         log.info("Emitting reply chunk: {}", message);
 
@@ -113,9 +110,9 @@ public class GenerateReplyProjection {
                 .collect(Collectors.joining());
     }
 
-    private Mono<Message<String>> saveMessage(ReplyGenerated e, String messageId, String content) {
+    private Mono<Message<String>> saveMessage(ReplyGenerated e, String id, String content) {
         Message<String> message =
-                Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), content);
+                Message.create(id, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), content);
 
         return messagePort.save(message)
                 .map(saved ->
@@ -124,7 +121,7 @@ public class GenerateReplyProjection {
                 .doOnSuccess(reply -> log.info("Reply saved: {}", message))
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
                     log.warn("Reply already exists (actor={}, chatId={}, messageId={}, prompt={})",
-                            e.actor(), e.chatId(), messageId, e.prompt(), error);
+                            e.actor(), e.chatId(), id, e.prompt(), error);
                     return Mono.empty();
                 });
     }

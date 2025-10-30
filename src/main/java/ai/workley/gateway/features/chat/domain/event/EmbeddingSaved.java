@@ -4,6 +4,7 @@ import ai.workley.gateway.features.shared.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.features.shared.domain.event.DomainEvent;
 
 import java.util.Map;
+import java.util.UUID;
 
 public record EmbeddingSaved(String actor, String text, Map<String, Object> metadata) implements DomainEvent {
 
@@ -14,7 +15,7 @@ public record EmbeddingSaved(String actor, String text, Map<String, Object> meta
 
     @Override
     public String aggregateId() {
-        return actor;
+        return UUID.randomUUID().toString();
     }
 
     @Override
