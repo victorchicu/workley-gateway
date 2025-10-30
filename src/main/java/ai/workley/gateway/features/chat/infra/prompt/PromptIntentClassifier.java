@@ -79,7 +79,6 @@ public class PromptIntentClassifier implements IntentClassifier {
                 .tap(Micrometer.metrics(meterRegistry))
                 .doOnSuccess(classification -> log.info("Classified as: {}", classification))
                 .onErrorResume(error -> {
-                    //TODO: Save a message that could not be classified
                     log.error("Classification failed", error);
                     return Mono.just(new ClassificationResult(IntentType.UNRELATED, 0f));
                 });
