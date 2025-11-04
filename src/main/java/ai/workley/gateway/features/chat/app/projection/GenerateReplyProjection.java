@@ -68,7 +68,7 @@ public class GenerateReplyProjection {
                 .timeout(Duration.ofSeconds(60))
                 .map(this::extractText)
                 .filter(Objects::nonNull)
-                .filter(s -> !s.isEmpty())
+                .filter(chunk -> !chunk.isEmpty())
                 .doOnNext(chunk -> emitChunk(e, id, chunk))
                 .reduce(new StringBuilder(), StringBuilder::append)
                 .map(StringBuilder::toString)
