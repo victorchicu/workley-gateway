@@ -33,11 +33,11 @@ public class PromptIntentClassifier implements IntentClassifier {
             Classify the user message into one of the following intents:
             - FIND_JOB — the user is looking for a job or employment opportunities.
             - FIND_TALENT — the user is looking for candidates, employees, or collaborators.
-            - BUILD_PROFILE — the user wants to create, edit, or improve a profile.
+            - CREATE_RESUME — the user wants to create, edit, or improve their resume/CV/profile.
             - UNRELATED — the message is not related to the platform’s functions.
             
             Output fields:
-            - intent: One of the enum values (FIND_JOB, FIND_TALENT, BUILD_PROFILE, UNRELATED)
+            - intent: One of the enum values (FIND_JOB, FIND_TALENT, CREATE_RESUME, UNRELATED)
             - confidence: A float between 0 and 1 representing confidence.
             
             Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
@@ -77,7 +77,6 @@ public class PromptIntentClassifier implements IntentClassifier {
                 .name("intent.classify")
                 .tag("operation", "classification")
                 .tap(Micrometer.metrics(meterRegistry))
-                .doOnSuccess(classification -> log.info("Classified as: {}", classification))
                 .onErrorResume(error -> {
                     log.error("Classification failed", error);
                     return Mono.just(new ClassificationResult(IntentType.UNRELATED, 0f));

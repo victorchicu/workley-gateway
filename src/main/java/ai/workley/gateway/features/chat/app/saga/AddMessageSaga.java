@@ -38,7 +38,7 @@ public class AddMessageSaga {
                         .jitter(0.50)
                         .maxBackoff(Duration.ofSeconds(5));
 
-        Mono<ClassificationResult> classificationResult = intentClassifier.classify(e.message())
+        intentClassifier.classify(e.message())
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
                     log.warn("Retrying classify intent (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
@@ -47,23 +47,26 @@ public class AddMessageSaga {
                 .doOnError(err -> {
                     log.error("Intent classification failed (actor={}, chatId={}, prompt={})",
                             e.actor(), e.chatId(), e.message().content(), err);
-                });
+                })
+                .flatMap(classificationResult -> {
+                    log.info("Intent classified as {} with confidence {} (actor={}, chatId={}, message={})",
+                            classificationResult.intent(), classificationResult.confidence(), e.actor(), e.chatId(), e.message().content());
 
-        classificationResult.flatMap(result -> {
-            return commandBus.execute(e.actor(), new GenerateReplyInput(e.chatId(), e.message()))
-                    .timeout(Duration.ofSeconds(5))
-                    .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
-                            log.warn("Retrying generating reply (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
-                                    e.actor(), e.chatId(), e.message().content(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
-                    )
-                    .doOnSuccess(v ->
-                            log.info("Execute generate reply command (actor={}, chatId={}, prompt={})",
-                                    e.actor(), e.chatId(), e.message().content()))
-                    .onErrorResume(error -> {
-                        log.error("Generate reply failed even after all retry attempts (actor={}, chatId={}, prompt={})",
-                                e.actor(), e.chatId(), e.message().content(), error);
-                        return Mono.empty();
-                    });
-        }).subscribe();
+                    return commandBus.execute(e.actor(), new GenerateReplyInput(e.chatId(), e.message(), classificationResult))
+                            .timeout(Duration.ofSeconds(5))
+                            .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
+                                    log.warn("Retrying generating reply (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
+                                            e.actor(), e.chatId(), e.message().content(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
+                            )
+                            .doOnSuccess(v ->
+                                    log.info("Execute generate reply command (actor={}, chatId={}, prompt={})",
+                                            e.actor(), e.chatId(), e.message().content()))
+                            .onErrorResume(error -> {
+                                log.error("Generate reply failed even after all retry attempts (actor={}, chatId={}, prompt={})",
+                                        e.actor(), e.chatId(), e.message().content(), error);
+                                return Mono.empty();
+                            });
+                })
+                .subscribe();
     }
 }

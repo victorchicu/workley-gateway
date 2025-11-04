@@ -40,7 +40,7 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReplyInput, 
     public Mono<GenerateReplyOutput> handle(String actor, GenerateReplyInput command) {
         return Mono.defer(() -> {
             ReplyGenerated replyGenerated =
-                    new ReplyGenerated(actor, command.chatId(), command.prompt());
+                    new ReplyGenerated(actor, command.chatId(), command.prompt(), command.classification());
 
             Mono<GenerateReplyOutput> tx = transactionalOperator.transactional(
                     eventStore.save(actor, replyGenerated)

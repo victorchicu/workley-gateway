@@ -2,6 +2,7 @@ package ai.workley.gateway.features.chat.app.projection;
 
 import ai.workley.gateway.features.chat.app.port.MessagePort;
 import ai.workley.gateway.features.chat.domain.Message;
+import ai.workley.gateway.features.chat.infra.prompt.ClassificationResult;
 import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
 import ai.workley.gateway.features.chat.domain.Role;
 import ai.workley.gateway.features.chat.domain.event.ReplyCompleted;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -65,6 +67,15 @@ public class GenerateReplyProjection {
                 .flatMap(history -> {
                     List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>();
 
+                    ClassificationResult classification = e.classification();
+                    String systemPrompt = classification.intent().getSystemPrompt(e.classification().confidence());
+
+                    if (systemPrompt != null && !systemPrompt.isBlank()) {
+                        messages.add(new SystemMessage(systemPrompt));
+                        log.info("Using {} confidence system prompt for intent: {} (actor={}, chatId={})",
+                                classification.confidence(), classification.intent(), e.actor(), e.chatId());
+                    }
+
                     for (Message<String> message : history) {
                         switch (message.role()) {
                             case ANONYMOUS, CUSTOMER -> messages.add(new UserMessage(message.content()));
@@ -100,7 +111,7 @@ public class GenerateReplyProjection {
         Message<String> message =
                 Message.create(id, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
 
-        log.info("Emitting reply chunk: {}", message);
+        log.debug("Emitting reply chunk: {}", message);
 
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
         if (emitResult.isFailure()) {
