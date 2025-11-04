@@ -13,7 +13,9 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.stereotype.Service;
 import reactor.core.observability.micrometer.Micrometer;
 import reactor.core.publisher.Mono;
@@ -27,6 +29,13 @@ import java.util.stream.Collectors;
 public class PromptIntentClassifier implements IntentClassifier {
     private static final Logger log = LoggerFactory.getLogger(PromptIntentClassifier.class);
 
+    private static final ChatOptions JSON_ONLY =
+            OllamaOptions.builder()
+                    .format("json")
+                    .temperature(0.0)
+                    .stop(List.of("```"))
+                    .build();
+
     private static final String ASSISTANT_PROMPT = """
             You are an intent classifier for a job and talent search platform.
             
@@ -37,13 +46,11 @@ public class PromptIntentClassifier implements IntentClassifier {
             - UNRELATED — the message is not related to the platform’s functions.
             
             Additionally, return a field indicating what the message specifically refers to ("refersTo").
-            The value of "refersTo" should be a short, descriptive identifier in CAMEL_CASE that summarizes what the message is about.
+            The value of "refersTo" should be a short, descriptive identifier in UPPER_CASE that summarizes what the message is about.
             Here are some examples (you are NOT limited to these):
-            - "JOB_LISTING"          (e.g., “show me software engineer roles”)
-            - "CANDIDATE_PROFILE"    (e.g., “search React developers near London”)
-            - "RESUME_BUILDER"       (e.g., “help me improve my CV”)
-            - "CAREER_ADVICE"        (e.g., “how do I prepare for interviews?”)
-            - "OTHER"                (not clearly one of the above)
+            - JOB_LISTING — show me software engineer roles
+            - CANDIDATE_PROFILE — search React developers near London
+            - CAREER_ADVICE — how do I prepare for interviews?
             
             Output fields:
             - intent: One of the enum values (FIND_JOB, FIND_TALENT, CREATE_RESUME, UNRELATED)
@@ -53,7 +60,17 @@ public class PromptIntentClassifier implements IntentClassifier {
             Guidelines:
             - Return exactly one JSON object.
             - Do not include trailing commas.
-            - Do not include markdown or extra text.
+            - Do not include markdown, code fences, or extra text.
+            - Always return a value for "refersTo", even when the intent is UNRELATED.
+              For UNRELATED, "refersTo" must still describe the message topic (e.g., GREETING, GENERAL_QUERY).
+            
+            Examples:
+            GOOD:
+            {"intent":"UNRELATED","confidence":0.97,"refersTo":"GREETING"}
+            {"intent":"FIND_JOB","confidence":0.93,"refersTo":"JOB_LISTING"}
+            
+            BAD (do not do this):
+            Sure! {"intent":"FIND_JOB","confidence":0.93,"refersTo":"JOB_LISTING"}
             
             Respond ONLY with valid JSON in this exact format:
             {
@@ -79,7 +96,9 @@ public class PromptIntentClassifier implements IntentClassifier {
 
         Prompt prompt =
                 new Prompt(
-                        new SystemMessage(ASSISTANT_PROMPT), new UserMessage(message.content()));
+                        List.of(new SystemMessage(ASSISTANT_PROMPT), new UserMessage(message.content())),
+                        JSON_ONLY
+                );
 
         return aiModel.stream(prompt)
                 .timeout(Duration.ofSeconds(60))

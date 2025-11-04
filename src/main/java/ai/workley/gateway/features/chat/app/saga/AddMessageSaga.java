@@ -1,6 +1,6 @@
 package ai.workley.gateway.features.chat.app.saga;
 
-import ai.workley.gateway.features.chat.infra.prompt.ClassificationResult;
+import ai.workley.gateway.features.chat.domain.IntentType;
 import ai.workley.gateway.features.chat.domain.command.GenerateReplyInput;
 import ai.workley.gateway.features.chat.domain.event.MessageAdded;
 import ai.workley.gateway.features.chat.infra.prompt.IntentClassifier;
@@ -49,8 +49,13 @@ public class AddMessageSaga {
                             e.actor(), e.chatId(), e.message().content(), err);
                 })
                 .flatMap(classificationResult -> {
-                    log.info("Intent classified as {} with confidence {}, refers to: {} (actor={}, chatId={}, message={})",
-                            classificationResult.intent(), classificationResult.confidence(), classificationResult.refersTo(), e.actor(), e.chatId(), e.message().content());
+                    log.info("Intent classified as {} with confidence {} (actor={}, chatId={}, message={})",
+                            classificationResult.intent(), classificationResult.confidence(), e.actor(), e.chatId(), e.message().content());
+
+                    if (classificationResult.intent() == IntentType.UNRELATED) {
+                        log.info("Intent refers to {} content (actor={}, chatId={}, message={})",
+                                classificationResult.refersTo(), e.actor(), e.chatId(), e.message().content());
+                    }
 
                     return commandBus.execute(e.actor(), new GenerateReplyInput(e.chatId(), e.message(), classificationResult))
                             .timeout(Duration.ofSeconds(5))
