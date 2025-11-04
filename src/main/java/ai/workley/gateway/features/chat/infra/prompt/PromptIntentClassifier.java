@@ -36,14 +36,30 @@ public class PromptIntentClassifier implements IntentClassifier {
             - CREATE_RESUME — the user wants to create, edit, or improve their resume/CV/profile.
             - UNRELATED — the message is not related to the platform’s functions.
             
+            Additionally, return a field indicating what the message specifically refers to ("refersTo").
+            The value of "refersTo" should be a short, descriptive identifier in CAMEL_CASE that summarizes what the message is about.
+            Here are some examples (you are NOT limited to these):
+            - "JOB_LISTING"          (e.g., “show me software engineer roles”)
+            - "CANDIDATE_PROFILE"    (e.g., “search React developers near London”)
+            - "RESUME_BUILDER"       (e.g., “help me improve my CV”)
+            - "CAREER_ADVICE"        (e.g., “how do I prepare for interviews?”)
+            - "OTHER"                (not clearly one of the above)
+            
             Output fields:
             - intent: One of the enum values (FIND_JOB, FIND_TALENT, CREATE_RESUME, UNRELATED)
             - confidence: A float between 0 and 1 representing confidence.
+            - refersTo: A descriptive string (may be one of the examples or a new value).
             
-            Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
+            Guidelines:
+            - Return exactly one JSON object.
+            - Do not include trailing commas.
+            - Do not include markdown or extra text.
+            
+            Respond ONLY with valid JSON in this exact format:
             {
               "intent": "FIND_JOB",
               "confidence": 0.93,
+              "refersTo": "JOB_LISTING"
             }
             """;
 
@@ -79,7 +95,7 @@ public class PromptIntentClassifier implements IntentClassifier {
                 .tap(Micrometer.metrics(meterRegistry))
                 .onErrorResume(error -> {
                     log.error("Classification failed", error);
-                    return Mono.just(new ClassificationResult(IntentType.UNRELATED, 0f));
+                    return Mono.just(new ClassificationResult(IntentType.UNRELATED, 0f, null));
                 });
     }
 

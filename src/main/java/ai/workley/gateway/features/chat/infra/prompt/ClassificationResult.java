@@ -2,7 +2,7 @@ package ai.workley.gateway.features.chat.infra.prompt;
 
 import ai.workley.gateway.features.chat.domain.IntentType;
 
-public record ClassificationResult(IntentType intent, Float confidence) {
+public record ClassificationResult(IntentType intent, Float confidence, String refersTo) {
 
     public String getSystemPrompt() {
         return intent.getSystemPrompt(confidence);

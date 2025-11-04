@@ -49,8 +49,8 @@ public class AddMessageSaga {
                             e.actor(), e.chatId(), e.message().content(), err);
                 })
                 .flatMap(classificationResult -> {
-                    log.info("Intent classified as {} with confidence {} (actor={}, chatId={}, message={})",
-                            classificationResult.intent(), classificationResult.confidence(), e.actor(), e.chatId(), e.message().content());
+                    log.info("Intent classified as {} with confidence {}, refers to: {} (actor={}, chatId={}, message={})",
+                            classificationResult.intent(), classificationResult.confidence(), classificationResult.refersTo(), e.actor(), e.chatId(), e.message().content());
 
                     return commandBus.execute(e.actor(), new GenerateReplyInput(e.chatId(), e.message(), classificationResult))
                             .timeout(Duration.ofSeconds(5))
