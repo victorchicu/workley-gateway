@@ -2,7 +2,7 @@ package ai.workley.gateway.features.chat.app.projection;
 
 import ai.workley.gateway.features.chat.app.port.MessagePort;
 import ai.workley.gateway.features.chat.domain.Message;
-import ai.workley.gateway.features.chat.infra.prompt.ClassificationResult;
+import ai.workley.gateway.features.chat.domain.event.ReplyFailed;
 import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
 import ai.workley.gateway.features.chat.domain.Role;
 import ai.workley.gateway.features.chat.domain.event.ReplyCompleted;
@@ -15,23 +15,21 @@ import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 import reactor.core.publisher.Sinks;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Component
 public class GenerateReplyProjection {
@@ -58,93 +56,103 @@ public class GenerateReplyProjection {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
-    @Async
+    //    @Async
     @EventListener
     @Order(0)
-    public void handle(ReplyGenerated e) {
-        messagePort.findRecentConversation(e.chatId(), 100)
+    public Mono<Void> handle(ReplyGenerated e) {
+        return messagePort.findRecentConversation(e.chatId(), 100)
                 .collectList()
-                .flatMap(history -> {
-                    List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>();
-
-                    ClassificationResult classification = e.classification();
-                    String systemPrompt = classification.intent().getSystemPrompt(e.classification().confidence());
-
-                    if (systemPrompt != null && !systemPrompt.isBlank()) {
-                        messages.add(new SystemMessage(systemPrompt));
-                        log.info("Using {} confidence system prompt for intent: {} (actor={}, chatId={})",
-                                classification.confidence(), classification.intent(), e.actor(), e.chatId());
-                    }
-
-                    for (Message<String> message : history) {
-                        switch (message.role()) {
-                            case ANONYMOUS, CUSTOMER -> messages.add(new UserMessage(message.content()));
-                            case ASSISTANT -> messages.add(new AssistantMessage(message.content()));
-                        }
-                    }
-
-                    final String id = messageIdGenerator.generate();
-
-                    return aiModel.stream(new Prompt(messages))
-                            .timeout(Duration.ofSeconds(60))
-                            .map(this::extractText)
-                            .filter(Objects::nonNull)
-                            .filter(chunk -> !chunk.isEmpty())
-                            .doOnNext(chunk -> emitChunk(e, id, chunk))
-                            .reduce(new StringBuilder(), StringBuilder::append)
-                            .map(StringBuilder::toString)
-                            .filter(reply -> !reply.isEmpty())
-                            .flatMap(reply ->
-                                    saveMessage(e, id, reply)
-                                            .doOnNext(message ->
-                                                    applicationEventPublisher.publishEvent(
-                                                            new ReplyCompleted(e.actor(), e.chatId(), message))))
-                            .doOnError(error ->
-                                    log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
-                                            e.actor(), e.chatId(), e.prompt(), error))
-                            .onErrorResume(error -> Mono.empty());
-                })
-                .subscribe();
+                .flatMapMany(history -> streamReply(e, history))
+                .then();
     }
 
-    private void emitChunk(ReplyGenerated e, String id, String chunk) {
-        Message<String> message =
-                Message.create(id, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
-
-        log.debug("Emitting reply chunk: {}", message);
-
+    private void emitChunkSafe(ReplyGenerated e, String id, String chunk) {
+        Message<String> message = Message.create(id, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
         if (emitResult.isFailure()) {
-            log.warn("Failed to emit chunk (actor={}, chatId={}, chunk={}) -> ({})",
-                    e.actor(), e.chatId(), chunk, emitResult);
+            log.warn("Dropped chunk (actor={}, chatId={}, reason={})", e.actor(), e.chatId(), emitResult);
         }
-    }
-
-    private String extractText(ChatResponse response) {
-        if (response == null) return "";
-        List<Generation> generations = response.getResults();
-        if (generations == null || generations.isEmpty()) return "";
-        return generations.stream()
-                .filter(Objects::nonNull)
-                .map(Generation::getOutput)
-                .map(AbstractMessage::getText)
-                .filter(Objects::nonNull)
-                .collect(Collectors.joining());
     }
 
     private Mono<Message<String>> saveMessage(ReplyGenerated e, String id, String content) {
         Message<String> message =
                 Message.create(id, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), content);
-
         return messagePort.save(message)
                 .map(saved ->
                         Message.create(
                                 saved.id(), saved.chatId(), e.actor(), saved.role(), saved.createdAt(), saved.content()))
-                .doOnSuccess(reply -> log.info("Reply saved: {}", message))
+                .doOnSuccess(saved -> log.info("Reply saved: id={}, chatId={}", saved.id(), saved.chatId()))
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
                     log.warn("Reply already exists (actor={}, chatId={}, messageId={}, prompt={})",
                             e.actor(), e.chatId(), id, e.prompt(), error);
                     return Mono.empty();
                 });
+    }
+
+    private Flux<Message<String>> streamReply(ReplyGenerated e, List<Message<String>> history) {
+        final String messageId = messageIdGenerator.generate();
+
+        Flux<String> chunks = aiModel.stream(buildPrompt(e, history))
+                .timeout(Duration.ofSeconds(30), Flux.empty())
+                .flatMapIterable(resp -> {
+                    List<Generation> gens = resp != null
+                            ? resp.getResults()
+                            : null;
+                    return gens != null ? gens : List.of();
+                })
+                .map(Generation::getOutput)
+                .map(AbstractMessage::getText)
+                .filter(chunk -> chunk != null && !chunk.isBlank())
+                .doOnNext(chunk -> emitChunkSafe(e, messageId, chunk))
+                .doOnError(error -> log.error("Stream reply failed (actor={}, chatId={})", e.actor(), e.chatId(), error))
+                .onErrorResume(error -> Flux.empty())
+                .share();
+
+        Mono<String> fullReply = chunks
+                .reduce(new StringBuilder(), StringBuilder::append)
+                .map(StringBuilder::toString)
+                .defaultIfEmpty("");
+
+        return fullReply.flatMapMany(reply -> {
+                    if (reply.isBlank()) {
+                        applicationEventPublisher.publishEvent(new ReplyFailed(e.actor(), e.chatId(), "Reply is blank or not valid"));
+                        return Flux.empty();
+                    }
+                    return saveMessage(e, messageId, reply)
+                            .doOnNext(saved -> applicationEventPublisher.publishEvent(
+                                    new ReplyCompleted(e.actor(), e.chatId(), saved)))
+                            .onErrorResume(InfrastructureErrors::isDuplicateKey, cause -> {
+                                log.warn("Duplicate reply id={} (chatId={}). Treating as success.", messageId, e.chatId(), cause);
+
+                                applicationEventPublisher.publishEvent(
+                                        new ReplyCompleted(e.actor(), e.chatId(), Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), reply)));
+
+                                return Mono.empty();
+                            })
+                            .flux();
+                })
+                .doFinally(signal -> {
+                    if (signal == SignalType.ON_ERROR || signal == SignalType.CANCEL) {
+                        applicationEventPublisher.publishEvent(new ReplyFailed(e.actor(), e.chatId(), signal.name()));
+                    }
+                });
+    }
+
+    private Prompt buildPrompt(ReplyGenerated e, List<Message<String>> history) {
+        List<org.springframework.ai.chat.messages.Message> list = new ArrayList<>();
+        list.add(new SystemMessage(e.classification().getSystemPrompt()));
+        if (history.isEmpty()) {
+            list.add(new UserMessage(e.prompt().content()));
+        } else {
+            for (Message<String> message : history) {
+                switch (message.role()) {
+                    case ANONYMOUS,
+                         CUSTOMER -> list.add(new UserMessage(message.content()));
+                    case ASSISTANT -> list.add(new AssistantMessage(message.content()));
+                    default -> log.warn("Ignoring role in history: {}", message.role());
+                }
+            }
+        }
+        return new Prompt(list);
     }
 }

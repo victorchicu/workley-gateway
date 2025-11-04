@@ -13,5 +13,5 @@ public interface MessageRepository extends ReactiveMongoRepository<MessageDocume
     @Query(value = "{ 'chatId': ?0 }", sort = "{ 'createdAt': 1 }")
     Flux<MessageDocument<String>> findLastN(String chatId, Pageable pageable);
 
-    Flux<MessageDocument<String>> findAllByChatId(String chatId);
+    Flux<MessageDocument<String>> findAllByChatId(String chatId, Pageable pageable);
 }

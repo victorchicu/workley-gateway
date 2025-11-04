@@ -26,7 +26,8 @@ public class MessageMongoAdapter implements MessagePort {
 
     @Override
     public Flux<Message<String>> findAll(String chatId) {
-        return messageRepository.findAllByChatId(chatId)
+        Pageable pageable = Pageable.ofSize(100);
+        return messageRepository.findAllByChatId(chatId, pageable)
                 .map(this::toMessage);
     }
 
