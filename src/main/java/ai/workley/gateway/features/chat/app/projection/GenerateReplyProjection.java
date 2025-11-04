@@ -81,7 +81,9 @@ public class GenerateReplyProjection {
                 .map(saved ->
                         Message.create(
                                 saved.id(), saved.chatId(), e.actor(), saved.role(), saved.createdAt(), saved.content()))
-                .doOnSuccess(saved -> log.info("Reply saved: id={}, chatId={}", saved.id(), saved.chatId()))
+                .doOnSuccess(saved ->
+                        log.info("Reply saved: id={}, chatId={}",
+                                saved.id(), saved.chatId()))
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
                     log.warn("Reply already exists (actor={}, chatId={}, messageId={}, prompt={})",
                             e.actor(), e.chatId(), id, e.prompt(), error);
@@ -104,7 +106,9 @@ public class GenerateReplyProjection {
                 .map(AbstractMessage::getText)
                 .filter(chunk -> chunk != null && !chunk.isBlank())
                 .doOnNext(chunk -> emitChunkSafe(e, messageId, chunk))
-                .doOnError(error -> log.error("Stream reply failed (actor={}, chatId={})", e.actor(), e.chatId(), error))
+                .doOnError(error ->
+                        log.error("Stream reply failed (actor={}, chatId={})",
+                                e.actor(), e.chatId(), error))
                 .onErrorResume(error -> Flux.empty())
                 .share();
 
@@ -115,14 +119,18 @@ public class GenerateReplyProjection {
 
         return fullReply.flatMapMany(reply -> {
                     if (reply.isBlank()) {
-                        applicationEventPublisher.publishEvent(new ReplyFailed(e.actor(), e.chatId(), "Reply is blank or not valid"));
+                        applicationEventPublisher.publishEvent(
+                                new ReplyFailed(e.actor(), e.chatId(), "Reply is blank or not valid"));
                         return Flux.empty();
                     }
                     return saveMessage(e, messageId, reply)
-                            .doOnNext(saved -> applicationEventPublisher.publishEvent(
-                                    new ReplyCompleted(e.actor(), e.chatId(), saved)))
+                            .doOnNext(saved ->
+                                    applicationEventPublisher.publishEvent(
+                                            new ReplyCompleted(e.actor(), e.chatId(), saved))
+                            )
                             .onErrorResume(InfrastructureErrors::isDuplicateKey, cause -> {
-                                log.warn("Duplicate reply id={} (chatId={}). Treating as success.", messageId, e.chatId(), cause);
+                                log.warn("Duplicate reply id={} (chatId={}). Treating as success.",
+                                        messageId, e.chatId(), cause);
 
                                 applicationEventPublisher.publishEvent(
                                         new ReplyCompleted(e.actor(), e.chatId(), Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), reply)));
