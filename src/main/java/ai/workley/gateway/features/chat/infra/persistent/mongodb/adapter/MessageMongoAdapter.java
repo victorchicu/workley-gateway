@@ -4,6 +4,7 @@ import ai.workley.gateway.features.chat.app.port.MessagePort;
 import ai.workley.gateway.features.chat.domain.Message;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.MessageRepository;
 import ai.workley.gateway.features.chat.infra.persistent.mongodb.document.MessageDocument;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,6 +27,13 @@ public class MessageMongoAdapter implements MessagePort {
     @Override
     public Flux<Message<String>> findAll(String chatId) {
         return messageRepository.findAllByChatId(chatId)
+                .map(this::toMessage);
+    }
+
+    @Override
+    public Flux<Message<String>> findRecentConversation(String chatId, int limit) {
+        Pageable pageable = Pageable.ofSize(limit);
+        return messageRepository.findLastN(chatId, pageable)
                 .map(this::toMessage);
     }
 

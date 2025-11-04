@@ -10,4 +10,5 @@ public interface MessagePort {
 
     Flux<Message<String>> findAll(String chatId);
 
+    Flux<Message<String>> findRecentConversation(String chatId, int limit);
 }

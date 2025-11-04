@@ -1,10 +1,10 @@
 package ai.workley.gateway.chat.presentation.rest;
 
 import ai.workley.gateway.chat.TestRunner;
+import ai.workley.gateway.features.chat.domain.Message;
 import ai.workley.gateway.features.chat.domain.command.AddMessageInput;
 import ai.workley.gateway.features.chat.domain.command.AddMessageOutput;
 import ai.workley.gateway.features.chat.domain.command.CreateChatInput;
-import ai.workley.gateway.features.chat.domain.Message;
 import ai.workley.gateway.features.chat.domain.command.CreateChatOutput;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

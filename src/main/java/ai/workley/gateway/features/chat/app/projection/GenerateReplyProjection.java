@@ -1,8 +1,8 @@
 package ai.workley.gateway.features.chat.app.projection;
 
 import ai.workley.gateway.features.chat.app.port.MessagePort;
-import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
 import ai.workley.gateway.features.chat.domain.Message;
+import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
 import ai.workley.gateway.features.chat.domain.Role;
 import ai.workley.gateway.features.chat.domain.event.ReplyCompleted;
 import ai.workley.gateway.features.chat.domain.event.ReplyGenerated;
@@ -11,6 +11,7 @@ import ai.workley.gateway.features.chat.infra.generators.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -25,6 +26,7 @@ import reactor.core.publisher.Sinks;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -58,30 +60,39 @@ public class GenerateReplyProjection {
     @EventListener
     @Order(0)
     public void handle(ReplyGenerated e) {
-        Prompt prompt =
-                new Prompt(List.of(
-                        new UserMessage(e.prompt().content())));
+        messagePort.findRecentConversation(e.chatId(), 100)
+                .collectList()
+                .flatMap(history -> {
+                    List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>();
 
-        final String id = messageIdGenerator.generate();
+                    for (Message<String> message : history) {
+                        switch (message.role()) {
+                            case ANONYMOUS, CUSTOMER -> messages.add(new UserMessage(message.content()));
+                            case ASSISTANT -> messages.add(new AssistantMessage(message.content()));
+                        }
+                    }
 
-        aiModel.stream(prompt)
-                .timeout(Duration.ofSeconds(60))
-                .map(this::extractText)
-                .filter(Objects::nonNull)
-                .filter(chunk -> !chunk.isEmpty())
-                .doOnNext(chunk -> emitChunk(e, id, chunk))
-                .reduce(new StringBuilder(), StringBuilder::append)
-                .map(StringBuilder::toString)
-                .filter(reply -> !reply.isEmpty())
-                .flatMap(reply ->
-                        saveMessage(e, id, reply)
-                                .doOnNext(message ->
-                                        applicationEventPublisher.publishEvent(
-                                                new ReplyCompleted(e.actor(), e.chatId(), message))))
-                .doOnError(error ->
-                        log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
-                                e.actor(), e.chatId(), e.prompt(), error))
-                .onErrorResume(error -> Mono.empty())
+                    final String id = messageIdGenerator.generate();
+
+                    return aiModel.stream(new Prompt(messages))
+                            .timeout(Duration.ofSeconds(60))
+                            .map(this::extractText)
+                            .filter(Objects::nonNull)
+                            .filter(chunk -> !chunk.isEmpty())
+                            .doOnNext(chunk -> emitChunk(e, id, chunk))
+                            .reduce(new StringBuilder(), StringBuilder::append)
+                            .map(StringBuilder::toString)
+                            .filter(reply -> !reply.isEmpty())
+                            .flatMap(reply ->
+                                    saveMessage(e, id, reply)
+                                            .doOnNext(message ->
+                                                    applicationEventPublisher.publishEvent(
+                                                            new ReplyCompleted(e.actor(), e.chatId(), message))))
+                            .doOnError(error ->
+                                    log.error("Failed to generate reply (actor={}, chatId={}, prompt={})",
+                                            e.actor(), e.chatId(), e.prompt(), error))
+                            .onErrorResume(error -> Mono.empty());
+                })
                 .subscribe();
     }
 
