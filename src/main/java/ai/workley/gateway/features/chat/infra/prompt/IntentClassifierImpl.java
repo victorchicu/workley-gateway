@@ -26,8 +26,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-public class PromptIntentClassifier implements IntentClassifier {
-    private static final Logger log = LoggerFactory.getLogger(PromptIntentClassifier.class);
+public class IntentClassifierImpl implements IntentClassifier {
+    private static final Logger log = LoggerFactory.getLogger(IntentClassifierImpl.class);
 
     private static final ChatOptions JSON_ONLY =
             OllamaOptions.builder()
@@ -37,61 +37,37 @@ public class PromptIntentClassifier implements IntentClassifier {
                     .build();
 
     private static final String ASSISTANT_PROMPT = """
-            You are an intent classifier for a job and talent search platform.
+             Classify user message into one intent:
+             - FIND_JOB: user wants to find a job
+             - FIND_TALENT: user wants to hire someone
+             - CREATE_RESUME: user wants to create/edit resume
+             - UNRELATED: anything else
             
-            Classify the user message into one of the following intents:
-            - FIND_JOB — the user is looking for a job or employment opportunities.
-            - FIND_TALENT — the user is looking for candidates, employees, or collaborators.
-            - CREATE_RESUME — the user wants to create, edit, or improve their resume/CV/profile.
-            - UNRELATED — the message is not related to the platform’s functions.
+             Return JSON only:
+             {
+               "intent": "FIND_JOB",
+               "confidence": 0.95
+             }
             
-            Additionally, return a field indicating what the message specifically refers to ("refersTo").
-            The value of "refersTo" should be a short, descriptive identifier in UPPER_CASE that summarizes what the message is about.
-            Here are some examples (you are NOT limited to these):
-            - JOB_LISTING — show me software engineer roles
-            - CANDIDATE_PROFILE — search React developers near London
-            - CAREER_ADVICE — how do I prepare for interviews?
-            
-            Output fields:
-            - intent: One of the enum values (FIND_JOB, FIND_TALENT, CREATE_RESUME, UNRELATED)
-            - confidence: A float between 0 and 1 representing confidence.
-            - refersTo: A descriptive string (may be one of the examples or a new value).
-            
-            Guidelines:
-            - Return exactly one JSON object.
-            - Do not include trailing commas.
-            - Do not include markdown, code fences, or extra text.
-            - Always return a value for "refersTo", even when the intent is UNRELATED.
-              For UNRELATED, "refersTo" must still describe the message topic (e.g., GREETING, GENERAL_QUERY).
-            
-            Examples:
-            GOOD:
-            {"intent":"UNRELATED","confidence":0.97,"refersTo":"GREETING"}
-            {"intent":"FIND_JOB","confidence":0.93,"refersTo":"JOB_LISTING"}
-            
-            BAD (do not do this):
-            Sure! {"intent":"FIND_JOB","confidence":0.93,"refersTo":"JOB_LISTING"}
-            
-            Respond ONLY with valid JSON in this exact format:
-            {
-              "intent": "FIND_JOB",
-              "confidence": 0.93,
-              "refersTo": "JOB_LISTING"
-            }
+             Examples:
+             "I need a job" -> {"intent":"FIND_JOB","confidence":0.95}
+             "hire developer" -> {"intent":"FIND_TALENT","confidence":0.92}
+             "help with CV" -> {"intent":"CREATE_RESUME","confidence":0.90}
+             "hello" -> {"intent":"UNRELATED","confidence":0.98}
             """;
 
     private final AiModel aiModel;
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
 
-    public PromptIntentClassifier(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
+    public IntentClassifierImpl(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
         this.aiModel = aiModel;
         this.objectMapper = objectMapper;
         this.meterRegistry = meterRegistry;
     }
 
     @Override
-    public Mono<ClassificationResult> classify(Message<String> message) {
+    public Mono<IntentClassification> classify(Message<String> message) {
         log.info("Classifying intent for: {}", message.content());
 
         Prompt prompt =
@@ -114,7 +90,7 @@ public class PromptIntentClassifier implements IntentClassifier {
                 .tap(Micrometer.metrics(meterRegistry))
                 .onErrorResume(error -> {
                     log.error("Classification failed", error);
-                    return Mono.just(new ClassificationResult(IntentType.UNRELATED, 0f, null));
+                    return Mono.just(new IntentClassification(IntentType.UNRELATED, 0f));
                 });
     }
 
@@ -130,11 +106,11 @@ public class PromptIntentClassifier implements IntentClassifier {
                 .collect(Collectors.joining());
     }
 
-    private ClassificationResult parseText(String text) {
+    private IntentClassification parseText(String text) {
         try {
-            return objectMapper.readValue(text, ClassificationResult.class);
+            return objectMapper.readValue(text, IntentClassification.class);
         } catch (Exception e) {
-            throw InfrastructureErrors.runtimeException("Failed to parse GPT response: " + text,
+            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + text,
                     e);
         }
     }

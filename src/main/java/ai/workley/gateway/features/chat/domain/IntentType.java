@@ -1,5 +1,9 @@
 package ai.workley.gateway.features.chat.domain;
 
+/*
+    CODE_EXAMPLE
+
+ */
 public enum IntentType {
     FIND_JOB(
             // High confidence prompt
