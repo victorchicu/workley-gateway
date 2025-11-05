@@ -1,9 +1,9 @@
 package ai.workley.gateway.chat.presentation.rest;
 
 import ai.workley.gateway.chat.TestRunner;
-import ai.workley.gateway.features.chat.domain.command.CreateChatInput;
-import ai.workley.gateway.features.chat.domain.command.CreateChatOutput;
-import ai.workley.gateway.features.chat.domain.query.GetChatOutput;
+import ai.workley.gateway.chat.domain.command.CreateChat;
+import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
+import ai.workley.gateway.chat.domain.payloads.GetChatPayload;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseCookie;
@@ -29,15 +29,15 @@ public class GetChatControllerIT extends TestRunner {
     @Test
     void getChatQuery() {
         WebTestClient.ResponseSpec createChatSpec = post(
-                new CreateChatInput("I'm Developer"), API_COMMAND_URL);
+                new CreateChat("I'm Developer"), API_COMMAND_URL);
 
-        EntityExchangeResult<CreateChatOutput> exchange =
+        EntityExchangeResult<CreateChatPayload> exchange =
                 createChatSpec.expectStatus()
                         .isOk()
-                        .expectBody(CreateChatOutput.class)
+                        .expectBody(CreateChatPayload.class)
                         .returnResult();
 
-        CreateChatOutput createChatView = exchange.getResponseBody();
+        CreateChatPayload createChatView = exchange.getResponseBody();
         Assertions.assertNotNull(createChatView);
 
         ResponseCookie cookie = exchange.getResponseCookies().getFirst("__HOST-anonymousToken");
@@ -46,10 +46,10 @@ public class GetChatControllerIT extends TestRunner {
         WebTestClient.ResponseSpec getChatQuerySpec =
                 get(cookie.getValue(), API_CHATS_URL, createChatView.chatId());
 
-        GetChatOutput getChatResult =
+        GetChatPayload getChatResult =
                 getChatQuerySpec.expectStatus()
                         .isOk()
-                        .expectBody(GetChatOutput.class)
+                        .expectBody(GetChatPayload.class)
                         .returnResult()
                         .getResponseBody();
 

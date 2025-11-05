@@ -1,0 +1,110 @@
+package ai.workley.gateway.chat.application.projections;
+
+import ai.workley.gateway.chat.application.ports.EmbeddingPort;
+import ai.workley.gateway.chat.domain.Embedding;
+import ai.workley.gateway.chat.domain.events.EmbeddingSaved;
+import ai.workley.gateway.chat.infrastructure.exceptions.InfrastructureErrors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.EmbeddingOptionsBuilder;
+import org.springframework.ai.embedding.TokenCountBatchingStrategy;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
+
+import java.util.List;
+import java.util.Objects;
+
+@Component
+@EnableConfigurationProperties(SaveEmbeddingProjection.OpenAiEmbeddingOptions.class)
+public class SaveEmbeddingProjection {
+    private static final Logger log = LoggerFactory.getLogger(SaveEmbeddingProjection.class);
+
+    private final EmbeddingPort embeddingPort;
+    private final OpenAiEmbeddingModel openAiEmbeddingModel;
+    private final OpenAiEmbeddingOptions openAiEmbeddingOptions;
+
+    public SaveEmbeddingProjection(
+            EmbeddingPort embeddingPort,
+            OpenAiEmbeddingModel openAiEmbeddingModel,
+            OpenAiEmbeddingOptions openAiEmbeddingOptions
+    ) {
+        this.embeddingPort = embeddingPort;
+        this.openAiEmbeddingModel = openAiEmbeddingModel;
+        this.openAiEmbeddingOptions = openAiEmbeddingOptions;
+    }
+
+    @Async
+    @EventListener
+    @Order(0)
+    public void handle(EmbeddingSaved e) {
+        var document = new Document(e.text(), e.metadata());
+        Mono.fromCallable(() -> openAiEmbeddingModel.embed(
+                        List.of(document),
+                        EmbeddingOptionsBuilder.builder()
+                                .withModel(openAiEmbeddingOptions.getModel())
+                                .withDimensions(openAiEmbeddingOptions.getDimension())
+                                .build(),
+                        new TokenCountBatchingStrategy()
+                ))
+                .publishOn(Schedulers.boundedElastic())
+                .map(list -> list.isEmpty() ? null : list.getFirst())
+                .filter(Objects::nonNull)
+                .flatMap(vector -> {
+                    var embedding =
+                            Embedding.create(openAiEmbeddingOptions.getModel(), e.actor(), openAiEmbeddingOptions.getDimension(), vector);
+                    return embeddingPort.save(embedding)
+                            .doOnSuccess(saved ->
+                                    log.info("Embedding saved (actor={})", saved.actor())
+                            )
+                            .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
+                                log.warn("Embedding already exists (actor={})", e.actor());
+                                return Mono.empty();
+                            });
+                })
+                .retryWhen(
+                        Retry.backoff(3, java.time.Duration.ofMillis(200))
+                                .maxBackoff(java.time.Duration.ofSeconds(2))
+                                .jitter(0.25)
+                                .doBeforeRetry(retrySignal -> {
+                                    log.warn("Retrying embedding save (actor={}) attempt #{} due to {}",
+                                            e.actor(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
+                                })
+                )
+                .doOnError(error -> log.error("Embedding failed (actor={}})", e.actor(), error))
+                .onErrorResume(err -> Mono.empty())
+                .subscribe();
+    }
+
+    @ConfigurationProperties("spring.ai.openai.embedding.options")
+    public static class OpenAiEmbeddingOptions {
+        private String model;
+        private Integer dimension;
+
+        public String getModel() {
+            return model;
+        }
+
+        public OpenAiEmbeddingOptions setModel(String model) {
+            this.model = model;
+            return this;
+        }
+
+        public Integer getDimension() {
+            return dimension;
+        }
+
+        public OpenAiEmbeddingOptions setDimension(Integer dimension) {
+            this.dimension = dimension;
+            return this;
+        }
+    }
+}

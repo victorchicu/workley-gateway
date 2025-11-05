@@ -1,6 +1,0 @@
-package ai.workley.gateway.features.chat.domain.command;
-
-import ai.workley.gateway.features.shared.domain.command.Command;
-
-public record CreateChatInput(String prompt) implements Command {
-}

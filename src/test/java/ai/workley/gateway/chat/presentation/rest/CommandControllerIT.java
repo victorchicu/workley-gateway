@@ -1,11 +1,11 @@
 package ai.workley.gateway.chat.presentation.rest;
 
 import ai.workley.gateway.chat.TestRunner;
-import ai.workley.gateway.features.chat.domain.Message;
-import ai.workley.gateway.features.chat.domain.command.AddMessageInput;
-import ai.workley.gateway.features.chat.domain.command.AddMessageOutput;
-import ai.workley.gateway.features.chat.domain.command.CreateChatInput;
-import ai.workley.gateway.features.chat.domain.command.CreateChatOutput;
+import ai.workley.gateway.chat.domain.Message;
+import ai.workley.gateway.chat.domain.command.AddMessage;
+import ai.workley.gateway.chat.domain.payloads.AddMessagePayload;
+import ai.workley.gateway.chat.domain.command.CreateChat;
+import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseCookie;
@@ -30,10 +30,10 @@ public class CommandControllerIT extends TestRunner {
     @Test
     void createChat() {
         WebTestClient.ResponseSpec spec = post(
-                new CreateChatInput("I'm Java Developer"), API_COMMAND_URL);
+                new CreateChat("I'm Java Developer"), API_COMMAND_URL);
 
-        CreateChatOutput actual = spec.expectStatus().isOk()
-                .expectBody(CreateChatOutput.class)
+        CreateChatPayload actual = spec.expectStatus().isOk()
+                .expectBody(CreateChatPayload.class)
                 .returnResult()
                 .getResponseBody();
 
@@ -43,15 +43,15 @@ public class CommandControllerIT extends TestRunner {
     @Test
     void addChatMessage() {
         WebTestClient.ResponseSpec createChatSpec = post(
-                new CreateChatInput("I'm Developer"), API_COMMAND_URL);
+                new CreateChat("I'm Developer"), API_COMMAND_URL);
 
-        EntityExchangeResult<CreateChatOutput> exchange =
+        EntityExchangeResult<CreateChatPayload> exchange =
                 createChatSpec.expectStatus()
                         .isOk()
-                        .expectBody(CreateChatOutput.class)
+                        .expectBody(CreateChatPayload.class)
                         .returnResult();
 
-        CreateChatOutput createChatView = exchange.getResponseBody();
+        CreateChatPayload createChatView = exchange.getResponseBody();
         Assertions.assertNotNull(createChatView);
 
         ResponseCookie cookie = exchange.getResponseCookies().getFirst("__HOST-anonymousToken");
@@ -59,11 +59,11 @@ public class CommandControllerIT extends TestRunner {
 
         WebTestClient.ResponseSpec addMessageSpec = post(
                 cookie.getValue(),
-                new AddMessageInput(createChatView.chatId(),
+                new AddMessage(createChatView.chatId(),
                         Message.create("Java Developer")), API_COMMAND_URL);
 
-        AddMessageOutput addMessageView = addMessageSpec.expectStatus().isOk()
-                .expectBody(AddMessageOutput.class)
+        AddMessagePayload addMessageView = addMessageSpec.expectStatus().isOk()
+                .expectBody(AddMessagePayload.class)
                 .returnResult()
                 .getResponseBody();
 
