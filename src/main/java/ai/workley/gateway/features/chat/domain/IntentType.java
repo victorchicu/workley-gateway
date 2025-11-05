@@ -1,9 +1,5 @@
 package ai.workley.gateway.features.chat.domain;
 
-/*
-    CODE_EXAMPLE
-
- */
 public enum IntentType {
     FIND_JOB(
             // High confidence prompt
@@ -20,7 +16,7 @@ public enum IntentType {
                     - Be conversational and friendly
                     - Ask one question at a time to avoid overwhelming the user
                     
-                    Keep responses natural and helpful.
+                    Keep responses natural and helpful, 2-3 sentences maximum.
                     """,
             // Low confidence prompt
             """
@@ -33,7 +29,7 @@ public enum IntentType {
                     
                     Example: "I'd be happy to help you find job opportunities! Are you looking for a specific type of role, or would you like to explore what's available?"
                     
-                    Keep it conversational and clarifying.
+                    Keep it conversational and clarifying, 2-3 sentences maximum
                     """
     ),
     FIND_TALENT(
@@ -50,7 +46,7 @@ public enum IntentType {
                     - Be professional and efficient
                     - Ask one question at a time
                     
-                    Keep responses focused on finding the right talent.
+                    Keep responses focused on finding the right talent, 2-3 sentences maximum.
                     """,
             // Low confidence prompt
             """
@@ -63,7 +59,7 @@ public enum IntentType {
                     
                     Example: "Are you looking to hire someone for your team? I can help you find the right candidates!"
                     
-                    Keep it friendly and clarifying.
+                    Keep it friendly and clarifying, 2-3 sentences maximum.
                     """
     ),
     CREATE_RESUME(
@@ -84,7 +80,7 @@ public enum IntentType {
                     - Provide specific, actionable advice
                     - Focus on achievements and impact, not just responsibilities
                     
-                    Keep responses professional yet friendly.
+                    Keep responses professional yet friendly, 2-3 sentences maximum.
                     """,
             // Low confidence prompt
             """
@@ -97,7 +93,7 @@ public enum IntentType {
                     
                     Example: "Would you like help creating or improving your resume? I can guide you through building a professional CV that stands out!"
                     
-                    Keep it welcoming and supportive.
+                    Keep it welcoming and supportive, 2-3 sentences maximum.
                     """
     ),
     UNRELATED(
@@ -113,7 +109,7 @@ public enum IntentType {
                     
                     Example: "I'm specialized in helping with job searches, hiring, and resume building. Is there anything in these areas I can help you with?"
                     
-                    Keep it brief, friendly, and redirect to what you can do.
+                    Keep it brief, friendly, 2-3 sentences maximum, and redirect to what you can do.
                     """,
             // Low confidence prompt
             """
@@ -126,7 +122,7 @@ public enum IntentType {
                     
                     Example: "Hi! I'm here to help with job searches, hiring, and resume building. What can I assist you with today?"
                     
-                    Keep it welcoming and open-ended.
+                    Keep it welcoming and open-ended, 2-3 sentences maximum.
                     """);
 
     private final String highConfidencePrompt;
