@@ -1,7 +1,7 @@
 package ai.workley.gateway.features.chat.domain.event;
 
 import ai.workley.gateway.features.chat.domain.Message;
-import ai.workley.gateway.features.chat.infra.prompt.IntentClassification;
+import ai.workley.gateway.features.chat.infra.intent.IntentClassification;
 import ai.workley.gateway.features.shared.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.features.shared.domain.event.DomainEvent;
 

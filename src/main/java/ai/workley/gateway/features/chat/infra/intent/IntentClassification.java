@@ -1,4 +1,4 @@
-package ai.workley.gateway.features.chat.infra.prompt;
+package ai.workley.gateway.features.chat.infra.intent;
 
 import ai.workley.gateway.features.chat.domain.IntentType;
 

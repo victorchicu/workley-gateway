@@ -1,9 +1,8 @@
-package ai.workley.gateway.features.chat.infra.prompt;
+package ai.workley.gateway.features.chat.infra.intent;
 
 import ai.workley.gateway.features.chat.domain.Message;
 import ai.workley.gateway.features.shared.infra.ai.AiModel;
 import ai.workley.gateway.features.shared.infra.error.InfrastructureErrors;
-import ai.workley.gateway.features.chat.domain.IntentType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -26,49 +25,47 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-public class IntentClassifierImpl implements IntentClassifier {
-    private static final Logger log = LoggerFactory.getLogger(IntentClassifierImpl.class);
+public class IntentSuggesterImpl implements IntentSuggester {
+    private static final Logger log = LoggerFactory.getLogger(IntentSuggesterImpl.class);
 
     private static final ChatOptions JSON_ONLY =
             OllamaOptions.builder()
+                    .model("llama3.2:3b")
                     .format("json")
-                    .temperature(0.0)
+                    .temperature(0.2)
                     .stop(List.of("```"))
                     .build();
 
     private static final String ASSISTANT_PROMPT = """
-             Classify user message into one intent:
-             - FIND_JOB: user wants to find a job
-             - FIND_TALENT: user wants to hire someone
-             - CREATE_RESUME: user wants to create/edit resume
-             - UNRELATED: anything else
+            Describe what the user message is about in 2-3 words.
+            Use UPPER_CASE format like: JOB_LISTING, CAREER_ADVICE, GREETING, etc.
             
-             Return JSON only:
-             {
-               "intent": "FIND_JOB",
-               "confidence": 0.95
-             }
+            Return JSON only:
+            {
+              "suggestion": "JOB_LISTING",
+              "confidence": 0.95
+            }
             
-             Examples:
-             "I need a job" -> {"intent":"FIND_JOB","confidence":0.95}
-             "hire developer" -> {"intent":"FIND_TALENT","confidence":0.92}
-             "help with CV" -> {"intent":"CREATE_RESUME","confidence":0.90}
-             "hello" -> {"intent":"UNRELATED","confidence":0.98}
+            Examples:
+            "show me software jobs" -> {"suggestion":"JOB_LISTING","confidence":0.95}
+            "how to prepare for interview" -> {"suggestion":"CAREER_ADVICE","confidence":0.92}
+            "search React developers" -> {"suggestion":"CANDIDATE_SEARCH","confidence":0.94}
+            "hello" -> {"suggestion":"GREETING","confidence":0.98}
             """;
 
     private final AiModel aiModel;
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
 
-    public IntentClassifierImpl(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
+    public IntentSuggesterImpl(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
         this.aiModel = aiModel;
         this.objectMapper = objectMapper;
         this.meterRegistry = meterRegistry;
     }
 
     @Override
-    public Mono<IntentClassification> classify(Message<String> message) {
-        log.info("Classifying intent for: {}", message.content());
+    public Mono<IntentSuggestion> suggest(Message<String> message) {
+        log.info("Suggesting intent for: {}", message.content());
 
         Prompt prompt =
                 new Prompt(
@@ -85,12 +82,12 @@ public class IntentClassifierImpl implements IntentClassifier {
                 .map(StringBuilder::toString)
                 .filter(content -> !content.isEmpty())
                 .map(this::parseText)
-                .name("intent.classify")
-                .tag("operation", "classification")
+                .name("intent.suggest")
+                .tag("operation", "suggestion")
                 .tap(Micrometer.metrics(meterRegistry))
                 .onErrorResume(error -> {
-                    log.error("Classification failed", error);
-                    return Mono.just(new IntentClassification(IntentType.UNRELATED, 0f));
+                    log.error("Suggestion failed", error);
+                    return Mono.just(new IntentSuggestion("UNKNOWN", 0f));
                 });
     }
 
@@ -106,12 +103,11 @@ public class IntentClassifierImpl implements IntentClassifier {
                 .collect(Collectors.joining());
     }
 
-    private IntentClassification parseText(String text) {
+    private IntentSuggestion parseText(String text) {
         try {
-            return objectMapper.readValue(text, IntentClassification.class);
+            return objectMapper.readValue(text, IntentSuggestion.class);
         } catch (Exception e) {
-            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + text,
-                    e);
+            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + text, e);
         }
     }
 }

@@ -2,11 +2,9 @@ package ai.workley.gateway.features.chat.app.saga;
 
 import ai.workley.gateway.features.chat.domain.command.GenerateReplyInput;
 import ai.workley.gateway.features.chat.domain.event.MessageAdded;
-import ai.workley.gateway.features.chat.infra.prompt.IntentClassification;
-import ai.workley.gateway.features.chat.infra.prompt.IntentClassifier;
+import ai.workley.gateway.features.chat.infra.intent.IntentClassifier;
 import ai.workley.gateway.features.chat.app.command.bus.CommandBus;
-import ai.workley.gateway.features.chat.infra.prompt.IntentSuggester;
-import ai.workley.gateway.features.chat.infra.prompt.IntentSuggestion;
+import ai.workley.gateway.features.chat.infra.intent.IntentSuggester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -87,13 +85,12 @@ public class AddMessageSaga {
                 .doOnSuccess(suggestion -> {
                     log.info("Intent suggested as {} (actor={}, chatId={}, message={})",
                             suggestion.suggestion(), e.actor(), e.chatId(), e.message().content());
-                    // You can store this suggestion in DB or cache for later use
                 })
                 .doOnError(err -> {
                     log.error("Intent suggestion failed (actor={}, chatId={}, prompt={})",
                             e.actor(), e.chatId(), e.message().content(), err);
                 })
-                .onErrorResume(error -> Mono.empty()) // Swallow errors - don't let it affect main flow
+                .onErrorResume(error -> Mono.empty()) // Swallow any errors
                 .subscribe();
     }
 }
