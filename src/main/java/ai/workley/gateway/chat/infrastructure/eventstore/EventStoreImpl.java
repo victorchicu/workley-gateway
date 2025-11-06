@@ -15,7 +15,6 @@ import java.util.Objects;
 public class EventStoreImpl implements EventStore {
     private final EventRepository eventRepository;
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public EventStoreImpl(EventRepository eventRepository) {
         this.eventRepository = eventRepository;
     }
