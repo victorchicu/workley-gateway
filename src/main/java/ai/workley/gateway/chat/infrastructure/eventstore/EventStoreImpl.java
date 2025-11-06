@@ -3,7 +3,6 @@ package ai.workley.gateway.chat.infrastructure.eventstore;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
 import ai.workley.gateway.chat.infrastructure.persistent.mongodb.documents.EventDocument;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,13 +19,13 @@ public class EventStoreImpl implements EventStore {
 
     @Override
     public <T extends DomainEvent> Flux<EventDocument<T>> load(String aggregateType, String aggregateId) {
-        return eventRepository.findAll(aggregateType, aggregateId, Sort.by(Sort.Direction.DESC, "version"));
+        return eventRepository.findAllByAggregateTypeAndAggregateIdOrderByVersionDesc(aggregateType, aggregateId);
     }
 
     @Override
     public <T extends DomainEvent> Mono<EventDocument<T>> append(String actor, T data, Long expectedVersion) {
         return eventRepository
-                .findFirst(data.aggregation().type(), data.aggregation().id(), Sort.by(Sort.Direction.DESC, "version"))
+                .findFirstByAggregateTypeAndAggregateIdOrderByVersionDesc(data.aggregation().type(), data.aggregation().id())
                 .map(EventDocument::getVersion)
                 .defaultIfEmpty(-1L)
                 .flatMap(currentVersion -> {
