@@ -1,8 +1,9 @@
 package ai.workley.gateway.chat.application.projections;
 
 import ai.workley.gateway.chat.application.ports.MessagePort;
-import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.events.ReplyGenerated;
+import ai.workley.gateway.chat.domain.events.ReplySaved;
+import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;

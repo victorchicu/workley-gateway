@@ -48,7 +48,7 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
 
             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyInitiated));
         }).onErrorMap(error -> {
-            log.error("Oops! Could not initiate reply. chatId={}", command.chatId(), error);
+            log.error("Oops! Could not generate reply. chatId={}", command.chatId(), error);
             return (error instanceof ApplicationError) ? error
                     : new ApplicationError("Oops! Something went wrong, please try again.", error);
         });

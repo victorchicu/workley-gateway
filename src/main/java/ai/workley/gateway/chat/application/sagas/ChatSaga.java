@@ -4,6 +4,7 @@ import ai.workley.gateway.chat.application.ports.MessagePort;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.command.AddMessage;
 import ai.workley.gateway.chat.domain.command.GenerateReply;
+import ai.workley.gateway.chat.domain.command.SaveReply;
 import ai.workley.gateway.chat.domain.events.*;
 import ai.workley.gateway.chat.application.command.CommandBus;
 import ai.workley.gateway.chat.infrastructure.ai.AiModel;
@@ -158,8 +159,27 @@ public class ChatSaga {
     @EventListener
     @Order(1)
     public Mono<Void> on(ReplyGenerated e) {
-        log.info("Unused reply generated saga event");
-        return Mono.empty();
+        RetryBackoffSpec retryBackoffSpec =
+                Retry.backoff(5, Duration.ofMillis(500))
+                        .jitter(0.50)
+                        .maxBackoff(Duration.ofSeconds(5));
+
+        return commandBus.execute(e.actor(), new SaveReply(e.chatId(), e.reply()))
+                .timeout(Duration.ofSeconds(60))
+                .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
+                        log.warn("Retrying saving reply (actor={}, chatId={}, reply={}) attempt #{} due to {}",
+                                e.actor(), e.chatId(), e.reply().content(),
+                                retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
+                )
+                .doOnSuccess(v ->
+                        log.info("Execute save reply command (actor={}, chatId={}, reply={})",
+                                e.actor(), e.chatId(), e.reply().content()))
+                .onErrorResume(error -> {
+                    log.error("Save reply failed even after all retry attempts (actor={}, chatId={}, reply={})",
+                            e.actor(), e.chatId(), e.reply().content(), error);
+                    return Mono.empty();
+                })
+                .then();
     }
 
     private void emitChunkSafe(ReplyInitiated e, String id, String chunk) {
