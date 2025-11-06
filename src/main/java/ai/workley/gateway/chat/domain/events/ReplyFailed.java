@@ -7,6 +7,6 @@ public record ReplyFailed(String actor, String chatId, String failure) implement
 
     @Override
     public Aggregation aggregation() {
-        return new Aggregation(chatId, AggregateTypes.CHAT, this.getClass().getSimpleName(), TsidCreator.getTsid().toLong());
+        return new Aggregation(chatId, AggregateTypes.CHAT, this.getClass().getSimpleName());
     }
 }

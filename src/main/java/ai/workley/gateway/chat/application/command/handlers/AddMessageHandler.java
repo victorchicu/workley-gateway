@@ -53,7 +53,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         return Mono.defer(() ->
                         eventStore.load(AggregateTypes.CHAT, command.chatId())
                                 .collectList()
-                                .flatMap(history -> replayEvent(actor, command, history)))
+                                .flatMap(history -> reassembleEvent(actor, command, history)))
                 .onErrorMap(this::handleError);
     }
 
@@ -75,7 +75,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         );
     }
 
-    private Mono<AddMessagePayload> replayEvent(String actor, AddMessage command, List<EventDocument<DomainEvent>> history) {
+    private Mono<AddMessagePayload> reassembleEvent(String actor, AddMessage command, List<EventDocument<DomainEvent>> history) {
         ChatAggregate aggregate;
         try {
             aggregate = ChatAggregate.rehydrate(history);
@@ -85,7 +85,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
 
         AggregateCommit<MessageAdded> commit;
         try {
-            commit = aggregate.addMessage(actor, randomIdGenerator.generate(), command.message().content());
+            commit = aggregate.appendMessage(actor, randomIdGenerator.generate(), command.message().content());
         } catch (IllegalStateException notAllowed) {
             return Mono.error(new ApplicationError("Oops! You are not allowed to post in this chat."));
         }

@@ -62,11 +62,11 @@ public class CommandControllerIT extends TestRunner {
                 new AddMessage(createChatView.chatId(),
                         Message.create("Java Developer")), API_COMMAND_URL);
 
-        AddMessagePayload addMessageView = addMessageSpec.expectStatus().isOk()
+        AddMessagePayload addMessagePayload = addMessageSpec.expectStatus().isOk()
                 .expectBody(AddMessagePayload.class)
                 .returnResult()
                 .getResponseBody();
 
-        Assertions.assertNotNull(addMessageView);
+        Assertions.assertNotNull(addMessagePayload);
     }
 }

@@ -61,7 +61,7 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(chatCreated));
         }).onErrorMap(error -> {
             log.error("Oops! Could not create chat.", error);
-            return new ApplicationError("Oops! Something went wrong, please try again.");
+            return new ApplicationError("Oops! Could not create chat.");
         });
     }
 }

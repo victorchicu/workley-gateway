@@ -10,6 +10,6 @@ public record EmbeddingSaved(String actor, String text, Map<String, Object> meta
 
     @Override
     public Aggregation aggregation() {
-        return new Aggregation(UUID.randomUUID().toString(), AggregateTypes.CHAT, this.getClass().getSimpleName(), TsidCreator.getTsid().toLong());
+        return new Aggregation(UUID.randomUUID().toString(), AggregateTypes.CHAT, this.getClass().getSimpleName());
     }
 }

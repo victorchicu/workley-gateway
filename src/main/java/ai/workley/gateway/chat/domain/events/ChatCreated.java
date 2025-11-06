@@ -7,6 +7,6 @@ public record ChatCreated(String actor, String chatId, String prompt) implements
 
     @Override
     public Aggregation aggregation() {
-        return new Aggregation(chatId, AggregateTypes.CHAT, this.getClass().getSimpleName(), TsidCreator.getTsid().toLong());
+        return new Aggregation(chatId, AggregateTypes.CHAT, this.getClass().getSimpleName());
     }
 }

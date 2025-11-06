@@ -8,54 +8,22 @@ import ai.workley.gateway.chat.infrastructure.persistent.mongodb.documents.Event
 
 import java.util.*;
 
-public class ChatAggregate {
-    private final String id;
-    private final Set<String> participants;
-    private final long version;
-    private final boolean initialized;
-
-    private ChatAggregate(String id, Set<String> participants, long version, boolean initialized) {
+public record ChatAggregate(String id, Set<String> participants, long version) {
+    public ChatAggregate(String id, Set<String> participants, long version) {
         this.id = id;
         this.participants = Collections.unmodifiableSet(new LinkedHashSet<>(participants));
         this.version = version;
-        this.initialized = initialized;
     }
 
     public static <T extends DomainEvent> ChatAggregate rehydrate(List<EventDocument<T>> history) {
-        ChatAggregate aggregate = new ChatAggregate(null, Set.of(), -1L, false);
-        for (EventDocument<?> entry : history) {
+        ChatAggregate aggregate = new ChatAggregate(null, Set.of(), -1L);
+        for (EventDocument<T> entry : history) {
             aggregate = aggregate.apply(entry);
-        }
-        if (!aggregate.initialized) {
-            throw new IllegalStateException("Chat aggregate not found");
         }
         return aggregate;
     }
 
-    private ChatAggregate apply(EventDocument<?> entry) {
-        DomainEvent event = entry.getEventData();
-        long newVersion = entry.getVersion() != null ? entry.getVersion() : version + 1;
-
-        if (event instanceof ChatCreated chatCreated) {
-            Set<String> participants = new LinkedHashSet<>();
-            participants.add(chatCreated.actor());
-            return new ChatAggregate(chatCreated.chatId(), participants, newVersion, true);
-        }
-
-        if (!initialized) {
-            return this;
-        }
-
-        if (event instanceof MessageAdded messageAdded) {
-            Set<String> updated = new LinkedHashSet<>(participants);
-            updated.add(messageAdded.message().ownedBy());
-            return new ChatAggregate(id, updated, newVersion, true);
-        }
-
-        return new ChatAggregate(id, participants, newVersion, initialized);
-    }
-
-    public AggregateCommit<MessageAdded> addMessage(String actor, String messageId, String content) {
+    public AggregateCommit<MessageAdded> appendMessage(String actor, String messageId, String content) {
         Objects.requireNonNull(actor, "actor must not be null");
         Objects.requireNonNull(messageId, "messageId must not be null");
         Objects.requireNonNull(content, "content must not be null");
@@ -69,15 +37,22 @@ public class ChatAggregate {
         return new AggregateCommit<>(new MessageAdded(actor, id, message), version);
     }
 
-    public String id() {
-        return id;
-    }
+    private <T extends DomainEvent> ChatAggregate apply(EventDocument<T> entry) {
+        DomainEvent event = entry.getEventData();
+        long newVersion = entry.getVersion() != null ? entry.getVersion() : version + 1;
 
-    public long version() {
-        return version;
-    }
+        if (event instanceof ChatCreated chatCreated) {
+            Set<String> participants = new LinkedHashSet<>();
+            participants.add(chatCreated.actor());
+            return new ChatAggregate(chatCreated.chatId(), participants, newVersion);
+        }
 
-    public Set<String> participants() {
-        return participants;
+        if (event instanceof MessageAdded messageAdded) {
+            Set<String> participants = new LinkedHashSet<>(this.participants);
+            participants.add(messageAdded.message().ownedBy());
+            return new ChatAggregate(id, participants, newVersion);
+        }
+
+        return new ChatAggregate(id, participants, newVersion);
     }
 }
