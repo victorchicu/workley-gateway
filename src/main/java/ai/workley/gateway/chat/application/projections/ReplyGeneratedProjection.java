@@ -5,7 +5,6 @@ import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.events.ReplyFailed;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.Role;
-import ai.workley.gateway.chat.domain.events.ReplyCompleted;
 import ai.workley.gateway.chat.domain.events.ReplyGenerated;
 import ai.workley.gateway.chat.infrastructure.ai.AiModel;
 import ai.workley.gateway.chat.infrastructure.generators.IdGenerator;
@@ -127,14 +126,15 @@ public class ReplyGeneratedProjection {
                     return saveMessage(e, messageId, reply)
                             .doOnNext(saved ->
                                     applicationEventPublisher.publishEvent(
-                                            new ReplyGenerated(e.actor(), e.chatId(), saved))
+                                            new ReplyGenerated(e.actor(), e.chatId(), saved, e.classification()))
                             )
                             .onErrorResume(InfrastructureErrors::isDuplicateKey, cause -> {
                                 log.warn("Duplicate reply id={} (chatId={}). Treating as success.",
                                         messageId, e.chatId(), cause);
 
                                 applicationEventPublisher.publishEvent(
-                                        new ReplyGenerated(e.actor(), e.chatId(), Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), reply)));
+                                        new ReplyGenerated(
+                                                e.actor(), e.chatId(), Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), reply), e.classification()));
 
                                 return Mono.empty();
                             })
