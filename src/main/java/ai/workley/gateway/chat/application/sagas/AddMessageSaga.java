@@ -33,10 +33,9 @@ public class AddMessageSaga {
         this.intentClassifier = intentClassifier;
     }
 
-    @Async
     @EventListener
     @Order(1)
-    public void handle(MessageAdded e) {
+    public Mono<Void> when(MessageAdded e) {
         RetryBackoffSpec retryBackoffSpec =
                 Retry.backoff(5, Duration.ofMillis(500))
                         .jitter(0.50)
@@ -95,6 +94,6 @@ public class AddMessageSaga {
                         })
                         .onErrorResume(error -> Mono.empty());
 
-        Mono.whenDelayError(classification, suggestion).subscribe();
+        return Mono.whenDelayError(classification, suggestion);
     }
 }

@@ -29,10 +29,9 @@ public class CreateChatSaga {
         this.randomIdGenerator = randomIdGenerator;
     }
 
-    @Async
     @EventListener
     @Order(1)
-    public void handle(ChatCreated e) {
+    public Mono<Void> handle(ChatCreated e) {
         RetryBackoffSpec retry =
                 Retry.backoff(5, Duration.ofMillis(500))
                         .jitter(0.5)
@@ -42,7 +41,7 @@ public class CreateChatSaga {
                                 log.warn("Retrying adding prompt (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
                                         e.actor(), e.chatId(), e.prompt(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
 
-        commandBus.execute(e.actor(),
+        return commandBus.execute(e.actor(),
                         new AddMessage(e.chatId(), Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), e.prompt())))
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(retry)
@@ -54,7 +53,7 @@ public class CreateChatSaga {
                             e.actor(), e.chatId(), e.prompt(), error);
                     return Mono.empty();
                 })
-                .subscribe();
+                .then();
     }
 
     private boolean isRetryable(Throwable throwable) {

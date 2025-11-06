@@ -24,17 +24,16 @@ public class CreateChatProjection {
         this.chatPort = chatPort;
     }
 
-    @Async
     @EventListener
     @Order(0)
-    public void handle(ChatCreated e) {
+    public Mono<Void> on(ChatCreated e) {
         Chat.Summary summary =
                 Chat.Summary.create(e.prompt());
 
         Set<Chat.Participant> participants =
                 Set.of(Chat.Participant.create(e.actor()));
 
-        chatPort.save(Chat.create(e.chatId(), summary, participants))
+        return chatPort.save(Chat.create(e.chatId(), summary, participants))
                 .doOnSuccess((Chat chat) ->
                         log.info("Chat created (actor={}, chatId={})",
                                 e.actor(), e.chatId())
@@ -44,6 +43,6 @@ public class CreateChatProjection {
                             e.actor(), e.chatId(), error);
                     return Mono.empty();
                 })
-                .subscribe();
+                .then();
     }
 }

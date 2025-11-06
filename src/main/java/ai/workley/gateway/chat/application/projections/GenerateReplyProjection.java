@@ -56,7 +56,6 @@ public class GenerateReplyProjection {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
-    //    @Async
     @EventListener
     @Order(0)
     public Mono<Void> handle(ReplyGenerated e) {

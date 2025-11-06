@@ -42,12 +42,11 @@ public class SaveEmbeddingProjection {
         this.openAiEmbeddingOptions = openAiEmbeddingOptions;
     }
 
-    @Async
     @EventListener
     @Order(0)
-    public void handle(EmbeddingSaved e) {
+    public Mono<Void> handle(EmbeddingSaved e) {
         var document = new Document(e.text(), e.metadata());
-        Mono.fromCallable(() -> openAiEmbeddingModel.embed(
+        return Mono.fromCallable(() -> openAiEmbeddingModel.embed(
                         List.of(document),
                         EmbeddingOptionsBuilder.builder()
                                 .withModel(openAiEmbeddingOptions.getModel())
@@ -81,7 +80,7 @@ public class SaveEmbeddingProjection {
                 )
                 .doOnError(error -> log.error("Embedding failed (actor={}})", e.actor(), error))
                 .onErrorResume(err -> Mono.empty())
-                .subscribe();
+                .then();
     }
 
     @ConfigurationProperties("spring.ai.openai.embedding.options")
