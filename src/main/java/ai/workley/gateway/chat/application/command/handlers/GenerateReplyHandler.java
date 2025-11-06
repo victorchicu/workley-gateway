@@ -1,7 +1,6 @@
 package ai.workley.gateway.chat.application.command.handlers;
 
 import ai.workley.gateway.chat.domain.command.GenerateReply;
-import ai.workley.gateway.chat.domain.events.ReplyInitiated;
 import ai.workley.gateway.chat.domain.payloads.GenerateReplyPayload;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
@@ -44,7 +43,7 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
                     new ReplyGenerated(actor, command.chatId(), command.prompt(), command.classification());
 
             Mono<GenerateReplyPayload> tx = transactionalOperator.transactional(
-                    eventStore.save(actor, replyGenerated)
+                    eventStore.append(actor, replyGenerated, null)
                             .thenReturn(GenerateReplyPayload.ack()));
 
             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyGenerated));

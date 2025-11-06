@@ -38,7 +38,6 @@ dependencies {
     implementation 'com.google.guava:guava:33.5.0-jre'
     implementation 'com.github.f4b6a3:tsid-creator:5.2.6'
     implementation 'org.apache.commons:commons-lang3:3.19.0'
-    implementation 'org.apache.commons:commons-lang3:3.18.0'
     implementation 'io.projectreactor:reactor-core-micrometer'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

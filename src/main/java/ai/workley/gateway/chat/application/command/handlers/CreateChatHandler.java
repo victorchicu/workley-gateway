@@ -55,7 +55,7 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
 
             Mono<CreateChatPayload> tx =
                     transactionalOperator.transactional(
-                            eventStore.save(actor, chatCreated)
+                            eventStore.append(actor, chatCreated, -1L)
                                     .thenReturn(CreateChatPayload.create(chatId, dummy)));
 
             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(chatCreated));

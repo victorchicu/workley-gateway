@@ -3,12 +3,13 @@ package ai.workley.gateway.chat.infrastructure.persistent.mongodb.documents;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
 @Document(collection = "events")
-//@CompoundIndex(name = "aggregate_idx", def = "{'aggregateId': 1, 'version': 1}", unique = true)
+@CompoundIndex(name = "aggregate_idx", def = "{'aggregateType': 1, 'aggregateId': 1, 'version': 1}", unique = true)
 public class EventDocument<T extends DomainEvent> {
     @Id
     private String id;
@@ -61,7 +62,7 @@ public class EventDocument<T extends DomainEvent> {
         return version;
     }
 
-    public EventDocument<T>  setVersion(Long version) {
+    public EventDocument<T> setVersion(Long version) {
         this.version = version;
         return this;
     }

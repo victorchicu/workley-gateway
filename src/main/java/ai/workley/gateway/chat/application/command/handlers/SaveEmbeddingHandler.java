@@ -45,7 +45,7 @@ public class SaveEmbeddingHandler implements CommandHandler<SaveEmbedding, SaveE
                     new EmbeddingSaved(actor, command.text(), Collections.emptyMap());
 
             Mono<SaveEmbeddingPayload> tx = transactionalOperator.transactional(
-                    eventStore.save(actor, embeddingSaved)
+                    eventStore.append(actor, embeddingSaved, null)
                             .thenReturn(SaveEmbeddingPayload.empty())
             );
 

@@ -41,13 +41,23 @@ public class MessageMongoAdapter implements MessagePort {
 
     private Message<String> toMessage(MessageDocument<String> source) {
         return Message.create(
-                source.getId(), source.getChatId(), source.getOwnedBy(), source.getRole(), source.getCreatedAt(), source.getContent()
+                source.getMessageId(),
+                source.getChatId(),
+                source.getOwnedBy(),
+                source.getRole(),
+                source.getCreatedAt(),
+                source.getContent()
         );
     }
 
     private MessageDocument<String> toMessageDocument(Message<String> source) {
         return MessageDocument.create(
-                source.role(), source.chatId(), source.ownedBy(), source.id(), source.createdAt(), source.content()
+                source.role(),
+                source.chatId(),
+                source.ownedBy(),
+                source.id(),
+                source.createdAt(),
+                source.content()
         );
     }
 }
