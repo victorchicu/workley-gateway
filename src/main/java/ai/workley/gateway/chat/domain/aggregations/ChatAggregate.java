@@ -39,11 +39,7 @@ public class ChatAggregate {
         if (event instanceof ChatCreated chatCreated) {
             Set<String> participants = new LinkedHashSet<>();
             participants.add(chatCreated.actor());
-            return new ChatAggregate(
-                    chatCreated.chatId(),
-                    participants,
-                    newVersion,
-                    true);
+            return new ChatAggregate(chatCreated.chatId(), participants, newVersion, true);
         }
 
         if (!initialized) {

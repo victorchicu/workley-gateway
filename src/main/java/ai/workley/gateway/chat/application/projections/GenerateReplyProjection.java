@@ -95,6 +95,8 @@ public class GenerateReplyProjection {
 
         Flux<String> chunks = aiModel.stream(buildPrompt(e, history))
                 .timeout(Duration.ofSeconds(30), Flux.empty())
+                .replay()
+                .autoConnect()
                 .flatMapIterable(resp -> {
                     List<Generation> gens = resp != null
                             ? resp.getResults()

@@ -32,7 +32,8 @@ public class EventStoreImpl implements EventStore {
                     if (expectedVersion != null && !Objects.equals(expectedVersion, currentVersion)) {
                         return Mono.error(
                                 new ConcurrencyException(
-                                        data.aggregation().type(), data.aggregation().id(), expectedVersion, currentVersion));
+                                        data.aggregation().type(), data.aggregation().id(), expectedVersion, currentVersion)
+                        );
                     }
                     long nextVersion = currentVersion + 1;
                     EventDocument<T> eventDocument =
