@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface EventRepository extends ReactiveMongoRepository<EventDocument<?>, String> {
 
-    <T extends DomainEvent> Flux<EventDocument<T>> findAllByAggregateTypeAndAggregateIdOrderByVersionDesc(
+    <T extends DomainEvent> Flux<EventDocument<T>> findAllByAggregateTypeAndAggregateIdOrderByVersionAsc(
             String aggregateType, String aggregateId);
 
     <T extends DomainEvent> Mono<EventDocument<T>> findFirstByAggregateTypeAndAggregateIdOrderByVersionDesc(
