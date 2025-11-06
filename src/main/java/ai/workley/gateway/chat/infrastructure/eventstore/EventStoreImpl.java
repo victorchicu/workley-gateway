@@ -19,7 +19,7 @@ public class EventStoreImpl implements EventStore {
 
     @Override
     public <T extends DomainEvent> Flux<EventDocument<T>> load(String aggregateType, String aggregateId) {
-        return eventRepository.findAllByAggregateTypeAndAggregateIdOrderByVersionDesc(aggregateType, aggregateId);
+        return eventRepository.findAllByAggregateTypeAndAggregateIdOrderByVersionAsc(aggregateType, aggregateId);
     }
 
     @Override
