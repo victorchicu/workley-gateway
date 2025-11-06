@@ -34,7 +34,7 @@ public class GetChatHandler implements QueryHandler<GetChat, GetChatPayload> {
         return chatPort.findChat(query.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationError("Oops. Chat not found.")))
                 .flatMap((Chat chat) ->
-                        messagePort.findAll(chat.id()).collectList()
+                        messagePort.loadAll(chat.id()).collectList()
                                 .map(messages -> new GetChatPayload(chat.id(), messages))
                 );
     }

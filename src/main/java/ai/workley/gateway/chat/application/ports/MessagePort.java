@@ -8,7 +8,7 @@ public interface MessagePort {
 
     Mono<Message<String>> save(Message<String> message);
 
-    Flux<Message<String>> findAll(String chatId);
+    Flux<Message<String>> loadAll(String chatId);
 
-    Flux<Message<String>> findRecentConversation(String chatId, int limit);
+    Flux<Message<String>> loadRecentConversation(String chatId, int limit);
 }

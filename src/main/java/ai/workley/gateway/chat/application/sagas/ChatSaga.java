@@ -132,7 +132,7 @@ public class ChatSaga {
                         .jitter(0.50)
                         .maxBackoff(Duration.ofSeconds(5));
 
-        return messagePort.findRecentConversation(e.chatId(), 100)
+        return messagePort.loadRecentConversation(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
                     return intentClassifier.classify(e.prompt())
@@ -152,32 +152,6 @@ public class ChatSaga {
                                         e.actor(), e.chatId(), e.prompt().content());
                                 return streamReply(e, classification, history);
                             });
-                })
-                .then();
-    }
-
-    @EventListener
-    @Order(1)
-    public Mono<Void> on(ReplyGenerated e) {
-        RetryBackoffSpec retryBackoffSpec =
-                Retry.backoff(5, Duration.ofMillis(500))
-                        .jitter(0.50)
-                        .maxBackoff(Duration.ofSeconds(5));
-
-        return commandBus.execute(e.actor(), new SaveReply(e.chatId(), e.reply()))
-                .timeout(Duration.ofSeconds(60))
-                .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
-                        log.warn("Retrying saving reply (actor={}, chatId={}, reply={}) attempt #{} due to {}",
-                                e.actor(), e.chatId(), e.reply().content(),
-                                retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
-                )
-                .doOnSuccess(v ->
-                        log.info("Execute save reply command (actor={}, chatId={}, reply={})",
-                                e.actor(), e.chatId(), e.reply().content()))
-                .onErrorResume(error -> {
-                    log.error("Save reply failed even after all retry attempts (actor={}, chatId={}, reply={})",
-                            e.actor(), e.chatId(), e.reply().content(), error);
-                    return Mono.empty();
                 })
                 .then();
     }
@@ -213,14 +187,32 @@ public class ChatSaga {
                 .onErrorResume(error -> Flux.empty())
                 .share();
 
+        RetryBackoffSpec retryBackoffSpec =
+                Retry.backoff(5, Duration.ofMillis(500))
+                        .jitter(0.50)
+                        .maxBackoff(Duration.ofSeconds(5));
+
         return chunks
                 .reduce(new StringBuilder(), StringBuilder::append)
                 .map(StringBuilder::toString)
                 .defaultIfEmpty("")
-                .doOnSuccess(reply -> {
-                    applicationEventPublisher.publishEvent(
-                            new ReplyGenerated(
-                                    e.actor(), e.chatId(), Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), reply)));
+                .flatMap(reply -> {
+                    Message<String> message = Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), reply);
+                    return commandBus.execute(e.actor(), new SaveReply(e.chatId(), message))
+                            .timeout(Duration.ofSeconds(60))
+                            .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
+                                    log.warn("Retrying saving reply (actor={}, chatId={}, reply={}) attempt #{} due to {}",
+                                            e.actor(), e.chatId(), message.content(),
+                                            retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
+                            )
+                            .doOnSuccess(v ->
+                                    log.info("Execute save reply command (actor={}, chatId={}, reply={})",
+                                            e.actor(), e.chatId(), message.content()))
+                            .onErrorResume(error -> {
+                                log.error("Save reply failed even after all retry attempts (actor={}, chatId={}, reply={})",
+                                        e.actor(), e.chatId(), message.content(), error);
+                                return Mono.empty();
+                            });
                 })
                 .then();
     }
