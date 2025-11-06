@@ -2,7 +2,7 @@ package ai.workley.gateway.chat.infrastructure.intent;
 
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.infrastructure.ai.AiModel;
-import ai.workley.gateway.chat.infrastructure.exceptions.InfrastructureErrors;
+import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.IntentType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;

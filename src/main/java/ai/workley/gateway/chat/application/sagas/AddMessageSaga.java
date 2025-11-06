@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.sagas;
 
-import ai.workley.gateway.chat.domain.Payload;
+import ai.workley.gateway.chat.domain.payloads.Payload;
 import ai.workley.gateway.chat.domain.command.GenerateReply;
 import ai.workley.gateway.chat.domain.events.MessageAdded;
 import ai.workley.gateway.chat.infrastructure.intent.IntentClassifier;

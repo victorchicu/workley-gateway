@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.command;
 
-import ai.workley.gateway.chat.domain.Payload;
+import ai.workley.gateway.chat.domain.payloads.Payload;
 import ai.workley.gateway.chat.domain.command.Command;
 import reactor.core.publisher.Mono;
 

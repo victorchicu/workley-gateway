@@ -3,7 +3,7 @@ package ai.workley.gateway.chat.application.projections;
 import ai.workley.gateway.chat.application.ports.EmbeddingPort;
 import ai.workley.gateway.chat.domain.Embedding;
 import ai.workley.gateway.chat.domain.events.EmbeddingSaved;
-import ai.workley.gateway.chat.infrastructure.exceptions.InfrastructureErrors;
+import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;

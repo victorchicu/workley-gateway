@@ -1,9 +1,9 @@
 package ai.workley.gateway.chat.api.rest;
 
-import ai.workley.gateway.chat.domain.exceptions.ErrorPayload;
+import ai.workley.gateway.chat.domain.payloads.ErrorPayload;
 import ai.workley.gateway.chat.domain.query.GetChat;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
-import ai.workley.gateway.chat.domain.Payload;
+import ai.workley.gateway.chat.domain.payloads.Payload;
 import ai.workley.gateway.chat.application.query.QueryBus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

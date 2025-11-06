@@ -2,7 +2,7 @@ package ai.workley.gateway.chat.application.projections;
 
 import ai.workley.gateway.chat.application.ports.ChatPort;
 import ai.workley.gateway.chat.domain.Chat;
-import ai.workley.gateway.chat.infrastructure.exceptions.InfrastructureErrors;
+import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

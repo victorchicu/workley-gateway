@@ -3,7 +3,7 @@ package ai.workley.gateway.chat.application.projections;
 import ai.workley.gateway.chat.application.ports.MessagePort;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.events.ReplyFailed;
-import ai.workley.gateway.chat.infrastructure.exceptions.InfrastructureErrors;
+import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.events.ReplyCompleted;
 import ai.workley.gateway.chat.domain.events.ReplyGenerated;

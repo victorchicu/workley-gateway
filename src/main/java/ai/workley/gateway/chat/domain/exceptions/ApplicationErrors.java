@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.exceptions;
+package ai.workley.gateway.chat.domain.exceptions;
 
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 

@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.query;
 
-import ai.workley.gateway.chat.domain.Payload;
+import ai.workley.gateway.chat.domain.payloads.Payload;
 import ai.workley.gateway.chat.domain.query.Query;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import org.springframework.stereotype.Component;

@@ -1,5 +1,6 @@
-package ai.workley.gateway.chat.infrastructure.exceptions;
+package ai.workley.gateway.chat.domain.exceptions;
 
+import ai.workley.gateway.chat.infrastructure.exceptions.InfrastructureError;
 import com.mongodb.DuplicateKeyException;
 
 public class InfrastructureErrors {

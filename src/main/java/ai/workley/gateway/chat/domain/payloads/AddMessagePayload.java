@@ -1,7 +1,6 @@
 package ai.workley.gateway.chat.domain.payloads;
 
 import ai.workley.gateway.chat.domain.Message;
-import ai.workley.gateway.chat.domain.Payload;
 
 public record AddMessagePayload(String chatId, Message<String> message) implements Payload {
 

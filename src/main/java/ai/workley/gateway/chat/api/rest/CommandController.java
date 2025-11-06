@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.api.rest;
 
-import ai.workley.gateway.chat.domain.Payload;
-import ai.workley.gateway.chat.domain.exceptions.ErrorPayload;
+import ai.workley.gateway.chat.domain.payloads.Payload;
+import ai.workley.gateway.chat.domain.payloads.ErrorPayload;
 import ai.workley.gateway.chat.domain.command.Command;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.application.command.CommandBus;

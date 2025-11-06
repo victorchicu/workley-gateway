@@ -1,7 +1,6 @@
 package ai.workley.gateway.chat.domain.payloads;
 
 import ai.workley.gateway.chat.domain.Message;
-import ai.workley.gateway.chat.domain.Payload;
 
 import java.util.Objects;
 

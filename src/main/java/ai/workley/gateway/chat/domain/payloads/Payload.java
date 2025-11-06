@@ -1,8 +1,5 @@
-package ai.workley.gateway.chat.domain;
+package ai.workley.gateway.chat.domain.payloads;
 
-import ai.workley.gateway.chat.domain.exceptions.ErrorPayload;
-import ai.workley.gateway.chat.domain.payloads.AddMessagePayload;
-import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
