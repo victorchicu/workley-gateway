@@ -8,6 +8,7 @@ import ai.workley.gateway.chat.domain.payloads.ReplySavedPayload;
 import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
@@ -18,10 +19,12 @@ public class SaveReplyHandler implements CommandHandler<SaveReply, ReplySavedPay
 
     private final EventStore eventStore;
     private final TransactionalOperator transactionalOperator;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public SaveReplyHandler(EventStore eventStore, TransactionalOperator transactionalOperator) {
+    public SaveReplyHandler(EventStore eventStore, TransactionalOperator transactionalOperator, ApplicationEventPublisher applicationEventPublisher) {
         this.eventStore = eventStore;
         this.transactionalOperator = transactionalOperator;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -35,9 +38,11 @@ public class SaveReplyHandler implements CommandHandler<SaveReply, ReplySavedPay
             ReplySaved replySaved =
                     new ReplySaved(actor, command.chatId(), command.reply());
 
-            return transactionalOperator.transactional(
+            Mono<ReplySavedPayload> tx = transactionalOperator.transactional(
                     eventStore.append(actor, replySaved, null)
                             .thenReturn(ReplySavedPayload.ack()));
+
+            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replySaved));
         }).onErrorMap(error -> {
             log.error("Oops! Could not save reply. chatId={}", command.chatId(), error);
             return (error instanceof ApplicationError) ? error
