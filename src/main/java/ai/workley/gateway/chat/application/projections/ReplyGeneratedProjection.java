@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class GenerateReplyProjection {
-    private static final Logger log = LoggerFactory.getLogger(GenerateReplyProjection.class);
+public class ReplyGeneratedProjection {
+    private static final Logger log = LoggerFactory.getLogger(ReplyGeneratedProjection.class);
 
     private final AiModel aiModel;
     private final IdGenerator messageIdGenerator;
@@ -41,7 +41,7 @@ public class GenerateReplyProjection {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final Sinks.Many<Message<String>> chatSink;
 
-    public GenerateReplyProjection(
+    public ReplyGeneratedProjection(
             AiModel aiModel,
             MessagePort messagePort,
             IdGenerator messageIdGenerator,
@@ -58,7 +58,7 @@ public class GenerateReplyProjection {
 
     @EventListener
     @Order(0)
-    public Mono<Void> handle(ReplyGenerated e) {
+    public Mono<Void> on(ReplyGenerated e) {
         return messagePort.findRecentConversation(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> streamReply(e, history))
@@ -84,8 +84,8 @@ public class GenerateReplyProjection {
                         log.info("Reply saved: id={}, chatId={}",
                                 saved.id(), saved.chatId()))
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
-                    log.warn("Reply already exists (actor={}, chatId={}, messageId={}, prompt={})",
-                            e.actor(), e.chatId(), id, e.prompt(), error);
+                    log.warn("Reply already exists (actor={}, chatId={}, messageId={}, reply={})",
+                            e.actor(), e.chatId(), id, e.reply(), error);
                     return Mono.empty();
                 });
     }
@@ -127,14 +127,14 @@ public class GenerateReplyProjection {
                     return saveMessage(e, messageId, reply)
                             .doOnNext(saved ->
                                     applicationEventPublisher.publishEvent(
-                                            new ReplyCompleted(e.actor(), e.chatId(), saved))
+                                            new ReplyGenerated(e.actor(), e.chatId(), saved))
                             )
                             .onErrorResume(InfrastructureErrors::isDuplicateKey, cause -> {
                                 log.warn("Duplicate reply id={} (chatId={}). Treating as success.",
                                         messageId, e.chatId(), cause);
 
                                 applicationEventPublisher.publishEvent(
-                                        new ReplyCompleted(e.actor(), e.chatId(), Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), reply)));
+                                        new ReplyGenerated(e.actor(), e.chatId(), Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), reply)));
 
                                 return Mono.empty();
                             })
@@ -151,7 +151,7 @@ public class GenerateReplyProjection {
         List<org.springframework.ai.chat.messages.Message> list = new ArrayList<>();
         list.add(new SystemMessage(e.classification().getSystemPrompt()));
         if (history.isEmpty()) {
-            list.add(new UserMessage(e.prompt().content()));
+            list.add(new UserMessage(e.reply().content()));
         } else {
             for (Message<String> message : history) {
                 switch (message.role()) {

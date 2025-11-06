@@ -7,23 +7,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class AddMessageProjection {
-    private static final Logger log = LoggerFactory.getLogger(AddMessageProjection.class);
+public class MessageAddedProjection {
+    private static final Logger log = LoggerFactory.getLogger(MessageAddedProjection.class);
 
     private final MessagePort messagePort;
 
-    public AddMessageProjection(MessagePort messagePort) {
+    public MessageAddedProjection(MessagePort messagePort) {
         this.messagePort = messagePort;
     }
 
     @EventListener
     @Order(0)
-    public Mono<Void> handle(MessageAdded e) {
+    public Mono<Void> on(MessageAdded e) {
         return messagePort.save(e.message())
                 .doOnSuccess(message -> {
                     log.info("Message saved (actor={}, chatId={}, messageId={})",

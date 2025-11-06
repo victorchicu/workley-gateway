@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -20,14 +19,14 @@ import reactor.util.retry.RetryBackoffSpec;
 import java.time.Duration;
 
 @Component
-public class AddMessageSaga {
-    private static final Logger log = LoggerFactory.getLogger(AddMessageSaga.class);
+public class MessageAddedSaga {
+    private static final Logger log = LoggerFactory.getLogger(MessageAddedSaga.class);
 
     private final CommandBus commandBus;
     private final IntentSuggester intentSuggester;
     private final IntentClassifier intentClassifier;
 
-    public AddMessageSaga(CommandBus commandBus, IntentSuggester intentSuggester, IntentClassifier intentClassifier) {
+    public MessageAddedSaga(CommandBus commandBus, IntentSuggester intentSuggester, IntentClassifier intentClassifier) {
         this.commandBus = commandBus;
         this.intentSuggester = intentSuggester;
         this.intentClassifier = intentClassifier;
@@ -35,7 +34,7 @@ public class AddMessageSaga {
 
     @EventListener
     @Order(1)
-    public Mono<Void> when(MessageAdded e) {
+    public Mono<Void> on(MessageAdded e) {
         RetryBackoffSpec retryBackoffSpec =
                 Retry.backoff(5, Duration.ofMillis(500))
                         .jitter(0.50)
@@ -45,12 +44,12 @@ public class AddMessageSaga {
                 intentClassifier.classify(e.message())
                         .timeout(Duration.ofSeconds(60))
                         .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
-                            log.warn("Retrying classify intent (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
+                            log.warn("Retrying classify intent (actor={}, chatId={}, reply={}) attempt #{} due to {}",
                                     e.actor(), e.chatId(), e.message().content(),
                                     retrySignal.totalRetries() + 1, retrySignal.failure().toString());
                         }))
                         .doOnError(err -> {
-                            log.error("Intent classification failed (actor={}, chatId={}, prompt={})",
+                            log.error("Intent classification failed (actor={}, chatId={}, reply={})",
                                     e.actor(), e.chatId(), e.message().content(), err);
                         })
                         .flatMap(result -> {
@@ -62,15 +61,15 @@ public class AddMessageSaga {
                                             new GenerateReply(e.chatId(), e.message(), result))
                                     .timeout(Duration.ofSeconds(60))
                                     .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
-                                            log.warn("Retrying generating reply (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
+                                            log.warn("Retrying generating reply (actor={}, chatId={}, reply={}) attempt #{} due to {}",
                                                     e.actor(), e.chatId(), e.message().content(),
                                                     retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
                                     )
                                     .doOnSuccess(v ->
-                                            log.info("Execute generate reply command (actor={}, chatId={}, prompt={})",
+                                            log.info("Execute generate reply command (actor={}, chatId={}, reply={})",
                                                     e.actor(), e.chatId(), e.message().content()))
                                     .onErrorResume(error -> {
-                                        log.error("Generate reply failed even after all retry attempts (actor={}, chatId={}, prompt={})",
+                                        log.error("Generate reply failed even after all retry attempts (actor={}, chatId={}, reply={})",
                                                 e.actor(), e.chatId(), e.message().content(), error);
                                         return Mono.empty();
                                     });
@@ -80,7 +79,7 @@ public class AddMessageSaga {
                 intentSuggester.suggest(e.message())
                         .timeout(Duration.ofSeconds(60))
                         .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
-                            log.warn("Retrying suggest intent (actor={}, chatId={}, prompt={}) attempt #{} due to {}",
+                            log.warn("Retrying suggest intent (actor={}, chatId={}, reply={}) attempt #{} due to {}",
                                     e.actor(), e.chatId(), e.message().content(),
                                     retrySignal.totalRetries() + 1, retrySignal.failure().toString());
                         }))
@@ -89,7 +88,7 @@ public class AddMessageSaga {
                                     result.suggestion(), e.actor(), e.chatId(), e.message().content());
                         })
                         .doOnError(err -> {
-                            log.error("Intent suggestion failed (actor={}, chatId={}, prompt={})",
+                            log.error("Intent suggestion failed (actor={}, chatId={}, reply={})",
                                     e.actor(), e.chatId(), e.message().content(), err);
                         })
                         .onErrorResume(error -> Mono.empty());

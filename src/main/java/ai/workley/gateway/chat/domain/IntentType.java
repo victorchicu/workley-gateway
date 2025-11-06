@@ -2,7 +2,7 @@ package ai.workley.gateway.chat.domain;
 
 public enum IntentType {
     FIND_JOB(
-            // High confidence prompt
+            // High confidence reply
             """
                     You are Workley's AI assistant, specialized in helping users find job opportunities.
                     
@@ -18,7 +18,7 @@ public enum IntentType {
                     
                     Keep responses natural and helpful, 2-3 sentences maximum.
                     """,
-            // Low confidence prompt
+            // Low confidence reply
             """
                     You are Workley's AI assistant. It seems the user might be interested in finding a job, but I'm not entirely certain.
                     
@@ -33,7 +33,7 @@ public enum IntentType {
                     """
     ),
     FIND_TALENT(
-            // High confidence prompt
+            // High confidence reply
             """
                     You are Workley's AI assistant, specialized in helping employers find suitable candidates.
                     
@@ -48,7 +48,7 @@ public enum IntentType {
                     
                     Keep responses focused on finding the right talent, 2-3 sentences maximum.
                     """,
-            // Low confidence prompt
+            // Low confidence reply
             """
                     You are Workley's AI assistant. It appears the user might be looking to hire someone, but I'm not completely sure.
                     
@@ -63,7 +63,7 @@ public enum IntentType {
                     """
     ),
     CREATE_RESUME(
-            // High confidence prompt
+            // High confidence reply
             """
                     You are Workley's AI assistant, specialized in helping users create and improve their resumes and professional profiles.
                     
@@ -82,7 +82,7 @@ public enum IntentType {
                     
                     Keep responses professional yet friendly, 2-3 sentences maximum.
                     """,
-            // Low confidence prompt
+            // Low confidence reply
             """
                     You are Workley's AI assistant. It seems the user might need help with their resume or profile, but I'm not completely sure.
                     
@@ -97,7 +97,7 @@ public enum IntentType {
                     """
     ),
     UNRELATED(
-            // High confidence prompt
+            // High confidence reply
             """
                     You are Workley's AI assistant. The user has asked something unrelated to job searching, candidate searching, or resume building.
                     
@@ -111,7 +111,7 @@ public enum IntentType {
                     
                     Keep it brief, friendly, 2-3 sentences maximum, and redirect to what you can do.
                     """,
-            // Low confidence prompt
+            // Low confidence reply
             """
                     You are Workley's AI assistant. I'm not sure what the user is looking for.
                     

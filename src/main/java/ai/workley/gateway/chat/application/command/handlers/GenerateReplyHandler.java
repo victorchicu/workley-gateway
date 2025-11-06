@@ -1,10 +1,10 @@
 package ai.workley.gateway.chat.application.command.handlers;
 
 import ai.workley.gateway.chat.domain.command.GenerateReply;
-import ai.workley.gateway.chat.domain.payloads.GenerateReplyPayload;
+import ai.workley.gateway.chat.domain.events.ReplyInitiated;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
+import ai.workley.gateway.chat.domain.payloads.GenerateReplyPayload;
 import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
-import ai.workley.gateway.chat.domain.events.ReplyGenerated;
 import ai.workley.gateway.chat.application.command.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,16 +39,16 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
     @Override
     public Mono<GenerateReplyPayload> handle(String actor, GenerateReply command) {
         return Mono.defer(() -> {
-            ReplyGenerated replyGenerated =
-                    new ReplyGenerated(actor, command.chatId(), command.prompt(), command.classification());
+            ReplyInitiated replyInitiated =
+                    new ReplyInitiated(actor, command.chatId());
 
             Mono<GenerateReplyPayload> tx = transactionalOperator.transactional(
-                    eventStore.append(actor, replyGenerated, null)
+                    eventStore.append(actor, replyInitiated, null)
                             .thenReturn(GenerateReplyPayload.ack()));
 
-            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyGenerated));
+            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyInitiated));
         }).onErrorMap(error -> {
-            log.error("Oops! Could not generate reply. chatId={}", command.chatId(), error);
+            log.error("Oops! Could not initiate reply. chatId={}", command.chatId(), error);
             return (error instanceof ApplicationError) ? error
                     : new ApplicationError("Oops! Something went wrong, please try again.", error);
         });

@@ -4,6 +4,8 @@ import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
 import ai.workley.gateway.chat.infrastructure.persistent.mongodb.documents.EventDocument;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13,6 +15,7 @@ import java.util.Objects;
 public class EventStoreImpl implements EventStore {
     private final EventRepository eventRepository;
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public EventStoreImpl(EventRepository eventRepository) {
         this.eventRepository = eventRepository;
     }

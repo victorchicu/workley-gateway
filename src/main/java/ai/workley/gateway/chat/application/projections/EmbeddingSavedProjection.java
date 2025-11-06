@@ -14,7 +14,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -24,15 +23,15 @@ import java.util.List;
 import java.util.Objects;
 
 @Component
-@EnableConfigurationProperties(SaveEmbeddingProjection.OpenAiEmbeddingOptions.class)
-public class SaveEmbeddingProjection {
-    private static final Logger log = LoggerFactory.getLogger(SaveEmbeddingProjection.class);
+@EnableConfigurationProperties(EmbeddingSavedProjection.OpenAiEmbeddingOptions.class)
+public class EmbeddingSavedProjection {
+    private static final Logger log = LoggerFactory.getLogger(EmbeddingSavedProjection.class);
 
     private final EmbeddingPort embeddingPort;
     private final OpenAiEmbeddingModel openAiEmbeddingModel;
     private final OpenAiEmbeddingOptions openAiEmbeddingOptions;
 
-    public SaveEmbeddingProjection(
+    public EmbeddingSavedProjection(
             EmbeddingPort embeddingPort,
             OpenAiEmbeddingModel openAiEmbeddingModel,
             OpenAiEmbeddingOptions openAiEmbeddingOptions
@@ -44,7 +43,7 @@ public class SaveEmbeddingProjection {
 
     @EventListener
     @Order(0)
-    public Mono<Void> handle(EmbeddingSaved e) {
+    public Mono<Void> on(EmbeddingSaved e) {
         var document = new Document(e.text(), e.metadata());
         return Mono.fromCallable(() -> openAiEmbeddingModel.embed(
                         List.of(document),
