@@ -19,15 +19,13 @@ public class EventStoreImpl implements EventStore {
 
     @Override
     public <T extends DomainEvent> Flux<EventDocument<T>> load(String aggregateType, String aggregateId) {
-        return eventRepository
-                .findAllByAggregateTypeAndAggregateIdOrderByVersionDesc(aggregateType, aggregateId);
+        return eventRepository.findAllByAggregateTypeAndAggregateIdOrderByVersionDesc(aggregateType, aggregateId);
     }
 
     @Override
     public <T extends DomainEvent> Mono<EventDocument<T>> append(String actor, T data, Long expectedVersion) {
         return eventRepository
-                .findFirstByAggregateTypeAndAggregateIdOrderByVersionDesc(
-                        data.aggregation().type(), data.aggregation().id())
+                .findFirstByAggregateTypeAndAggregateIdOrderByVersionDesc(data.aggregation().type(), data.aggregation().id())
                 .map(EventDocument::getVersion)
                 .defaultIfEmpty(-1L)
                 .flatMap(currentVersion -> {
