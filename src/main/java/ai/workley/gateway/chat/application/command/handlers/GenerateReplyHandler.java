@@ -17,8 +17,6 @@ import reactor.core.publisher.Mono;
 public class GenerateReplyHandler implements CommandHandler<GenerateReply, GenerateReplyPayload> {
     private static final Logger log = LoggerFactory.getLogger(GenerateReplyHandler.class);
 
-    private final EventStore eventStore;
-    private final TransactionalOperator transactionalOperator;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public GenerateReplyHandler(
@@ -26,8 +24,6 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
             TransactionalOperator transactionalOperator,
             ApplicationEventPublisher applicationEventPublisher
     ) {
-        this.eventStore = eventStore;
-        this.transactionalOperator = transactionalOperator;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
@@ -39,14 +35,10 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
     @Override
     public Mono<GenerateReplyPayload> handle(String actor, GenerateReply command) {
         return Mono.defer(() -> {
-            ReplyStarted replyStarted =
-                    new ReplyStarted(actor, command.chatId(), command.message());
-
-            Mono<GenerateReplyPayload> tx = transactionalOperator.transactional(
-                    eventStore.append(actor, replyStarted, null)
-                            .thenReturn(GenerateReplyPayload.ack()));
-
-            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyStarted));
+            applicationEventPublisher.publishEvent(
+                    new ReplyStarted(
+                            actor, command.chatId(), command.message()));
+            return Mono.just(GenerateReplyPayload.ack());
         }).onErrorMap(error -> {
             log.error("Oops! Could not generate message. chatId={}", command.chatId(), error);
             return (error instanceof ApplicationError) ? error
