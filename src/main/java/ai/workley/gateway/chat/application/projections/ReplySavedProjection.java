@@ -23,13 +23,13 @@ public class ReplySavedProjection {
     @EventListener
     @Order(0)
     public Mono<Void> on(ReplySaved e) {
-        return messagePort.save(e.reply())
+        return messagePort.save(e.message())
                 .doOnSuccess(saved ->
                         log.info("Reply saved: (actor={}, chatId={}, messageId={})",
                                 e.actor(), saved.chatId(), saved.id()))
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, error -> {
                     log.warn("Reply already exists (actor={}, chatId={}, messageId={})",
-                            e.actor(), e.chatId(), e.reply().id(), error);
+                            e.actor(), e.chatId(), e.message().id(), error);
                     return Mono.empty();
                 })
                 .then();

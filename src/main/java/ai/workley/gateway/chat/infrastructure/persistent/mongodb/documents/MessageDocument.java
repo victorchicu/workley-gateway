@@ -100,7 +100,7 @@ public class MessageDocument<T> {
                 ", chatId='" + chatId + '\'' +
                 ", ownedBy='" + ownedBy + '\'' +
                 ", createdAt=" + createdAt +
-                ", reply=" + content +
+                ", message=" + content +
                 '}';
     }
 }

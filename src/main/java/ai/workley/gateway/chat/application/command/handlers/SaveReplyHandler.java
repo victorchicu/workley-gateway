@@ -3,6 +3,7 @@ package ai.workley.gateway.chat.application.command.handlers;
 import ai.workley.gateway.chat.application.command.CommandHandler;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.command.SaveReply;
+import ai.workley.gateway.chat.domain.events.ReplyCompleted;
 import ai.workley.gateway.chat.domain.events.ReplySaved;
 import ai.workley.gateway.chat.domain.payloads.ReplySavedPayload;
 import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
@@ -15,7 +16,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class SaveReplyHandler implements CommandHandler<SaveReply, ReplySavedPayload> {
-    private static final Logger log = LoggerFactory.getLogger(GenerateReplyHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(SaveReplyHandler.class);
 
     private final EventStore eventStore;
     private final TransactionalOperator transactionalOperator;
@@ -44,7 +45,7 @@ public class SaveReplyHandler implements CommandHandler<SaveReply, ReplySavedPay
 
             return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replySaved));
         }).onErrorMap(error -> {
-            log.error("Oops! Could not save reply. chatId={}", command.chatId(), error);
+            log.error("Oops! Could not save message. chatId={}", command.chatId(), error);
             return (error instanceof ApplicationError) ? error
                     : new ApplicationError("Oops! Something went wrong, please try again.", error);
         });

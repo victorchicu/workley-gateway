@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.application.command.handlers;
 
 import ai.workley.gateway.chat.domain.command.GenerateReply;
-import ai.workley.gateway.chat.domain.events.ReplyInitiated;
+import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.payloads.GenerateReplyPayload;
 import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
@@ -39,16 +39,16 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
     @Override
     public Mono<GenerateReplyPayload> handle(String actor, GenerateReply command) {
         return Mono.defer(() -> {
-            ReplyInitiated replyInitiated =
-                    new ReplyInitiated(actor, command.chatId(), command.prompt());
+            ReplyStarted replyStarted =
+                    new ReplyStarted(actor, command.chatId(), command.message());
 
             Mono<GenerateReplyPayload> tx = transactionalOperator.transactional(
-                    eventStore.append(actor, replyInitiated, null)
+                    eventStore.append(actor, replyStarted, null)
                             .thenReturn(GenerateReplyPayload.ack()));
 
-            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyInitiated));
+            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(replyStarted));
         }).onErrorMap(error -> {
-            log.error("Oops! Could not generate reply. chatId={}", command.chatId(), error);
+            log.error("Oops! Could not generate message. chatId={}", command.chatId(), error);
             return (error instanceof ApplicationError) ? error
                     : new ApplicationError("Oops! Something went wrong, please try again.", error);
         });
