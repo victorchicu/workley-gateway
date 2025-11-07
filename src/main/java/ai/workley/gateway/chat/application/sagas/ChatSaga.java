@@ -62,6 +62,10 @@ public class ChatSaga {
     @EventListener
     @Order(1)
     public Mono<Void> on(MessageAdded e) {
+        if (e.message().role() == Role.ASSISTANT) {
+            return Mono.empty();
+        }
+
         RetryBackoffSpec retryBackoffSpec =
                 Retry.backoff(5, Duration.ofMillis(500))
                         .jitter(0.50)
