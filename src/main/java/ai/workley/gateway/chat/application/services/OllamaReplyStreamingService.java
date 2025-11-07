@@ -70,21 +70,21 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
         return messagePort.loadRecentConversation(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
-                    return intentClassifier.classify(e.prompt())
+                    return intentClassifier.classify(e.message())
                             .timeout(Duration.ofSeconds(60))
                             .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
                                 log.warn("Retrying classify intent (actor={}, chatId={}, message={}) attempt #{} due to {}",
-                                        e.actor(), e.chatId(), e.prompt().content(),
+                                        e.actor(), e.chatId(), e.message().content(),
                                         retrySignal.totalRetries() + 1, retrySignal.failure().toString());
                             }))
                             .doOnError(err -> {
                                 log.error("Intent classification failed (actor={}, chatId={}, message={})",
-                                        e.actor(), e.chatId(), e.prompt().content(), err);
+                                        e.actor(), e.chatId(), e.message().content(), err);
                             })
                             .flatMap(classification -> {
                                 log.info("Intent classified as {} with confidence {} (actor={}, chatId={}, message={})",
                                         classification.intent(), classification.confidence(),
-                                        e.actor(), e.chatId(), e.prompt().content());
+                                        e.actor(), e.chatId(), e.message().content());
                                 return streamReply(e, classification, history);
                             });
                 })
@@ -113,8 +113,8 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
             }
         }
 
-        if (history.isEmpty() || !history.getLast().id().equals(e.prompt().id())) {
-            list.add(new UserMessage(e.prompt().content()));
+        if (history.isEmpty() || !history.getLast().id().equals(e.message().id())) {
+            list.add(new UserMessage(e.message().content()));
         }
 
         return new Prompt(list);

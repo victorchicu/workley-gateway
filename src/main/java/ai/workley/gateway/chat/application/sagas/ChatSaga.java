@@ -1,8 +1,8 @@
 package ai.workley.gateway.chat.application.sagas;
 
+import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.command.AddMessage;
 import ai.workley.gateway.chat.domain.command.GenerateReply;
-import ai.workley.gateway.chat.domain.command.SaveReply;
 import ai.workley.gateway.chat.domain.events.*;
 import ai.workley.gateway.chat.application.command.CommandBus;
 import ai.workley.gateway.chat.infrastructure.generators.IdGenerator;
@@ -49,7 +49,7 @@ public class ChatSaga {
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(retry)
                 .doOnSuccess(result ->
-                        log.info("Execute add message command (actor={}, chatId={}, message={})",
+                        log.info("Add message command executed (actor={}, chatId={}, message={})",
                                 e.actor(), e.chatId(), e.prompt()))
                 .onErrorResume(error -> {
                     log.error("Failed to add message even after all retry attempts (actor={}, chatId={}, message={})",
@@ -75,7 +75,7 @@ public class ChatSaga {
                                 retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
                 )
                 .doOnSuccess(v ->
-                        log.info("Execute generate reply command (actor={}, chatId={}, message={})",
+                        log.info("Generate reply command executed (actor={}, chatId={}, message={})",
                                 e.actor(), e.chatId(), e.message().content()))
                 .onErrorResume(error -> {
                     log.error("Generate reply failed even after all retry attempts (actor={}, chatId={}, message={})",
@@ -93,7 +93,7 @@ public class ChatSaga {
                         .jitter(0.50)
                         .maxBackoff(Duration.ofSeconds(5));
 
-        return commandBus.execute(e.actor(), new SaveReply(e.chatId(), e.reply()))
+        return commandBus.execute(e.actor(), new AddMessage(e.chatId(), e.reply()))
                 .timeout(Duration.ofSeconds(60))
                 .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
                         log.warn("Retrying saving message (actor={}, chatId={}, message={}) attempt #{} due to {}",
@@ -101,10 +101,10 @@ public class ChatSaga {
                                 retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
                 )
                 .doOnSuccess(v ->
-                        log.info("Execute save message command (actor={}, chatId={}, message={})",
+                        log.info("Add message command executed (actor={}, chatId={}, message={})",
                                 e.actor(), e.chatId(), e.reply().content()))
                 .onErrorResume(error -> {
-                    log.error("Save message failed even after all retry attempts (actor={}, chatId={}, message={})",
+                    log.error("Add message failed even after all retry attempts (actor={}, chatId={}, message={})",
                             e.actor(), e.chatId(), e.reply().content(), error);
                     return Mono.empty();
                 })

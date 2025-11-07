@@ -5,6 +5,8 @@ import ai.workley.gateway.chat.domain.query.GetChat;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.payloads.Payload;
 import ai.workley.gateway.chat.application.query.QueryBus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import java.security.Principal;
 @RequestMapping("/api/chats/{chatId}")
 @RestController
 public class GetChatController {
+    private static final Logger log = LoggerFactory.getLogger(GetChatController.class);
 
     private final QueryBus queryBus;
 
@@ -24,6 +27,8 @@ public class GetChatController {
 
     @GetMapping
     public Mono<ResponseEntity<Payload>> query(Principal actor, @PathVariable String chatId) {
+        log.info("Execute get chat query (actor={}, chatId={})", actor.getName(), chatId);
+
         return queryBus.execute(actor, new GetChat(chatId))
                 .flatMap((Payload payload) ->
                         Mono.just(ResponseEntity.ok()

@@ -1,7 +1,6 @@
 package ai.workley.gateway.chat.domain.events;
 
 import ai.workley.gateway.chat.domain.aggregations.AggregateTypes;
-import com.github.f4b6a3.tsid.TsidCreator;
 
 public record ChatCreated(String actor, String chatId, String prompt) implements DomainEvent {
 

@@ -53,7 +53,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         return Mono.defer(() ->
                         eventStore.load(AggregateTypes.CHAT, command.chatId())
                                 .collectList()
-                                .flatMap(history -> reassembleEvent(actor, command, history)))
+                                .flatMap(history -> replay(actor, command, history)))
                 .onErrorMap(this::handleError);
     }
 
@@ -75,7 +75,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         );
     }
 
-    private Mono<AddMessagePayload> reassembleEvent(String actor, AddMessage command, List<EventDocument<DomainEvent>> history) {
+    private Mono<AddMessagePayload> replay(String actor, AddMessage command, List<EventDocument<DomainEvent>> history) {
         ChatAggregate aggregate;
         try {
             aggregate = ChatAggregate.rehydrate(history);

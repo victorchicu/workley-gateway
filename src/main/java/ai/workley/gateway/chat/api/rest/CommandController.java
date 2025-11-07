@@ -6,6 +6,8 @@ import ai.workley.gateway.chat.domain.command.Command;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.application.command.CommandBus;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import java.security.Principal;
 @RequestMapping("/api/command")
 @RestController
 public class CommandController {
+    private static final Logger log = LoggerFactory.getLogger(CommandController.class);
 
     private final CommandBus commandBus;
 
@@ -25,6 +28,8 @@ public class CommandController {
 
     @PostMapping
     public <T extends Command> Mono<ResponseEntity<Payload>> execute(Principal actor, @Valid @RequestBody T command) {
+        log.info("Execute command (actor={}, command={})", actor.getName(), command.getClass().getSimpleName());
+
         return commandBus.execute(actor.getName(), command)
                 .flatMap((Payload payload) ->
                         Mono.just(ResponseEntity.ok()
