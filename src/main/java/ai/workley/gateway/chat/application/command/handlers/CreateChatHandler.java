@@ -2,6 +2,7 @@ package ai.workley.gateway.chat.application.command.handlers;
 
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.Message;
+import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.command.CreateChat;
 import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Component
@@ -49,7 +51,7 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
             String chatId = randomIdGenerator.generate();
 
             Message<String> dummy =
-                    Message.create(UUID.randomUUID().toString(), chatId, actor, command.prompt());
+                    Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), command.prompt());
 
             ChatCreated chatCreated = new ChatCreated(actor, chatId, command.prompt());
 

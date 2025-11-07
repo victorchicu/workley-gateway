@@ -152,12 +152,12 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
                 .reduce(new StringBuilder(), StringBuilder::append)
                 .map(StringBuilder::toString)
                 .defaultIfEmpty("")
-                .flatMap(reply -> emitReplyCompleted(e, reply, messageId))
+                .flatMap(fullReply -> emitReplyCompleted(e, messageId, fullReply))
                 .then();
     }
 
-    private Mono<Void> emitReplyCompleted(ReplyStarted e, String reply, String messageId) {
-        Message<String> message = Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), reply);
+    private Mono<Void> emitReplyCompleted(ReplyStarted e, String messageId, String fullReply) {
+        Message<String> message = Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), fullReply);
         publisher.publishEvent(new ReplyCompleted(e.actor(), e.chatId(), message));
         return Mono.empty();
     }

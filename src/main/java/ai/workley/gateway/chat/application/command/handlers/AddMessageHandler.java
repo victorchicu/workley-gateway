@@ -85,15 +85,15 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
 
         AggregateCommit<MessageAdded> commit;
         try {
-            commit = aggregate.addMessage(actor, randomIdGenerator.generate(), command.message().content());
+            commit = aggregate.addMessage(actor, command.message());
         } catch (IllegalStateException notAllowed) {
             return Mono.error(new ApplicationError("Oops! You are not allowed to post in this chat."));
         }
 
         Mono<AddMessagePayload> tx =
                 transactionalOperator.transactional(
-                        eventStore.append(actor, commit.event(), commit.expectedVersion())
-                                .thenReturn(AddMessagePayload.create(aggregate.id(), commit.event().message()))
+                        eventStore.append(actor, commit.event(), commit.version())
+                                .thenReturn(AddMessagePayload.create(aggregate.chatId(), commit.event().message()))
                 );
 
         return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(commit.event()));

@@ -17,6 +17,7 @@ import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
 
 import java.time.Duration;
+import java.time.Instant;
 
 @Component
 public class ChatSaga {
@@ -43,7 +44,7 @@ public class ChatSaga {
                                         e.actor(), e.chatId(), e.prompt(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
 
         Message<String> message =
-                Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), e.prompt());
+                Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), Role.ANONYMOUS, Instant.now(), e.prompt());
 
         return commandBus.execute(e.actor(), new AddMessage(e.chatId(), message))
                 .timeout(Duration.ofSeconds(5))

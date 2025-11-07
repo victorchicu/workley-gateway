@@ -8,9 +8,9 @@ import ai.workley.gateway.chat.infrastructure.persistent.mongodb.documents.Event
 
 import java.util.*;
 
-public record ChatAggregate(String id, Set<String> participants, long version) {
-    public ChatAggregate(String id, Set<String> participants, long version) {
-        this.id = id;
+public record ChatAggregate(String chatId, Set<String> participants, long version) {
+    public ChatAggregate(String chatId, Set<String> participants, long version) {
+        this.chatId = chatId;
         this.participants = Collections.unmodifiableSet(new LinkedHashSet<>(participants));
         this.version = version;
     }
@@ -23,18 +23,15 @@ public record ChatAggregate(String id, Set<String> participants, long version) {
         return aggregate;
     }
 
-    public AggregateCommit<MessageAdded> addMessage(String actor, String messageId, String content) {
+    public AggregateCommit<MessageAdded> addMessage(String actor, Message<String> message) {
         Objects.requireNonNull(actor, "actor must not be null");
-        Objects.requireNonNull(messageId, "messageId must not be null");
-        Objects.requireNonNull(content, "content must not be null");
+        Objects.requireNonNull(message, "message must not be null");
 
         if (!participants.contains(actor)) {
             throw new IllegalStateException("Actor is not part of this chat");
         }
 
-        Message<String> message = Message.create(messageId, id, actor, content);
-
-        return new AggregateCommit<>(new MessageAdded(actor, id, message), version);
+        return new AggregateCommit<>(new MessageAdded(actor, chatId, message), version);
     }
 
     private <T extends DomainEvent> ChatAggregate apply(EventDocument<T> entry) {
@@ -50,9 +47,9 @@ public record ChatAggregate(String id, Set<String> participants, long version) {
         if (event instanceof MessageAdded messageAdded) {
             Set<String> participants = new LinkedHashSet<>(this.participants);
             participants.add(messageAdded.message().ownedBy());
-            return new ChatAggregate(id, participants, newVersion);
+            return new ChatAggregate(chatId, participants, newVersion);
         }
 
-        return new ChatAggregate(id, participants, newVersion);
+        return new ChatAggregate(chatId, participants, newVersion);
     }
 }
