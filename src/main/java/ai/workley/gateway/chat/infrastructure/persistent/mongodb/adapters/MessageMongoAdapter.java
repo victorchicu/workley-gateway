@@ -32,7 +32,7 @@ public class MessageMongoAdapter implements MessagePort {
     }
 
     @Override
-    public Flux<Message<String>> loadRecentConversation(String chatId, int limit) {
+    public Flux<Message<String>> loadRecent(String chatId, int limit) {
         Pageable pageable = Pageable.ofSize(limit);
         return messageRepository.findAllByChatIdOrderByCreatedAtAsc(chatId, pageable)
                 .map(this::toMessage);

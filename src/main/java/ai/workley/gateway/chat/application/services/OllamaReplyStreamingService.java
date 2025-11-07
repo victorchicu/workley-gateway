@@ -67,7 +67,7 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
                         .jitter(0.50)
                         .maxBackoff(Duration.ofSeconds(5));
 
-        return messagePort.loadRecentConversation(e.chatId(), 100)
+        return messagePort.loadRecent(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
                     return intentClassifier.classify(e.message())

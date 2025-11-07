@@ -49,14 +49,16 @@ public class ChatSaga {
         return commandBus.execute(e.actor(), new AddMessage(e.chatId(), message))
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(retry)
-                .doOnSuccess(result ->
-                        log.info("Add message command executed (actor={}, chatId={}, message={})",
-                                e.actor(), e.chatId(), e.prompt()))
-                .onErrorResume(error -> {
-                    log.error("Failed to add message even after all retry attempts (actor={}, chatId={}, message={})",
-                            e.actor(), e.chatId(), e.prompt(), error);
-                    return Mono.empty();
-                })
+                .doOnSubscribe(subscription ->
+                        log.info("Dispatching AddMessage command: actor={}, chatId={}",
+                                e.actor(), e.chatId()))
+                .doOnSuccess(payload ->
+                        log.info("AddMessage dispatched successfully: actor={}, chatId={}",
+                                e.actor(), e.chatId()))
+                .doOnError(error ->
+                        log.error("AddMessage failed: actor={}, chatId={}, error={}",
+                                e.actor(), e.chatId(), error.getMessage(), error))
+                .onErrorResume(error -> Mono.empty())
                 .then();
     }
 
@@ -79,14 +81,16 @@ public class ChatSaga {
                                 e.actor(), e.chatId(), e.message().content(),
                                 retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
                 )
-                .doOnSuccess(v ->
-                        log.info("Generate reply command executed (actor={}, chatId={}, message={})",
-                                e.actor(), e.chatId(), e.message().content()))
-                .onErrorResume(error -> {
-                    log.error("Generate reply failed even after all retry attempts (actor={}, chatId={}, message={})",
-                            e.actor(), e.chatId(), e.message().content(), error);
-                    return Mono.empty();
-                })
+                .doOnSubscribe(subscription ->
+                        log.info("Dispatching GenerateReply command: actor={}, chatId={}",
+                                e.actor(), e.chatId()))
+                .doOnSuccess(payload ->
+                        log.info("GenerateReply dispatched successfully: actor={}, chatId={}",
+                                e.actor(), e.chatId()))
+                .doOnError(error ->
+                        log.error("GenerateReply failed: actor={}, chatId={}, error={}",
+                                e.actor(), e.chatId(), error.getMessage(), error))
+                .onErrorResume(error -> Mono.empty())
                 .then();
     }
 
@@ -101,18 +105,20 @@ public class ChatSaga {
         return commandBus.execute(e.actor(), new AddMessage(e.chatId(), e.reply()))
                 .timeout(Duration.ofSeconds(60))
                 .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
-                        log.warn("Retrying saving message (actor={}, chatId={}, message={}) attempt #{} due to {}",
+                        log.warn("Retrying adding message (actor={}, chatId={}, message={}) attempt #{} due to {}",
                                 e.actor(), e.chatId(), e.reply().content(),
                                 retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
                 )
-                .doOnSuccess(v ->
-                        log.info("Add message command executed (actor={}, chatId={}, message={})",
-                                e.actor(), e.chatId(), e.reply().content()))
-                .onErrorResume(error -> {
-                    log.error("Add message failed even after all retry attempts (actor={}, chatId={}, message={})",
-                            e.actor(), e.chatId(), e.reply().content(), error);
-                    return Mono.empty();
-                })
+                .doOnSubscribe(subscription ->
+                        log.info("Dispatching AddMessage command: actor={}, chatId={}",
+                                e.actor(), e.chatId()))
+                .doOnSuccess(payload ->
+                        log.info("AddMessage dispatched successfully: actor={}, chatId={}",
+                                e.actor(), e.chatId()))
+                .doOnError(error ->
+                        log.error("AddMessage failed: actor={}, chatId={}, error={}",
+                                e.actor(), e.chatId(), error.getMessage(), error))
+                .onErrorResume(error -> Mono.empty())
                 .then();
     }
 }

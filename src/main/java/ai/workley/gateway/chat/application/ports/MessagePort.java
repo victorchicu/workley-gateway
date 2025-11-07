@@ -10,5 +10,5 @@ public interface MessagePort {
 
     Flux<Message<String>> loadAll(String chatId);
 
-    Flux<Message<String>> loadRecentConversation(String chatId, int limit);
+    Flux<Message<String>> loadRecent(String chatId, int limit);
 }
