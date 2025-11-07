@@ -23,7 +23,7 @@ public record ChatAggregate(String id, Set<String> participants, long version) {
         return aggregate;
     }
 
-    public AggregateCommit<MessageAdded> appendMessage(String actor, String messageId, String content) {
+    public AggregateCommit<MessageAdded> addMessage(String actor, String messageId, String content) {
         Objects.requireNonNull(actor, "actor must not be null");
         Objects.requireNonNull(messageId, "messageId must not be null");
         Objects.requireNonNull(content, "content must not be null");
