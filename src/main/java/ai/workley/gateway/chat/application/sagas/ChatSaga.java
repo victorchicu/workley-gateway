@@ -93,7 +93,7 @@ public class ChatSaga {
 
         AddMessage command =
                 new AddMessage(e.chatId(),
-                        Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), e.message().content()));
+                        Message.create(e.replyId(), e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), e.message().content()));
 
         return addMessage(e.actor(), e.chatId(), command, retryBackoffSpec);
     }

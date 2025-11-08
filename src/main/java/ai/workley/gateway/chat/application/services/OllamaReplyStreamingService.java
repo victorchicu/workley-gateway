@@ -88,8 +88,8 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
                 .then();
     }
 
-    private void emitChunkSafe(ReplyStarted e, String dummyId, String chunk) {
-        Message<String> dummy = Message.create(dummyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
+    private void emitChunkSafe(ReplyStarted e, String replyId, String chunk) {
+        Message<String> dummy = Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(dummy);
         if (emitResult.isFailure()) {
             log.warn("Dropped chunk (actor={}, chatId={}, reason={})", e.actor(), e.chatId(), emitResult);
@@ -118,7 +118,7 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
     }
 
     private Mono<Void> streamReply(ReplyStarted e, IntentClassification classification, List<Message<String>> history) {
-        final String dummyId = UUID.randomUUID().toString();
+        final String replyId = UUID.randomUUID().toString();
 
         Flux<String> chunks = aiModel.stream(buildPrompt(e, classification, history))
                 .timeout(Duration.ofSeconds(30), Flux.empty())
@@ -133,7 +133,7 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
                 .map(Generation::getOutput)
                 .map(AbstractMessage::getText)
                 .filter(chunk -> chunk != null && !chunk.isBlank())
-                .doOnNext(chunk -> emitChunkSafe(e, dummyId, chunk))
+                .doOnNext(chunk -> emitChunkSafe(e, replyId, chunk))
                 .doOnError(error ->
                         log.error("Stream message failed (actor={}, chatId={})",
                                 e.actor(), e.chatId(), error))
@@ -145,10 +145,9 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
                 .map(StringBuilder::toString)
                 .defaultIfEmpty("")
                 .flatMap(fullReply -> {
-                    applicationEventPublisher.publishEvent(new ReplyCompleted(e.actor(), e.chatId(), Message.create(fullReply)));
+                    applicationEventPublisher.publishEvent(new ReplyCompleted(e.actor(), replyId, e.chatId(), Message.create(fullReply)));
                     return Mono.empty();
                 })
                 .then();
     }
 }
-
