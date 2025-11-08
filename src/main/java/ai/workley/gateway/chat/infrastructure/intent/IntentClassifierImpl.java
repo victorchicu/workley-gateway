@@ -36,7 +36,14 @@ public class IntentClassifierImpl implements IntentClassifier {
                     .stop(List.of("```"))
                     .build();
 
-    private static final String ASSISTANT_PROMPT = """
+    private static final String ASSISTANT_TONE = """
+             You are Workley, a friendly conversational assistant.
+             You can chat naturally about anything. Keep responses clear, relaxed, and human-sounding.
+             Use contractions (you're, let's, it's), short sentences, and avoid sounding scripted.
+             Ask clarifying questions only when they genuinely help.
+            """;
+
+    private static final String ASSISTANT_PROMPT_CLASSIFICATION = """
              Classify user message into one intent:
              - FIND_JOB: user wants to find a job
              - FIND_TALENT: user wants to hire someone
@@ -72,7 +79,10 @@ public class IntentClassifierImpl implements IntentClassifier {
 
         Prompt prompt =
                 new Prompt(
-                        List.of(new SystemMessage(ASSISTANT_PROMPT), new UserMessage(message.content())),
+                        List.of(
+                                new SystemMessage(ASSISTANT_TONE),
+                                new SystemMessage(ASSISTANT_PROMPT_CLASSIFICATION),
+                                new UserMessage(message.content())),
                         JSON_ONLY
                 );
 
