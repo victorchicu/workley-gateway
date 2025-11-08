@@ -9,7 +9,6 @@ import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.domain.payloads.AddMessagePayload;
 import ai.workley.gateway.chat.domain.events.MessageAdded;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
-import ai.workley.gateway.chat.infrastructure.generators.IdGenerator;
 import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
 import ai.workley.gateway.chat.application.command.CommandHandler;
 import ai.workley.gateway.chat.infrastructure.persistent.mongodb.documents.EventDocument;
@@ -27,18 +26,15 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
     private static final Logger log = LoggerFactory.getLogger(AddMessageHandler.class);
 
     private final EventStore eventStore;
-    private final IdGenerator randomIdGenerator;
     private final TransactionalOperator transactionalOperator;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public AddMessageHandler(
             EventStore eventStore,
-            IdGenerator randomIdGenerator,
             TransactionalOperator transactionalOperator,
             ApplicationEventPublisher applicationEventPublisher
     ) {
         this.eventStore = eventStore;
-        this.randomIdGenerator = randomIdGenerator;
         this.transactionalOperator = transactionalOperator;
         this.applicationEventPublisher = applicationEventPublisher;
     }
@@ -80,6 +76,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         try {
             aggregate = ChatAggregate.rehydrate(history);
         } catch (IllegalStateException notFound) {
+            log.error("Chat not found (chatId={})", command.chatId());
             return Mono.error(new ApplicationError("Oops! Chat not found."));
         }
 
@@ -87,6 +84,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         try {
             commit = aggregate.addMessage(actor, command.message());
         } catch (IllegalStateException notAllowed) {
+            log.error("You are not allowed to post in this chat (chatId={})", command.chatId());
             return Mono.error(new ApplicationError("Oops! You are not allowed to post in this chat."));
         }
 

@@ -37,17 +37,16 @@ public class ChatSaga {
         RetryBackoffSpec retry =
                 Retry.backoff(5, Duration.ofMillis(500))
                         .jitter(0.5)
-                        //.filter(this::isRetryable)
                         .maxBackoff(Duration.ofSeconds(5))
                         .doBeforeRetry(retrySignal ->
-                                log.warn("Retrying AddMessage command (actor={}, chatId={}, message={}) attempt #{} due to {}",
-                                        e.actor(), e.chatId(), e.prompt(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
+                                log.warn("Retrying AddMessage command (actor={}, chatId={}) attempt #{} due to {}",
+                                        e.actor(), e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
 
         AddMessage command =
                 new AddMessage(e.chatId(),
                         Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), Role.ANONYMOUS, Instant.now(), e.prompt()));
 
-        return addMessage(e.actor(), e.chatId(), e.prompt(), command, retry);
+        return addMessage(e.actor(), e.chatId(), command, retry);
     }
 
     @EventListener
@@ -93,18 +92,19 @@ public class ChatSaga {
                         .maxBackoff(Duration.ofSeconds(5));
 
         AddMessage command =
-                new AddMessage(e.chatId(), e.message());
+                new AddMessage(e.chatId(),
+                        Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), e.message().content()));
 
-        return addMessage(e.actor(), e.chatId(), e.message().content(), command, retryBackoffSpec);
+        return addMessage(e.actor(), e.chatId(), command, retryBackoffSpec);
     }
 
 
-    private Mono<Void> addMessage(String actor, String chatId, String content, AddMessage command, RetryBackoffSpec retryBackoffSpec) {
+    private Mono<Void> addMessage(String actor, String chatId, AddMessage command, RetryBackoffSpec retryBackoffSpec) {
         return commandBus.execute(actor, command)
                 .timeout(Duration.ofSeconds(60))
                 .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
-                        log.warn("Retrying AddMessage (actor={}, chatId={}, message={}) attempt #{} due to {}",
-                                actor, chatId, content, retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
+                        log.warn("Retrying AddMessage (actor={}, chatId={}) attempt #{} due to {}",
+                                actor, chatId, retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
                 )
                 .doOnSubscribe(subscription ->
                         log.info("Dispatching AddMessage command: actor={}, chatId={}",

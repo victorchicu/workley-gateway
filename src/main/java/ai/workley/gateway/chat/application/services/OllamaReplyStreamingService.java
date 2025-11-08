@@ -6,7 +6,6 @@ import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.events.ReplyCompleted;
 import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import ai.workley.gateway.chat.infrastructure.ai.AiModel;
-import ai.workley.gateway.chat.infrastructure.generators.IdGenerator;
 import ai.workley.gateway.chat.infrastructure.intent.IntentClassification;
 import ai.workley.gateway.chat.infrastructure.intent.IntentClassifier;
 import org.slf4j.Logger;
@@ -31,6 +30,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OllamaReplyStreamingService implements ReplyStreamingService {
@@ -38,24 +38,21 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
 
     private final AiModel aiModel;
     private final MessagePort messagePort;
-    private final IdGenerator randomIdGenerator;
     private final IntentClassifier intentClassifier;
-    private final ApplicationEventPublisher publisher;
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final Sinks.Many<Message<String>> chatSink;
 
     public OllamaReplyStreamingService(
             AiModel aiModel,
             MessagePort messagePort,
-            IdGenerator randomIdGenerator,
             IntentClassifier intentClassifier,
-            ApplicationEventPublisher publisher,
+            ApplicationEventPublisher applicationEventPublisher,
             Sinks.Many<Message<String>> chatSink
     ) {
         this.aiModel = aiModel;
         this.messagePort = messagePort;
-        this.randomIdGenerator = randomIdGenerator;
         this.intentClassifier = intentClassifier;
-        this.publisher = publisher;
+        this.applicationEventPublisher = applicationEventPublisher;
         this.chatSink = chatSink;
     }
 
@@ -91,9 +88,9 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
                 .then();
     }
 
-    private void emitChunkSafe(ReplyStarted e, String id, String chunk) {
-        Message<String> message = Message.create(id, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
-        Sinks.EmitResult emitResult = chatSink.tryEmitNext(message);
+    private void emitChunkSafe(ReplyStarted e, String dummyId, String chunk) {
+        Message<String> dummy = Message.create(dummyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
+        Sinks.EmitResult emitResult = chatSink.tryEmitNext(dummy);
         if (emitResult.isFailure()) {
             log.warn("Dropped chunk (actor={}, chatId={}, reason={})", e.actor(), e.chatId(), emitResult);
         }
@@ -121,7 +118,7 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
     }
 
     private Mono<Void> streamReply(ReplyStarted e, IntentClassification classification, List<Message<String>> history) {
-        final String messageId = randomIdGenerator.generate();
+        final String dummyId = UUID.randomUUID().toString();
 
         Flux<String> chunks = aiModel.stream(buildPrompt(e, classification, history))
                 .timeout(Duration.ofSeconds(30), Flux.empty())
@@ -136,30 +133,22 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
                 .map(Generation::getOutput)
                 .map(AbstractMessage::getText)
                 .filter(chunk -> chunk != null && !chunk.isBlank())
-                .doOnNext(chunk -> emitChunkSafe(e, messageId, chunk))
+                .doOnNext(chunk -> emitChunkSafe(e, dummyId, chunk))
                 .doOnError(error ->
                         log.error("Stream message failed (actor={}, chatId={})",
                                 e.actor(), e.chatId(), error))
                 .onErrorResume(error -> Flux.empty())
                 .share();
 
-        RetryBackoffSpec retryBackoffSpec =
-                Retry.backoff(5, Duration.ofMillis(500))
-                        .jitter(0.50)
-                        .maxBackoff(Duration.ofSeconds(5));
-
         return chunks
                 .reduce(new StringBuilder(), StringBuilder::append)
                 .map(StringBuilder::toString)
                 .defaultIfEmpty("")
-                .flatMap(fullReply -> emitReplyCompleted(e, messageId, fullReply))
+                .flatMap(fullReply -> {
+                    applicationEventPublisher.publishEvent(new ReplyCompleted(e.actor(), e.chatId(), Message.create(fullReply)));
+                    return Mono.empty();
+                })
                 .then();
-    }
-
-    private Mono<Void> emitReplyCompleted(ReplyStarted e, String messageId, String fullReply) {
-        Message<String> message = Message.create(messageId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), fullReply);
-        publisher.publishEvent(new ReplyCompleted(e.actor(), e.chatId(), message));
-        return Mono.empty();
     }
 }
 

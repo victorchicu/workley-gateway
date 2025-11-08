@@ -4,13 +4,11 @@ import ai.workley.gateway.chat.domain.command.GenerateReply;
 import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.payloads.GenerateReplyPayload;
-import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
 import ai.workley.gateway.chat.application.command.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -19,11 +17,7 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public GenerateReplyHandler(
-            EventStore eventStore,
-            TransactionalOperator transactionalOperator,
-            ApplicationEventPublisher applicationEventPublisher
-    ) {
+    public GenerateReplyHandler(ApplicationEventPublisher applicationEventPublisher) {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
