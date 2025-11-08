@@ -24,9 +24,10 @@ spring:
     ollama:
       chat:
         options:
+          top-p: 0.9
           model: llama3.1:8b
           max-tokens: 1000
-          temperature: 0.2
+          temperature: 0.8
       base-url: http://localhost:7869
     openai:
       api-key: ${SPRING_AI_OPENAI_API_KEY}

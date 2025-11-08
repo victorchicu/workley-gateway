@@ -36,31 +36,24 @@ public class IntentClassifierImpl implements IntentClassifier {
                     .stop(List.of("```"))
                     .build();
 
-    private static final String ASSISTANT_TONE = """
-             You are Workley, a friendly conversational assistant.
-             You can chat naturally about anything. Keep responses clear, relaxed, and human-sounding.
-             Use contractions (you're, let's, it's), short sentences, and avoid sounding scripted.
-             Ask clarifying questions only when they genuinely help.
-            """;
-
     private static final String ASSISTANT_PROMPT_CLASSIFICATION = """
-             Classify user message into one intent:
-             - FIND_JOB: user wants to find a job
-             - FIND_TALENT: user wants to hire someone
-             - CREATE_RESUME: user wants to create/edit resume
-             - UNRELATED: anything else
+            Classify the user's message into exactly one intent category.
             
-             Return JSON only:
-             {
-               "intent": "FIND_JOB",
-               "confidence": 0.95
-             }
+            Intents:
+            - FIND_JOB: user is looking for work/employment
+            - FIND_TALENT: user wants to hire/recruit someone
+            - CREATE_RESUME: user needs help with resume/CV/profile
+            - UNRELATED: anything else (greetings, off-topic, unclear)
             
-             Examples:
-             "I need a job" -> {"intent":"FIND_JOB","confidence":0.95}
-             "hire developer" -> {"intent":"FIND_TALENT","confidence":0.92}
-             "help with CV" -> {"intent":"CREATE_RESUME","confidence":0.90}
-             "hello" -> {"intent":"UNRELATED","confidence":0.98}
+            Output only valid JSON with this exact structure:
+            {"intent":"INTENT_NAME","confidence":0.95}
+            
+            Examples:
+            "I need a job" -> {"intent":"FIND_JOB","confidence":0.95}
+            "looking to hire a developer" -> {"intent":"FIND_TALENT","confidence":0.92}
+            "help with my CV" -> {"intent":"CREATE_RESUME","confidence":0.90}
+            "hello" -> {"intent":"UNRELATED","confidence":0.98}
+            "what's the weather" -> {"intent":"UNRELATED","confidence":0.99}
             """;
 
     private final AiModel aiModel;
@@ -80,7 +73,6 @@ public class IntentClassifierImpl implements IntentClassifier {
         Prompt prompt =
                 new Prompt(
                         List.of(
-                                new SystemMessage(ASSISTANT_TONE),
                                 new SystemMessage(ASSISTANT_PROMPT_CLASSIFICATION),
                                 new UserMessage(message.content())),
                         JSON_ONLY
