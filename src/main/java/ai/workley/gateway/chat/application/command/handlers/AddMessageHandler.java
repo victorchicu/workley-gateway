@@ -14,6 +14,7 @@ import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
 import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
 import ai.workley.gateway.chat.application.command.CommandHandler;
 import ai.workley.gateway.chat.infrastructure.persistent.mongodb.documents.EventDocument;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -86,19 +87,12 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
 
         AggregateCommit<MessageAdded> commit;
         try {
-            String dummyId =
-                    UUID.randomUUID().toString();
-
-            Message<String> message =
-                    Message.create(dummyId, command.chatId(), actor, Role.ANONYMOUS, Instant.now(), command.message().content());
-
             commit =
                     command.message().id() == null
-                            ? aggregate.addMessage(actor, message)
-                            : aggregate.addMessage(actor, command.message());
+                            ? newAggregate(actor, command, aggregate) : aggregate.addMessage(actor, command.message());
         } catch (IllegalStateException notAllowed) {
-            log.error("You are not allowed to post in this chat (chatId={})", command.chatId());
-            return Mono.error(new ApplicationError("Oops! You are not allowed to post in this chat."));
+            log.error("Oops! You can't add a message to this chat. chatId={}", command.chatId());
+            return Mono.error(new ApplicationError("Oops! You can't add a message to this chat."));
         }
 
         Mono<AddMessagePayload> tx =
@@ -108,5 +102,15 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
                 );
 
         return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(commit.event()));
+    }
+
+    private AggregateCommit<MessageAdded> newAggregate(String actor, AddMessage command, ChatAggregate aggregate) {
+        String dummyId =
+                UUID.randomUUID().toString();
+
+        Message<String> message =
+                Message.create(dummyId, command.chatId(), actor, Role.ANONYMOUS, Instant.now(), command.message().content());
+
+        return aggregate.addMessage(actor, message);
     }
 }
