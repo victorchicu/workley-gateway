@@ -70,19 +70,17 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
                     return intentClassifier.classify(e.message())
                             .timeout(Duration.ofSeconds(60))
                             .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
-                                log.warn("Retrying classify intent (actor={}, chatId={}, message={}) attempt #{} due to {}",
-                                        e.actor(), e.chatId(), e.message().content(),
-                                        retrySignal.totalRetries() + 1, retrySignal.failure().toString());
+                                log.warn("Retrying classify intent (actor={}, chatId={}) attempt #{} due to {}",
+                                        e.actor(), e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
                             }))
-                            .doOnError(err -> {
-                                log.error("Intent classification failed (actor={}, chatId={}, message={})",
-                                        e.actor(), e.chatId(), e.message().content(), err);
-                            })
                             .flatMap(classification -> {
-                                log.info("Intent classified as {} with confidence {} (actor={}, chatId={}, message={})",
-                                        classification.intent(), classification.confidence(),
-                                        e.actor(), e.chatId(), e.message().content());
+                                log.info("Intent classified as {} with confidence {} (actor={}, chatId={})",
+                                        classification.intent(), classification.confidence(), e.actor(), e.chatId());
                                 return streamReply(e, classification, history);
+                            })
+                            .doOnError(err -> {
+                                log.error("Intent classification failed (actor={}, chatId={})",
+                                        e.actor(), e.chatId(), err);
                             });
                 })
                 .then();
