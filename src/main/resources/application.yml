@@ -24,7 +24,7 @@ spring:
     ollama:
       chat:
         options:
-          model: llama3.2:3b
+          model: llama3.1:8b
           max-tokens: 1000
           temperature: 0.2
       base-url: http://localhost:7869
