@@ -28,8 +28,8 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     private static final String ANONYMOUS_KEY = "anonymousId";
     private static final String ANONYMOUS_TOKEN_COOKIE = "__HOST-anonymousToken";
     private static final Duration COOKIE_MAX_AGE = Duration.ofDays(30);
-    private static final Duration TOKEN_EXPIRES_THRESHOLD = Duration.ofMinutes(5);
-    private static final Duration TOKEN_REFRESH_THRESHOLD = Duration.ofMinutes(1);
+    private static final Duration TOKEN_EXPIRES_THRESHOLD = Duration.ofMinutes(60);
+    private static final Duration TOKEN_REFRESH_THRESHOLD = Duration.ofMinutes(10);
 
     private final AnonymousJwtSecret jwtSecret;
 

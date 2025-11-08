@@ -145,7 +145,9 @@ public class OllamaReplyStreamingService implements ReplyStreamingService {
                 .map(StringBuilder::toString)
                 .defaultIfEmpty("")
                 .flatMap(fullReply -> {
-                    applicationEventPublisher.publishEvent(new ReplyCompleted(e.actor(), replyId, e.chatId(), Message.create(fullReply)));
+                    applicationEventPublisher.publishEvent(
+                            new ReplyCompleted(e.actor(),
+                                    e.chatId(), Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), fullReply)));
                     return Mono.empty();
                 })
                 .then();

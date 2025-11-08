@@ -1,6 +1,8 @@
 package ai.workley.gateway.chat.application.command.handlers;
 
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
+import ai.workley.gateway.chat.domain.Message;
+import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.aggregations.AggregateCommit;
 import ai.workley.gateway.chat.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.chat.domain.aggregations.ChatAggregate;
@@ -19,7 +21,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class AddMessageHandler implements CommandHandler<AddMessage, AddMessagePayload> {
@@ -82,7 +86,16 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
 
         AggregateCommit<MessageAdded> commit;
         try {
-            commit = aggregate.addMessage(actor, command.message());
+            String dummyId =
+                    UUID.randomUUID().toString();
+
+            Message<String> message =
+                    Message.create(dummyId, command.chatId(), actor, Role.ANONYMOUS, Instant.now(), command.message().content());
+
+            commit =
+                    command.message().id() == null
+                            ? aggregate.addMessage(actor, message)
+                            : aggregate.addMessage(actor, command.message());
         } catch (IllegalStateException notAllowed) {
             log.error("You are not allowed to post in this chat (chatId={})", command.chatId());
             return Mono.error(new ApplicationError("Oops! You are not allowed to post in this chat."));
