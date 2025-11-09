@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.application.query.handlers;
 
-import ai.workley.gateway.chat.application.ports.ChatPort;
-import ai.workley.gateway.chat.application.ports.MessagePort;
+import ai.workley.gateway.chat.application.ports.outbound.ChatService;
+import ai.workley.gateway.chat.application.ports.outbound.MessageService;
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.domain.query.GetChat;
 import ai.workley.gateway.chat.domain.payloads.GetChatPayload;
@@ -15,12 +15,12 @@ import java.util.Set;
 
 @Component
 public class GetChatHandler implements QueryHandler<GetChat, GetChatPayload> {
-    private final ChatPort chatPort;
-    private final MessagePort messagePort;
+    private final ChatService chatService;
+    private final MessageService messageService;
 
-    public GetChatHandler(ChatPort chatPort, MessagePort messagePort) {
-        this.chatPort = chatPort;
-        this.messagePort = messagePort;
+    public GetChatHandler(ChatService chatService, MessageService messageService) {
+        this.chatService = chatService;
+        this.messageService = messageService;
     }
 
     @Override
@@ -31,10 +31,10 @@ public class GetChatHandler implements QueryHandler<GetChat, GetChatPayload> {
     @Override
     public Mono<GetChatPayload> handle(Principal actor, GetChat query) {
         Set<String> participants = Set.of(actor.getName());
-        return chatPort.findChat(query.chatId(), participants)
+        return chatService.findChat(query.chatId(), participants)
                 .switchIfEmpty(Mono.error(new ApplicationError("Oops. Chat not found.")))
                 .flatMap((Chat chat) ->
-                        messagePort.loadAll(chat.id()).collectList()
+                        messageService.loadAll(chat.id()).collectList()
                                 .map(messages -> new GetChatPayload(chat.id(), messages))
                 );
     }

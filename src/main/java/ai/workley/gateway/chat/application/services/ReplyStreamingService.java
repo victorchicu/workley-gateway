@@ -1,14 +1,14 @@
 package ai.workley.gateway.chat.application.services;
 
-import ai.workley.gateway.chat.application.ports.MessagePort;
+import ai.workley.gateway.chat.application.ports.outbound.MessageService;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.events.ReplyCompleted;
 import ai.workley.gateway.chat.domain.events.ReplyStarted;
-import ai.workley.gateway.chat.infrastructure.ai.AiModel;
-import ai.workley.gateway.chat.infrastructure.eventbus.EventBus;
+import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
+import ai.workley.gateway.chat.application.ports.outbound.EventBus;
 import ai.workley.gateway.chat.infrastructure.intent.IntentClassification;
-import ai.workley.gateway.chat.infrastructure.intent.IntentClassifier;
+import ai.workley.gateway.chat.application.ports.outbound.IntentClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -47,20 +47,20 @@ public class ReplyStreamingService {
 
     private final AiModel aiModel;
     private final EventBus eventBus;
-    private final MessagePort messagePort;
+    private final MessageService messageService;
     private final IntentClassifier intentClassifier;
     private final Sinks.Many<Message<String>> chatSink;
 
     public ReplyStreamingService(
             AiModel aiModel,
             EventBus eventBus,
-            MessagePort messagePort,
+            MessageService messageService,
             IntentClassifier intentClassifier,
             Sinks.Many<Message<String>> chatSink
     ) {
         this.aiModel = aiModel;
         this.eventBus = eventBus;
-        this.messagePort = messagePort;
+        this.messageService = messageService;
         this.intentClassifier = intentClassifier;
         this.chatSink = chatSink;
     }
@@ -68,7 +68,7 @@ public class ReplyStreamingService {
     @EventListener
     @Order(1)
     public Mono<Void> on(ReplyStarted e) {
-        return messagePort.loadRecent(e.chatId(), 100)
+        return messageService.loadRecent(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
                     return intentClassifier.classify(e.message())

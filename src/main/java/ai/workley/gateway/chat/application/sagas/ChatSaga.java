@@ -4,8 +4,8 @@ import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.command.AddMessage;
 import ai.workley.gateway.chat.domain.command.GenerateReply;
 import ai.workley.gateway.chat.domain.events.*;
-import ai.workley.gateway.chat.application.command.CommandBus;
-import ai.workley.gateway.chat.infrastructure.generators.IdGenerator;
+import ai.workley.gateway.chat.infrastructure.bus.InMemoryCommandBus;
+import ai.workley.gateway.chat.infrastructure.id.IdGenerator;
 import ai.workley.gateway.chat.domain.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +32,10 @@ public class ChatSaga {
                                     retrySignal.totalRetries() + 1, retrySignal.failure().toString())
                     );
 
-    private final CommandBus commandBus;
+    private final InMemoryCommandBus commandBus;
     private final IdGenerator randomIdGenerator;
 
-    public ChatSaga(CommandBus commandBus, IdGenerator randomIdGenerator) {
+    public ChatSaga(InMemoryCommandBus commandBus, IdGenerator randomIdGenerator) {
         this.commandBus = commandBus;
         this.randomIdGenerator = randomIdGenerator;
     }

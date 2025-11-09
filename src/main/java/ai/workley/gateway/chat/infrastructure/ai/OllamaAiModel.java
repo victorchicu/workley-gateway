@@ -1,5 +1,6 @@
 package ai.workley.gateway.chat.infrastructure.ai;
 
+import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.OllamaChatModel;
