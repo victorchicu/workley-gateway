@@ -5,9 +5,9 @@ import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.payloads.GenerateReplyPayload;
 import ai.workley.gateway.chat.application.command.CommandHandler;
+import ai.workley.gateway.chat.infrastructure.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -15,10 +15,10 @@ import reactor.core.publisher.Mono;
 public class GenerateReplyHandler implements CommandHandler<GenerateReply, GenerateReplyPayload> {
     private static final Logger log = LoggerFactory.getLogger(GenerateReplyHandler.class);
 
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final EventBus eventBus;
 
-    public GenerateReplyHandler(ApplicationEventPublisher applicationEventPublisher) {
-        this.applicationEventPublisher = applicationEventPublisher;
+    public GenerateReplyHandler(EventBus eventBus) {
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -29,7 +29,7 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
     @Override
     public Mono<GenerateReplyPayload> handle(String actor, GenerateReply command) {
         return Mono.defer(() -> {
-            applicationEventPublisher.publishEvent(
+            eventBus.publishEvent(
                     new ReplyStarted(
                             actor, command.chatId(), command.message()));
             return Mono.just(GenerateReplyPayload.ack());

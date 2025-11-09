@@ -10,14 +10,13 @@ import ai.workley.gateway.chat.domain.command.AddMessage;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.domain.payloads.AddMessagePayload;
 import ai.workley.gateway.chat.domain.events.MessageAdded;
+import ai.workley.gateway.chat.infrastructure.eventbus.EventBus;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
 import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
 import ai.workley.gateway.chat.application.command.CommandHandler;
 import ai.workley.gateway.chat.infrastructure.persistent.mongodb.documents.EventDocument;
-import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
@@ -30,18 +29,18 @@ import java.util.UUID;
 public class AddMessageHandler implements CommandHandler<AddMessage, AddMessagePayload> {
     private static final Logger log = LoggerFactory.getLogger(AddMessageHandler.class);
 
+    private final EventBus eventBus;
     private final EventStore eventStore;
     private final TransactionalOperator transactionalOperator;
-    private final ApplicationEventPublisher applicationEventPublisher;
 
     public AddMessageHandler(
+            EventBus eventBus,
             EventStore eventStore,
-            TransactionalOperator transactionalOperator,
-            ApplicationEventPublisher applicationEventPublisher
+            TransactionalOperator transactionalOperator
     ) {
+        this.eventBus = eventBus;
         this.eventStore = eventStore;
         this.transactionalOperator = transactionalOperator;
-        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -101,7 +100,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
                                 .thenReturn(AddMessagePayload.create(aggregate.chatId(), commit.event().message()))
                 );
 
-        return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(commit.event()));
+        return tx.doOnSuccess(__ -> eventBus.publishEvent(commit.event()));
     }
 
     private AggregateCommit<MessageAdded> newAggregate(String actor, AddMessage command, ChatAggregate aggregate) {

@@ -6,12 +6,12 @@ import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.command.CreateChat;
 import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
+import ai.workley.gateway.chat.infrastructure.eventbus.EventBus;
 import ai.workley.gateway.chat.infrastructure.generators.IdGenerator;
 import ai.workley.gateway.chat.infrastructure.eventstore.EventStore;
 import ai.workley.gateway.chat.application.command.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
@@ -23,21 +23,21 @@ import java.util.UUID;
 public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatPayload> {
     private static final Logger log = LoggerFactory.getLogger(CreateChatHandler.class);
 
+    private final EventBus eventBus;
     private final EventStore eventStore;
     private final IdGenerator randomIdGenerator;
     private final TransactionalOperator transactionalOperator;
-    private final ApplicationEventPublisher applicationEventPublisher;
 
     public CreateChatHandler(
+            EventBus eventBus,
             EventStore eventStore,
             IdGenerator randomIdGenerator,
-            TransactionalOperator transactionalOperator,
-            ApplicationEventPublisher applicationEventPublisher
+            TransactionalOperator transactionalOperator
     ) {
+        this.eventBus = eventBus;
         this.eventStore = eventStore;
         this.randomIdGenerator = randomIdGenerator;
         this.transactionalOperator = transactionalOperator;
-        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
                             eventStore.append(actor, chatCreated, -1L)
                                     .thenReturn(CreateChatPayload.create(chatId, dummy)));
 
-            return tx.doOnSuccess(__ -> applicationEventPublisher.publishEvent(chatCreated));
+            return tx.doOnSuccess(__ -> eventBus.publishEvent(chatCreated));
         }).onErrorMap(error -> {
             log.error("Oops! Could not create chat.", error);
             return new ApplicationError("Oops! Could not create chat.");
