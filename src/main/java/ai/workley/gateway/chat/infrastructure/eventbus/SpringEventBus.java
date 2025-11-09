@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 
 @Primary
 @Component
-public class ApplicationEventBus implements EventBus {
+public class SpringEventBus implements EventBus {
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public ApplicationEventBus(ApplicationEventPublisher applicationEventPublisher) {
+    public SpringEventBus(ApplicationEventPublisher applicationEventPublisher) {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
