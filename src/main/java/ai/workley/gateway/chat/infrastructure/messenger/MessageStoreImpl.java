@@ -2,9 +2,6 @@ package ai.workley.gateway.chat.infrastructure.messenger;
 
 import ai.workley.gateway.chat.application.ports.outbound.MessageStore;
 import ai.workley.gateway.chat.domain.Message;
-import ai.workley.gateway.chat.infrastructure.messenger.mongodb.MessageDocument;
-import ai.workley.gateway.chat.infrastructure.messenger.mongodb.MongoMessageRepository;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

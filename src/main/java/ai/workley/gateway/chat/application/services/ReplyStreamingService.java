@@ -1,6 +1,5 @@
 package ai.workley.gateway.chat.application.services;
 
-import ai.workley.gateway.chat.application.ports.outbound.MessageStore;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.events.ReplyCompleted;
