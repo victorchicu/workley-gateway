@@ -1,6 +1,5 @@
 package ai.workley.gateway.chat.infrastructure.embedding.mongodb;
 
-import ai.workley.gateway.chat.application.ports.outbound.embedding.EmbeddingStore;
 import ai.workley.gateway.chat.domain.Embedding;
 import ai.workley.gateway.chat.infrastructure.embedding.EmbeddingRepository;
 import org.springframework.stereotype.Component;

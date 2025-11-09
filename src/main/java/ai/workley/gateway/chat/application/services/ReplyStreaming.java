@@ -6,7 +6,7 @@ import ai.workley.gateway.chat.domain.events.ReplyCompleted;
 import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
 import ai.workley.gateway.chat.application.ports.outbound.EventBus;
-import ai.workley.gateway.chat.infrastructure.intent.IntentClassification;
+import ai.workley.gateway.chat.domain.intent.IntentClassification;
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

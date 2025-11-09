@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Primary
 @Component
 public class LocalQueryBus implements QueryBus {
     private final Map<Class<? extends Query>, QueryHandler<? extends Query, ? extends Payload>> handlers;

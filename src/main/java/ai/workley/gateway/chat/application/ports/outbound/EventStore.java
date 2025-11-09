@@ -9,5 +9,5 @@ public interface EventStore {
 
     <T extends DomainEvent> Flux<EventDocument<T>> load(String aggregateType, String aggregateId);
 
-    <T extends DomainEvent> Mono<EventDocument<T>> append(String actor, T object, Long expectedVersion);
+    <T extends DomainEvent> Mono<EventDocument<T>> append(String actor, T object, String aggregateType, String aggregateId, Long expectedVersion);
 }

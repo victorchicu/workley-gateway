@@ -5,6 +5,7 @@ import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.IntentType;
+import ai.workley.gateway.chat.domain.intent.IntentClassification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;

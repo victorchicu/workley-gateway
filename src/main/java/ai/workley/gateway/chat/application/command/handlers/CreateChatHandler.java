@@ -3,6 +3,7 @@ package ai.workley.gateway.chat.application.command.handlers;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
+import ai.workley.gateway.chat.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.chat.domain.command.CreateChat;
 import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
@@ -57,7 +58,7 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
 
             Mono<CreateChatPayload> tx =
                     transactionalOperator.transactional(
-                            eventStore.append(actor, chatCreated, -1L)
+                            eventStore.append(actor, chatCreated, AggregateTypes.CHAT, chatId, -1L)
                                     .thenReturn(CreateChatPayload.create(chatId, dummy)));
 
             return tx.doOnSuccess(__ -> eventBus.publishEvent(chatCreated));

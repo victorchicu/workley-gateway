@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.application.ports.outbound.intent;
 
 import ai.workley.gateway.chat.domain.Message;
-import ai.workley.gateway.chat.infrastructure.intent.IntentSuggestion;
+import ai.workley.gateway.chat.domain.intent.IntentSuggestion;
 import reactor.core.publisher.Mono;
 
 public interface IntentSuggester {

@@ -1,6 +1,7 @@
 package ai.workley.gateway.chat.application.command.handlers;
 
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
+import ai.workley.gateway.chat.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.chat.domain.command.SaveEmbedding;
 import ai.workley.gateway.chat.domain.payloads.SaveEmbeddingPayload;
 import ai.workley.gateway.chat.domain.events.EmbeddingSaved;
@@ -14,6 +15,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
+import java.util.UUID;
 
 @Component
 public class SaveEmbeddingHandler implements CommandHandler<SaveEmbedding, SaveEmbeddingPayload> {
@@ -45,7 +47,7 @@ public class SaveEmbeddingHandler implements CommandHandler<SaveEmbedding, SaveE
                     new EmbeddingSaved(actor, command.text(), Collections.emptyMap());
 
             Mono<SaveEmbeddingPayload> tx = transactionalOperator.transactional(
-                    eventStore.append(actor, embeddingSaved, null)
+                    eventStore.append(actor, embeddingSaved, AggregateTypes.EMBEDDING, UUID.randomUUID().toString(), null)
                             .thenReturn(SaveEmbeddingPayload.empty())
             );
 

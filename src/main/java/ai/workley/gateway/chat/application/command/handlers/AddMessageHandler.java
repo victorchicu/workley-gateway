@@ -96,7 +96,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
 
         Mono<AddMessagePayload> tx =
                 transactionalOperator.transactional(
-                        eventStore.append(actor, commit.event(), commit.version())
+                        eventStore.append(actor, commit.event(), AggregateTypes.CHAT, command.chatId(), commit.version())
                                 .thenReturn(AddMessagePayload.create(aggregate.chatId(), commit.event().message()))
                 );
 

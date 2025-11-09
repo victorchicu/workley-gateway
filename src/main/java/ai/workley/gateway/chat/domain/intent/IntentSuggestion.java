@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.infrastructure.intent;
+package ai.workley.gateway.chat.domain.intent;
 
 public record IntentSuggestion(String suggestion, Float confidence) {
 

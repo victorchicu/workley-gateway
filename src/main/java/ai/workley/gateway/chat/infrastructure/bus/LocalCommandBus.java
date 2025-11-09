@@ -5,7 +5,6 @@ import ai.workley.gateway.chat.domain.command.Command;
 import ai.workley.gateway.chat.domain.payloads.Payload;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.application.ports.inbound.CommandBus;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Primary
 @Component
 public class LocalCommandBus implements CommandBus {
     private final Map<Class<? extends Command>, CommandHandler<?, ?>> handlers;
