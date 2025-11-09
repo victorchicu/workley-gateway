@@ -1,22 +1,23 @@
-package ai.workley.gateway.chat.infrastructure.embedding;
+package ai.workley.gateway.chat.infrastructure.embedding.mongodb;
 
-import ai.workley.gateway.chat.application.ports.outbound.EmbeddingService;
+import ai.workley.gateway.chat.application.ports.outbound.embedding.EmbeddingStore;
 import ai.workley.gateway.chat.domain.Embedding;
+import ai.workley.gateway.chat.infrastructure.embedding.EmbeddingRepository;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class EmbeddingAdapter implements EmbeddingService {
-    private final EmbeddingRepository embeddingRepository;
+public class MongoEmbeddingRepositoryAdapter implements EmbeddingRepository {
+    private final MongoEmbeddingRepository mongoEmbeddingRepository;
 
-    public EmbeddingAdapter(EmbeddingRepository embeddingRepository) {
-        this.embeddingRepository = embeddingRepository;
+    public MongoEmbeddingRepositoryAdapter(MongoEmbeddingRepository mongoEmbeddingRepository) {
+        this.mongoEmbeddingRepository = mongoEmbeddingRepository;
     }
 
     @Override
     public Mono<Embedding> save(Embedding embedding) {
         EmbeddingDocument entity = toEmbeddingDocument(embedding);
-        return embeddingRepository.save(entity)
+        return mongoEmbeddingRepository.save(entity)
                 .map(this::toEmbedding);
     }
 

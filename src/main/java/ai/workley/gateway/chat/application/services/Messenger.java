@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.application.services;
 
-import ai.workley.gateway.chat.application.ports.outbound.ChatStore;
-import ai.workley.gateway.chat.application.ports.outbound.MessageStore;
+import ai.workley.gateway.chat.application.ports.outbound.messenger.ChatStore;
+import ai.workley.gateway.chat.application.ports.outbound.messenger.MessageStore;
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.domain.Message;
 import org.springframework.stereotype.Service;
@@ -11,11 +11,11 @@ import reactor.core.publisher.Mono;
 import java.util.Collection;
 
 @Service
-public class MessengerService {
+public class Messenger {
     private final ChatStore chatStore;
     private final MessageStore messageStore;
 
-    public MessengerService(ChatStore chatStore, MessageStore messageStore) {
+    public Messenger(ChatStore chatStore, MessageStore messageStore) {
         this.chatStore = chatStore;
         this.messageStore = messageStore;
     }

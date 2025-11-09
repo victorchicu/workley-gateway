@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.infrastructure.messenger;
 
-import ai.workley.gateway.chat.application.ports.outbound.ChatStore;
+import ai.workley.gateway.chat.application.ports.outbound.messenger.ChatStore;
 import ai.workley.gateway.chat.domain.Chat;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -22,6 +22,6 @@ public class ChatStoreImpl implements ChatStore {
 
     @Override
     public Mono<Chat> findChat(String id, Collection<String> participants) {
-        return messengerRepository.findChat(id, participants);
+        return messengerRepository.find(id, participants);
     }
 }

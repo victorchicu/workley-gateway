@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 
 @Primary
 @Component
-public class InMemoryEventBus implements EventBus {
+public class LocalEventBus implements EventBus {
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public InMemoryEventBus(ApplicationEventPublisher applicationEventPublisher) {
+    public LocalEventBus(ApplicationEventPublisher applicationEventPublisher) {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 

@@ -1,8 +1,9 @@
 package ai.workley.gateway.chat.infrastructure.embedding;
 
-import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.stereotype.Repository;
+import ai.workley.gateway.chat.domain.Embedding;
+import reactor.core.publisher.Mono;
 
-@Repository
-public interface EmbeddingRepository extends ReactiveMongoRepository<EmbeddingDocument, String> {
+public interface EmbeddingRepository {
+
+    Mono<Embedding> save(Embedding embedding);
 }

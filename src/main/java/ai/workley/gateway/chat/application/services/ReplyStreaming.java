@@ -7,7 +7,7 @@ import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
 import ai.workley.gateway.chat.application.ports.outbound.EventBus;
 import ai.workley.gateway.chat.infrastructure.intent.IntentClassification;
-import ai.workley.gateway.chat.application.ports.outbound.IntentClassifier;
+import ai.workley.gateway.chat.application.ports.outbound.intent.IntentClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class ReplyStreamingService {
-    private static final Logger log = LoggerFactory.getLogger(ReplyStreamingService.class);
+public class ReplyStreaming {
+    private static final Logger log = LoggerFactory.getLogger(ReplyStreaming.class);
 
     private final RetryBackoffSpec retryBackoffSpec =
             Retry.backoff(5, Duration.ofMillis(500))
@@ -46,20 +46,20 @@ public class ReplyStreamingService {
 
     private final AiModel aiModel;
     private final EventBus eventBus;
-    private final MessengerService messengerService;
+    private final Messenger messenger;
     private final IntentClassifier intentClassifier;
     private final Sinks.Many<Message<String>> chatSink;
 
-    public ReplyStreamingService(
+    public ReplyStreaming(
             AiModel aiModel,
             EventBus eventBus,
-            MessengerService messengerService,
+            Messenger messenger,
             IntentClassifier intentClassifier,
             Sinks.Many<Message<String>> chatSink
     ) {
         this.aiModel = aiModel;
         this.eventBus = eventBus;
-        this.messengerService = messengerService;
+        this.messenger = messenger;
         this.intentClassifier = intentClassifier;
         this.chatSink = chatSink;
     }
@@ -67,7 +67,7 @@ public class ReplyStreamingService {
     @EventListener
     @Order(1)
     public Mono<Void> on(ReplyStarted e) {
-        return messengerService.loadRecentHistory(e.chatId(), 100)
+        return messenger.loadRecentHistory(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
                     return intentClassifier.classify(e.message())

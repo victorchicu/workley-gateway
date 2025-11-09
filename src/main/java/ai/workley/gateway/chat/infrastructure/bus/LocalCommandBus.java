@@ -16,10 +16,10 @@ import java.util.stream.Collectors;
 
 @Primary
 @Component
-public class InMemoryCommandBus implements CommandBus {
+public class LocalCommandBus implements CommandBus {
     private final Map<Class<? extends Command>, CommandHandler<?, ?>> handlers;
 
-    public InMemoryCommandBus(List<CommandHandler<?, ?>> source) {
+    public LocalCommandBus(List<CommandHandler<?, ?>> source) {
         this.handlers = source.stream()
                 .collect(Collectors.toMap(CommandHandler::supported,
                         Function.identity()));

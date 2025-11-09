@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.ports.outbound;
+package ai.workley.gateway.chat.application.ports.outbound.messenger;
 
 import ai.workley.gateway.chat.domain.Chat;
 import reactor.core.publisher.Mono;

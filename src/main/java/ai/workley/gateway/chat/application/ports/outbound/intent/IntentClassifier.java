@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.ports.outbound;
+package ai.workley.gateway.chat.application.ports.outbound.intent;
 
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.infrastructure.intent.IntentClassification;

@@ -30,8 +30,8 @@ public class MongoMessengerRepositoryAdapter implements MessengerRepository {
     }
 
     @Override
-    public Mono<Chat> findChat(String id, Collection<String> participants) {
-        return mongoChatRepository.findChat(id, participants)
+    public Mono<Chat> find(String chatId, Collection<String> participants) {
+        return mongoChatRepository.findChat(chatId, participants)
                 .map(this::toChat);
     }
 

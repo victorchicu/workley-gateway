@@ -10,7 +10,7 @@ import java.util.Collection;
 public interface MessengerRepository {
     Mono<Chat> save(Chat chat);
 
-    Mono<Chat> findChat(String id, Collection<String> participants);
+    Mono<Chat> find(String chatId, Collection<String> participants);
 
     Mono<Message<String>> save(Message<String> message);
 

@@ -4,13 +4,14 @@ import ai.workley.gateway.chat.application.ports.outbound.EventStore;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.infrastructure.eventstore.mongodb.EventDocument;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-@Service
+@Component
 public class EventStoreImpl implements EventStore {
     private final EventRepository eventRepository;
 

@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.infrastructure.intent;
 
-import ai.workley.gateway.chat.application.ports.outbound.IntentClassifier;
+import ai.workley.gateway.chat.application.ports.outbound.intent.IntentClassifier;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;

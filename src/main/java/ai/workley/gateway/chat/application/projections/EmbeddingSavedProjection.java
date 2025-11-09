@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.projections;
 
-import ai.workley.gateway.chat.application.ports.outbound.EmbeddingService;
+import ai.workley.gateway.chat.application.ports.outbound.embedding.EmbeddingStore;
 import ai.workley.gateway.chat.domain.Embedding;
 import ai.workley.gateway.chat.domain.events.EmbeddingSaved;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
@@ -34,16 +34,16 @@ public class EmbeddingSavedProjection {
                     .jitter(0.5)
                     .maxBackoff(Duration.ofSeconds(5));
 
-    private final EmbeddingService embeddingService;
+    private final EmbeddingStore embeddingStore;
     private final OpenAiEmbeddingModel openAiEmbeddingModel;
     private final OpenAiEmbeddingOptions openAiEmbeddingOptions;
 
     public EmbeddingSavedProjection(
-            EmbeddingService embeddingService,
+            EmbeddingStore embeddingStore,
             OpenAiEmbeddingModel openAiEmbeddingModel,
             OpenAiEmbeddingOptions openAiEmbeddingOptions
     ) {
-        this.embeddingService = embeddingService;
+        this.embeddingStore = embeddingStore;
         this.openAiEmbeddingModel = openAiEmbeddingModel;
         this.openAiEmbeddingOptions = openAiEmbeddingOptions;
     }
@@ -66,7 +66,7 @@ public class EmbeddingSavedProjection {
                 .flatMap(vector -> {
                     var embedding =
                             Embedding.create(openAiEmbeddingOptions.getModel(), e.actor(), openAiEmbeddingOptions.getDimension(), vector);
-                    return embeddingService.save(embedding)
+                    return embeddingStore.save(embedding)
                             .doOnSuccess(saved ->
                                     log.info("Embedding saved (actor={})", saved.actor())
                             )

@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.infrastructure.messenger;
 
-import ai.workley.gateway.chat.application.ports.outbound.MessageStore;
+import ai.workley.gateway.chat.application.ports.outbound.messenger.MessageStore;
 import ai.workley.gateway.chat.domain.Message;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;

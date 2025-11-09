@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 
 @Primary
 @Component
-public class InMemoryQueryBus implements QueryBus {
+public class LocalQueryBus implements QueryBus {
     private final Map<Class<? extends Query>, QueryHandler<? extends Query, ? extends Payload>> handlers;
 
-    public InMemoryQueryBus(List<QueryHandler<? extends Query, ? extends Payload>> source) {
+    public LocalQueryBus(List<QueryHandler<? extends Query, ? extends Payload>> source) {
         this.handlers = source.stream()
                 .collect(Collectors.toMap(QueryHandler::supported,
                         Function.identity()));

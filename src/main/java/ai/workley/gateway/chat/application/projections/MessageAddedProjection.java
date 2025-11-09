@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.projections;
 
-import ai.workley.gateway.chat.application.services.MessengerService;
+import ai.workley.gateway.chat.application.services.Messenger;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.events.MessageAdded;
 import org.slf4j.Logger;
@@ -14,16 +14,16 @@ import reactor.core.publisher.Mono;
 public class MessageAddedProjection {
     private static final Logger log = LoggerFactory.getLogger(MessageAddedProjection.class);
 
-    private final MessengerService messengerService;
+    private final Messenger messenger;
 
-    public MessageAddedProjection(MessengerService messengerService) {
-        this.messengerService = messengerService;
+    public MessageAddedProjection(Messenger messenger) {
+        this.messenger = messenger;
     }
 
     @EventListener
     @Order(0)
     public Mono<Void> on(MessageAdded e) {
-        return messengerService.addMessage(e.message())
+        return messenger.addMessage(e.message())
                 .doOnSuccess(message -> {
                     log.info("Message saved (actor={}, chatId={}, messageId={})",
                             message.ownedBy(), message.chatId(), message.id());

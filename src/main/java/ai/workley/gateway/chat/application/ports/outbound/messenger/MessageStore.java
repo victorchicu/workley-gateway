@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.ports.outbound;
+package ai.workley.gateway.chat.application.ports.outbound.messenger;
 
 import ai.workley.gateway.chat.domain.Message;
 import reactor.core.publisher.Flux;
