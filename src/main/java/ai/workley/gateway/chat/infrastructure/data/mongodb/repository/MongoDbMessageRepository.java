@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
 @Repository
-public interface MessageRepository extends ReactiveMongoRepository<MessageDocument<String>, String> {
+public interface MongoDbMessageRepository extends ReactiveMongoRepository<MessageDocument<String>, String> {
 
     Flux<MessageDocument<String>> findAllByChatId(String chatId, Pageable pageable);
 

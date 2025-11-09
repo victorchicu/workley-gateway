@@ -3,7 +3,7 @@ package ai.workley.gateway.chat.infrastructure.data.mongodb.service;
 import ai.workley.gateway.chat.application.ports.outbound.ChatSession;
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.infrastructure.data.mongodb.document.ChatDocument;
-import ai.workley.gateway.chat.infrastructure.data.mongodb.repository.ChatRepository;
+import ai.workley.gateway.chat.infrastructure.data.mongodb.repository.MongoDbChatRepository;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -13,22 +13,22 @@ import java.util.stream.Collectors;
 
 @Component
 public class MongoDbChatSession implements ChatSession {
-    private final ChatRepository chatRepository;
+    private final MongoDbChatRepository mongoDbChatRepository;
 
-    public MongoDbChatSession(ChatRepository chatRepository) {
-        this.chatRepository = chatRepository;
+    public MongoDbChatSession(MongoDbChatRepository mongoDbChatRepository) {
+        this.mongoDbChatRepository = mongoDbChatRepository;
     }
 
     @Override
     public Mono<Chat> save(Chat chat) {
         ChatDocument entity = toChatDocument(chat);
-        return chatRepository.save(entity)
+        return mongoDbChatRepository.save(entity)
                 .map(this::toChat);
     }
 
     @Override
     public Mono<Chat> findChat(String id, Collection<String> participants) {
-        return chatRepository.findChat(id, participants)
+        return mongoDbChatRepository.findChat(id, participants)
                 .map(this::toChat);
     }
 

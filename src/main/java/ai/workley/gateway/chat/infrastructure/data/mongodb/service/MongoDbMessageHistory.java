@@ -3,7 +3,7 @@ package ai.workley.gateway.chat.infrastructure.data.mongodb.service;
 import ai.workley.gateway.chat.application.ports.outbound.MessageHistory;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.infrastructure.data.mongodb.document.MessageDocument;
-import ai.workley.gateway.chat.infrastructure.data.mongodb.repository.MessageRepository;
+import ai.workley.gateway.chat.infrastructure.data.mongodb.repository.MongoDbMessageRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -11,30 +11,30 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class MongoDbMessageHistory implements MessageHistory {
-    private final MessageRepository messageRepository;
+    private final MongoDbMessageRepository mongoDbMessageRepository;
 
-    public MongoDbMessageHistory(MessageRepository messageRepository) {
-        this.messageRepository = messageRepository;
+    public MongoDbMessageHistory(MongoDbMessageRepository mongoDbMessageRepository) {
+        this.mongoDbMessageRepository = mongoDbMessageRepository;
     }
 
     @Override
     public Mono<Message<String>> save(Message<String> message) {
         MessageDocument<String> entity = toMessageDocument(message);
-        return messageRepository.save(entity)
+        return mongoDbMessageRepository.save(entity)
                 .map(this::toMessage);
     }
 
     @Override
     public Flux<Message<String>> loadAll(String chatId) {
         Pageable pageable = Pageable.ofSize(100);
-        return messageRepository.findAllByChatId(chatId, pageable)
+        return mongoDbMessageRepository.findAllByChatId(chatId, pageable)
                 .map(this::toMessage);
     }
 
     @Override
     public Flux<Message<String>> loadRecent(String chatId, int limit) {
         Pageable pageable = Pageable.ofSize(limit);
-        return messageRepository.findAllByChatIdOrderByCreatedAtAsc(chatId, pageable)
+        return mongoDbMessageRepository.findAllByChatIdOrderByCreatedAtAsc(chatId, pageable)
                 .map(this::toMessage);
     }
 
