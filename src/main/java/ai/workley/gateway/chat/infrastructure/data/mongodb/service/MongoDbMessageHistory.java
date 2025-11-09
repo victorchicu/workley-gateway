@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.infrastructure.data.mongodb.service;
 
-import ai.workley.gateway.chat.application.ports.outbound.MessageService;
+import ai.workley.gateway.chat.application.ports.outbound.MessageHistory;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.infrastructure.data.mongodb.document.MessageDocument;
 import ai.workley.gateway.chat.infrastructure.data.mongodb.repository.MessageRepository;
@@ -10,10 +10,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
-public class MongoDbMessageService implements MessageService {
+public class MongoDbMessageHistory implements MessageHistory {
     private final MessageRepository messageRepository;
 
-    public MongoDbMessageService(MessageRepository messageRepository) {
+    public MongoDbMessageHistory(MessageRepository messageRepository) {
         this.messageRepository = messageRepository;
     }
 

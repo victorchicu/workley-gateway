@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.infrastructure.data.mongodb.service;
 
-import ai.workley.gateway.chat.application.ports.outbound.ChatService;
+import ai.workley.gateway.chat.application.ports.outbound.ChatSession;
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.infrastructure.data.mongodb.document.ChatDocument;
 import ai.workley.gateway.chat.infrastructure.data.mongodb.repository.ChatRepository;
@@ -12,10 +12,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
-public class MongoDbChatService implements ChatService {
+public class MongoDbChatSession implements ChatSession {
     private final ChatRepository chatRepository;
 
-    public MongoDbChatService(ChatRepository chatRepository) {
+    public MongoDbChatSession(ChatRepository chatRepository) {
         this.chatRepository = chatRepository;
     }
 

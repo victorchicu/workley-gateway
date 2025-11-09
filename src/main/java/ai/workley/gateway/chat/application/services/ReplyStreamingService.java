@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.services;
 
-import ai.workley.gateway.chat.application.ports.outbound.MessageService;
+import ai.workley.gateway.chat.application.ports.outbound.MessageHistory;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.events.ReplyCompleted;
@@ -47,20 +47,20 @@ public class ReplyStreamingService {
 
     private final AiModel aiModel;
     private final EventBus eventBus;
-    private final MessageService messageService;
+    private final MessageHistory messageHistory;
     private final IntentClassifier intentClassifier;
     private final Sinks.Many<Message<String>> chatSink;
 
     public ReplyStreamingService(
             AiModel aiModel,
             EventBus eventBus,
-            MessageService messageService,
+            MessageHistory messageHistory,
             IntentClassifier intentClassifier,
             Sinks.Many<Message<String>> chatSink
     ) {
         this.aiModel = aiModel;
         this.eventBus = eventBus;
-        this.messageService = messageService;
+        this.messageHistory = messageHistory;
         this.intentClassifier = intentClassifier;
         this.chatSink = chatSink;
     }
@@ -68,7 +68,7 @@ public class ReplyStreamingService {
     @EventListener
     @Order(1)
     public Mono<Void> on(ReplyStarted e) {
-        return messageService.loadRecent(e.chatId(), 100)
+        return messageHistory.loadRecent(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
                     return intentClassifier.classify(e.message())

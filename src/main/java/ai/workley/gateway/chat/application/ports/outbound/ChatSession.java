@@ -5,7 +5,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 
-public interface ChatService {
+public interface ChatSession {
 
     Mono<Chat> save(Chat chat);
 
