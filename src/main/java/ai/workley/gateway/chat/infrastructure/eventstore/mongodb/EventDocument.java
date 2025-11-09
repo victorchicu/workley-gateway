@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.infrastructure.eventstore;
+package ai.workley.gateway.chat.infrastructure.eventstore.mongodb;
 
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import org.springframework.data.annotation.CreatedDate;

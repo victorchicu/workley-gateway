@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.application.ports.outbound;
 
 import ai.workley.gateway.chat.domain.events.DomainEvent;
-import ai.workley.gateway.chat.infrastructure.eventstore.EventDocument;
+import ai.workley.gateway.chat.infrastructure.eventstore.mongodb.EventDocument;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

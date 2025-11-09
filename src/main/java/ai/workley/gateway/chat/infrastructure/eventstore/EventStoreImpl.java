@@ -2,6 +2,7 @@ package ai.workley.gateway.chat.infrastructure.eventstore;
 
 import ai.workley.gateway.chat.application.ports.outbound.EventStore;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
+import ai.workley.gateway.chat.infrastructure.eventstore.mongodb.EventDocument;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -10,22 +11,22 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 
 @Service
-public class MongoEventStore implements EventStore {
-    private final MongoEventRepository mongoEventRepository;
+public class EventStoreImpl implements EventStore {
+    private final EventRepository eventRepository;
 
-    public MongoEventStore(MongoEventRepository mongoEventRepository) {
-        this.mongoEventRepository = mongoEventRepository;
+    public EventStoreImpl(EventRepository eventRepository) {
+        this.eventRepository = eventRepository;
     }
 
     @Override
     public <T extends DomainEvent> Flux<EventDocument<T>> load(String aggregateType, String aggregateId) {
-        return mongoEventRepository.findAllByAggregateTypeAndAggregateIdOrderByVersionAsc(aggregateType, aggregateId);
+        return eventRepository.findRecentEvents(aggregateType, aggregateId);
     }
 
     @Override
     public <T extends DomainEvent> Mono<EventDocument<T>> append(String actor, T data, Long expectedVersion) {
-        return mongoEventRepository
-                .findFirstByAggregateTypeAndAggregateIdOrderByVersionDesc(data.aggregation().type(), data.aggregation().id())
+        return eventRepository
+                .findLastEvent(data.aggregation().type(), data.aggregation().id())
                 .map(EventDocument::getVersion)
                 .defaultIfEmpty(-1L)
                 .flatMap(currentVersion -> {
@@ -44,7 +45,7 @@ public class MongoEventStore implements EventStore {
                                     .setVersion(nextVersion)
                                     .setEventData(data);
 
-                    return mongoEventRepository.save(eventDocument);
+                    return eventRepository.saveEvent(eventDocument);
                 });
     }
 }

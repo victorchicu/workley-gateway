@@ -4,7 +4,7 @@ import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.domain.events.MessageAdded;
-import ai.workley.gateway.chat.infrastructure.eventstore.EventDocument;
+import ai.workley.gateway.chat.infrastructure.eventstore.mongodb.EventDocument;
 
 import java.util.*;
 

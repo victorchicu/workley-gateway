@@ -1,13 +1,12 @@
-package ai.workley.gateway.chat.infrastructure.data.mongodb.repository;
+package ai.workley.gateway.chat.infrastructure.messenger.mongodb;
 
-import ai.workley.gateway.chat.infrastructure.data.mongodb.document.MessageDocument;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
 @Repository
-public interface MongoDbMessageRepository extends ReactiveMongoRepository<MessageDocument<String>, String> {
+public interface MongoMessageRepository extends ReactiveMongoRepository<MessageDocument<String>, String> {
 
     Flux<MessageDocument<String>> findAllByChatId(String chatId, Pageable pageable);
 

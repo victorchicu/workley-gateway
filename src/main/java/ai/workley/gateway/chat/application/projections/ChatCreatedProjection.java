@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.projections;
 
-import ai.workley.gateway.chat.application.ports.outbound.ChatSession;
+import ai.workley.gateway.chat.application.ports.outbound.ChatStore;
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
@@ -17,10 +17,10 @@ import java.util.Set;
 public class ChatCreatedProjection {
     private static final Logger log = LoggerFactory.getLogger(ChatCreatedProjection.class);
 
-    private final ChatSession chatSession;
+    private final ChatStore chatStore;
 
-    public ChatCreatedProjection(ChatSession chatSession) {
-        this.chatSession = chatSession;
+    public ChatCreatedProjection(ChatStore chatStore) {
+        this.chatStore = chatStore;
     }
 
     @EventListener
@@ -32,7 +32,7 @@ public class ChatCreatedProjection {
         Set<Chat.Participant> participants =
                 Set.of(Chat.Participant.create(e.actor()));
 
-        return chatSession.save(Chat.create(e.chatId(), summary, participants))
+        return chatStore.save(Chat.create(e.chatId(), summary, participants))
                 .doOnSuccess((Chat chat) ->
                         log.info("Chat created (actor={}, chatId={})",
                                 e.actor(), e.chatId())

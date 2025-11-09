@@ -14,7 +14,7 @@ import ai.workley.gateway.chat.application.ports.outbound.EventBus;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
 import ai.workley.gateway.chat.application.ports.outbound.EventStore;
 import ai.workley.gateway.chat.application.command.CommandHandler;
-import ai.workley.gateway.chat.infrastructure.eventstore.EventDocument;
+import ai.workley.gateway.chat.infrastructure.eventstore.mongodb.EventDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
