@@ -36,6 +36,15 @@ import java.util.UUID;
 public class ReplyStreamingService {
     private static final Logger log = LoggerFactory.getLogger(ReplyStreamingService.class);
 
+    private final RetryBackoffSpec retryBackoffSpec =
+            Retry.backoff(5, Duration.ofMillis(500))
+                    .jitter(0.50)
+                    .maxBackoff(Duration.ofSeconds(5))
+                    .doBeforeRetry(retrySignal -> {
+                        log.warn("Retrying classify intent attempt #{} due to {}",
+                                retrySignal.totalRetries() + 1, retrySignal.failure().toString());
+                    });
+
     private final AiModel aiModel;
     private final EventBus eventBus;
     private final MessagePort messagePort;
@@ -59,20 +68,12 @@ public class ReplyStreamingService {
     @EventListener
     @Order(1)
     public Mono<Void> on(ReplyStarted e) {
-        RetryBackoffSpec retryBackoffSpec =
-                Retry.backoff(5, Duration.ofMillis(500))
-                        .jitter(0.50)
-                        .maxBackoff(Duration.ofSeconds(5));
-
         return messagePort.loadRecent(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
                     return intentClassifier.classify(e.message())
                             .timeout(Duration.ofSeconds(60))
-                            .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal -> {
-                                log.warn("Retrying classify intent (actor={}, chatId={}) attempt #{} due to {}",
-                                        e.actor(), e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
-                            }))
+                            .retryWhen(retryBackoffSpec)
                             .flatMap(classification -> {
                                 log.info("Intent classified as {} with confidence {} (actor={}, chatId={})",
                                         classification.intent(), classification.confidence(), e.actor(), e.chatId());

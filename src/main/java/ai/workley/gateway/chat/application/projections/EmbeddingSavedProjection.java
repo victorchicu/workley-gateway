@@ -18,7 +18,9 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
+import reactor.util.retry.RetryBackoffSpec;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,6 +28,11 @@ import java.util.Objects;
 @EnableConfigurationProperties(EmbeddingSavedProjection.OpenAiEmbeddingOptions.class)
 public class EmbeddingSavedProjection {
     private static final Logger log = LoggerFactory.getLogger(EmbeddingSavedProjection.class);
+
+    private final RetryBackoffSpec retryBackoffSpec =
+            Retry.backoff(5, Duration.ofMillis(500))
+                    .jitter(0.5)
+                    .maxBackoff(Duration.ofSeconds(5));
 
     private final EmbeddingPort embeddingPort;
     private final OpenAiEmbeddingModel openAiEmbeddingModel;
@@ -68,14 +75,9 @@ public class EmbeddingSavedProjection {
                                 return Mono.empty();
                             });
                 })
-                .retryWhen(
-                        Retry.backoff(3, java.time.Duration.ofMillis(200))
-                                .maxBackoff(java.time.Duration.ofSeconds(2))
-                                .jitter(0.25)
-                                .doBeforeRetry(retrySignal -> {
-                                    log.warn("Retrying embedding save (actor={}) attempt #{} due to {}",
-                                            e.actor(), retrySignal.totalRetries() + 1, retrySignal.failure().toString());
-                                })
+                .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
+                        log.warn("Retrying embedding save (actor={}) attempt #{} due to {}",
+                                e.actor(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
                 )
                 .doOnError(error -> log.error("Embedding failed (actor={}})", e.actor(), error))
                 .onErrorResume(err -> Mono.empty())

@@ -23,6 +23,15 @@ import java.time.Instant;
 public class ChatSaga {
     private static final Logger log = LoggerFactory.getLogger(ChatSaga.class);
 
+    private final RetryBackoffSpec retryBackoffSpec =
+            Retry.backoff(5, Duration.ofMillis(500))
+                    .jitter(0.5)
+                    .maxBackoff(Duration.ofSeconds(5))
+                    .doBeforeRetry(retrySignal ->
+                            log.warn("Retrying in chat operation attempt #{} due to {}",
+                                    retrySignal.totalRetries() + 1, retrySignal.failure().toString())
+                    );
+
     private final CommandBus commandBus;
     private final IdGenerator randomIdGenerator;
 
@@ -34,19 +43,11 @@ public class ChatSaga {
     @EventListener
     @Order(1)
     public Mono<Void> on(ChatCreated e) {
-        RetryBackoffSpec retry =
-                Retry.backoff(5, Duration.ofMillis(500))
-                        .jitter(0.5)
-                        .maxBackoff(Duration.ofSeconds(5))
-                        .doBeforeRetry(retrySignal ->
-                                log.warn("Retrying AddMessage command (actor={}, chatId={}) attempt #{} due to {}",
-                                        e.actor(), e.chatId(), retrySignal.totalRetries() + 1, retrySignal.failure().toString()));
-
         AddMessage command =
                 new AddMessage(e.chatId(),
                         Message.create(randomIdGenerator.generate(), e.chatId(), e.actor(), Role.ANONYMOUS, Instant.now(), e.prompt()));
 
-        return addMessage(e.actor(), e.chatId(), command, retry);
+        return addMessage(e.actor(), e.chatId(), command, retryBackoffSpec);
     }
 
     @EventListener
@@ -56,29 +57,20 @@ public class ChatSaga {
             return Mono.empty();
         }
 
-        RetryBackoffSpec retryBackoffSpec =
-                Retry.backoff(5, Duration.ofMillis(500))
-                        .jitter(0.50)
-                        .maxBackoff(Duration.ofSeconds(5));
-
         GenerateReply command = new GenerateReply(e.chatId(), e.message());
 
         return commandBus.execute(e.actor(), command)
                 .timeout(Duration.ofSeconds(60))
-                .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
-                        log.warn("Retrying GenerateReply command (actor={}, chatId={}, message={}) attempt #{} due to {}",
-                                e.actor(), e.chatId(), e.message().content(),
-                                retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
-                )
+                .retryWhen(retryBackoffSpec)
                 .doOnSubscribe(subscription ->
-                        log.info("Dispatching GenerateReply command: actor={}, chatId={}",
-                                e.actor(), e.chatId()))
+                        log.info("Dispatching {} command (actor={}, chatId={})",
+                                command.getClass().getSimpleName(), e.actor(), e.chatId()))
                 .doOnSuccess(payload ->
-                        log.info("GenerateReply dispatched successfully: actor={}, chatId={}",
-                                e.actor(), e.chatId()))
+                        log.info("{} dispatched successfully (actor={}, chatId={})",
+                                command.getClass().getSimpleName(), e.actor(), e.chatId()))
                 .doOnError(error ->
-                        log.error("GenerateReply failed: actor={}, chatId={}, error={}",
-                                e.actor(), e.chatId(), error.getMessage(), error))
+                        log.error("{} failed (actor={}, chatId={}, error={})",
+                                command.getClass().getSimpleName(), e.actor(), e.chatId(), error.getMessage(), error))
                 .onErrorResume(error -> Mono.empty())
                 .then();
     }
@@ -86,11 +78,6 @@ public class ChatSaga {
     @EventListener
     @Order(1)
     public Mono<Void> on(ReplyCompleted e) {
-        RetryBackoffSpec retryBackoffSpec =
-                Retry.backoff(5, Duration.ofMillis(500))
-                        .jitter(0.50)
-                        .maxBackoff(Duration.ofSeconds(5));
-
         AddMessage command =
                 new AddMessage(e.chatId(),
                         e.message());
@@ -102,19 +89,16 @@ public class ChatSaga {
     private Mono<Void> addMessage(String actor, String chatId, AddMessage command, RetryBackoffSpec retryBackoffSpec) {
         return commandBus.execute(actor, command)
                 .timeout(Duration.ofSeconds(60))
-                .retryWhen(retryBackoffSpec.doBeforeRetry(retrySignal ->
-                        log.warn("Retrying AddMessage (actor={}, chatId={}) attempt #{} due to {}",
-                                actor, chatId, retrySignal.totalRetries() + 1, retrySignal.failure().toString()))
-                )
+                .retryWhen(retryBackoffSpec)
                 .doOnSubscribe(subscription ->
-                        log.info("Dispatching AddMessage command: actor={}, chatId={}",
-                                actor, chatId))
+                        log.info("Dispatching {} command (actor={}, chatId={})",
+                                command.getClass().getSimpleName(), actor, chatId))
                 .doOnSuccess(payload ->
-                        log.info("AddMessage dispatched successfully: actor={}, chatId={}",
-                                actor, chatId))
+                        log.info("{} dispatched successfully (actor={}, chatId={})",
+                                command.getClass().getSimpleName(), actor, chatId))
                 .doOnError(error ->
-                        log.error("AddMessage failed: actor={}, chatId={}, error={}",
-                                actor, chatId, error.getMessage(), error))
+                        log.error("{} failed (actor={}, chatId={}, error={})",
+                                command.getClass().getSimpleName(), actor, chatId, error.getMessage(), error))
                 .onErrorResume(error -> Mono.empty())
                 .then();
     }
