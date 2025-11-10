@@ -1,10 +1,11 @@
 package ai.workley.gateway.chat.domain.payloads;
 
 import ai.workley.gateway.chat.domain.Message;
+import ai.workley.gateway.chat.domain.content.TextContent;
 
-public record AddMessagePayload(String chatId, Message<String> message) implements Payload {
+public record AddMessagePayload(String chatId, Message<TextContent> message) implements Payload {
 
-    public static AddMessagePayload create(String chatId, Message<String> message) {
+    public static AddMessagePayload ack(String chatId, Message<TextContent> message) {
         return new AddMessagePayload(chatId, message);
     }
 }

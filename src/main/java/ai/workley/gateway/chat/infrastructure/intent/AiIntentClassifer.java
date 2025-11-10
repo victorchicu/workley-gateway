@@ -3,6 +3,7 @@ package ai.workley.gateway.chat.infrastructure.intent;
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentClassifier;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
+import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.IntentType;
 import ai.workley.gateway.chat.domain.intent.IntentClassification;
@@ -28,8 +29,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-public class IntentClassifierImpl implements IntentClassifier {
-    private static final Logger log = LoggerFactory.getLogger(IntentClassifierImpl.class);
+public class AiIntentClassifer implements IntentClassifier {
+    private static final Logger log = LoggerFactory.getLogger(AiIntentClassifer.class);
 
     private static final ChatOptions JSON_ONLY =
             OllamaOptions.builder()
@@ -62,21 +63,21 @@ public class IntentClassifierImpl implements IntentClassifier {
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
 
-    public IntentClassifierImpl(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
+    public AiIntentClassifer(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
         this.aiModel = aiModel;
         this.objectMapper = objectMapper;
         this.meterRegistry = meterRegistry;
     }
 
     @Override
-    public Mono<IntentClassification> classify(Message<String> message) {
+    public Mono<IntentClassification> classify(Message<TextContent> message) {
         log.info("Classifying intent for: {}", message.content());
 
         Prompt prompt =
                 new Prompt(
                         List.of(
                                 new SystemMessage(ASSISTANT_PROMPT_CLASSIFICATION),
-                                new UserMessage(message.content())),
+                                new UserMessage(message.content().value())),
                         JSON_ONLY
                 );
 

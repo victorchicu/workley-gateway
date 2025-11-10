@@ -2,6 +2,8 @@ package ai.workley.gateway.chat.application.services;
 
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
+import ai.workley.gateway.chat.domain.content.Content;
+import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.events.ReplyCompleted;
 import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
@@ -12,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -48,14 +49,14 @@ public class ReplyStreaming {
     private final EventBus eventBus;
     private final Messenger messenger;
     private final IntentClassifier intentClassifier;
-    private final Sinks.Many<Message<String>> chatSink;
+    private final Sinks.Many<Message<TextContent>> chatSink;
 
     public ReplyStreaming(
             AiModel aiModel,
             EventBus eventBus,
             Messenger messenger,
             IntentClassifier intentClassifier,
-            Sinks.Many<Message<String>> chatSink
+            Sinks.Many<Message<TextContent>> chatSink
     ) {
         this.aiModel = aiModel;
         this.eventBus = eventBus;
@@ -87,35 +88,37 @@ public class ReplyStreaming {
     }
 
     private void emitChunkSafe(ReplyStarted e, String replyId, String chunk) {
-        Message<String> dummy = Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk);
+        Message<TextContent> dummy = Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), new TextContent(chunk));
         Sinks.EmitResult emitResult = chatSink.tryEmitNext(dummy);
         if (emitResult.isFailure()) {
             log.warn("Dropped chunk (actor={}, chatId={}, reason={})", e.actor(), e.chatId(), emitResult);
         }
     }
 
-    private Prompt buildPrompt(ReplyStarted e, IntentClassification classification, List<Message<String>> history) {
+    private Prompt buildPrompt(ReplyStarted e, IntentClassification classification, List<Message<? extends Content>> history) {
         List<org.springframework.ai.chat.messages.Message> list = new ArrayList<>();
 
-        list.add(new SystemMessage(classification.getSystemPrompt()));
+//        list.add(new SystemMessage(classification.getSystemPrompt()));
 
-        for (Message<String> message : history) {
-            switch (message.role()) {
-                case ANONYMOUS,
-                     CUSTOMER -> list.add(new UserMessage(message.content()));
-                case ASSISTANT -> list.add(new AssistantMessage(message.content()));
-                default -> log.warn("Ignoring role in history: {}", message.role());
+        for (Message<? extends Content> message : history) {
+            if (message.content() instanceof TextContent(String value)) {
+                switch (message.role()) {
+                    case ANONYMOUS,
+                         CUSTOMER -> list.add(new UserMessage(value));
+                    case ASSISTANT -> list.add(new AssistantMessage(value));
+                    default -> log.warn("Ignoring role in history: {}", message.role());
+                }
             }
         }
 
         if (history.isEmpty() || !history.getLast().id().equals(e.message().id())) {
-            list.add(new UserMessage(e.message().content()));
+            list.add(new UserMessage(e.message().content().value()));
         }
 
         return new Prompt(list);
     }
 
-    private Mono<Void> streamReply(ReplyStarted e, IntentClassification classification, List<Message<String>> history) {
+    private Mono<Void> streamReply(ReplyStarted e, IntentClassification classification, List<Message<? extends Content>> history) {
         final String replyId = UUID.randomUUID().toString();
 
         Flux<String> chunks = aiModel.stream(buildPrompt(e, classification, history))
@@ -143,9 +146,12 @@ public class ReplyStreaming {
                 .map(StringBuilder::toString)
                 .defaultIfEmpty("")
                 .flatMap(fullReply -> {
+                    TextContent content = new TextContent(fullReply);
+
                     eventBus.publishEvent(
-                            new ReplyCompleted(e.actor(),
-                                    e.chatId(), Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), fullReply)));
+                            new ReplyCompleted(
+                                    e.actor(), e.chatId(), Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), content)));
+
                     return Mono.empty();
                 })
                 .then();

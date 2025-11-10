@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 @Component
-public class OpenAiModel implements AiModel {
+public class GptAiModel implements AiModel {
     private final OpenAiChatModel openAiChatModel;
 
-    public OpenAiModel(OpenAiChatModel openAiChatModel) {
+    public GptAiModel(OpenAiChatModel openAiChatModel) {
         this.openAiChatModel = openAiChatModel;
     }
 

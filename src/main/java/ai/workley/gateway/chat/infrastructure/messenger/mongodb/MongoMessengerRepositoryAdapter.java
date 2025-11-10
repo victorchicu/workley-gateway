@@ -2,6 +2,7 @@ package ai.workley.gateway.chat.infrastructure.messenger.mongodb;
 
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.domain.Message;
+import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.infrastructure.messenger.MessengerRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -36,21 +37,21 @@ public class MongoMessengerRepositoryAdapter implements MessengerRepository {
     }
 
     @Override
-    public Mono<Message<String>> save(Message<String> message) {
-        MessageDocument<String> entity = toMessageDocument(message);
+    public Mono<Message<? extends Content>> save(Message<? extends Content> message) {
+        MessageDocument<? extends Content> entity = toMessageDocument(message);
         return mongoMessageRepository.save(entity)
                 .map(this::toMessage);
     }
 
     @Override
-    public Flux<Message<String>> loadAll(String chatId) {
+    public Flux<Message<? extends Content>> loadAll(String chatId) {
         Pageable pageable = Pageable.ofSize(100);
         return mongoMessageRepository.findAllByChatId(chatId, pageable)
                 .map(this::toMessage);
     }
 
     @Override
-    public Flux<Message<String>> loadRecent(String chatId, int limit) {
+    public Flux<Message<? extends Content>> loadRecent(String chatId, int limit) {
         Pageable pageable = Pageable.ofSize(limit);
         return mongoMessageRepository.findAllByChatIdOrderByCreatedAtAsc(chatId, pageable)
                 .map(this::toMessage);
@@ -81,7 +82,7 @@ public class MongoMessengerRepositoryAdapter implements MessengerRepository {
                 .setParticipants(participants);
     }
 
-    private Message<String> toMessage(MessageDocument<String> source) {
+    private Message<? extends Content> toMessage(MessageDocument<? extends Content> source) {
         return Message.create(
                 source.getMessageId(),
                 source.getChatId(),
@@ -92,7 +93,7 @@ public class MongoMessengerRepositoryAdapter implements MessengerRepository {
         );
     }
 
-    private MessageDocument<String> toMessageDocument(Message<String> source) {
+    private MessageDocument<? extends Content> toMessageDocument(Message<? extends Content> source) {
         return MessageDocument.create(
                 source.role(),
                 source.chatId(),

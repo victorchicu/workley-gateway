@@ -4,6 +4,7 @@ import ai.workley.gateway.chat.application.ports.inbound.CommandBus;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.command.AddMessage;
 import ai.workley.gateway.chat.domain.command.GenerateReply;
+import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.events.*;
 import ai.workley.gateway.chat.infrastructure.id.IdGenerator;
 import ai.workley.gateway.chat.domain.Message;
@@ -45,7 +46,7 @@ public class ChatSaga {
     public Mono<Void> on(ChatCreated e) {
         AddMessage command =
                 new AddMessage(e.chatId(),
-                        Message.create(idGenerator.generate(), e.chatId(), e.actor(), Role.ANONYMOUS, Instant.now(), e.prompt()));
+                        Message.create(idGenerator.generate(), e.chatId(), e.actor(), Role.ANONYMOUS, Instant.now(), new TextContent(e.prompt())));
 
         return addMessage(e.actor(), e.chatId(), command, retryBackoffSpec);
     }

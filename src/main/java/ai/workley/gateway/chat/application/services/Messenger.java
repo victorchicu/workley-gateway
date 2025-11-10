@@ -4,6 +4,7 @@ import ai.workley.gateway.chat.application.ports.outbound.messenger.ChatStore;
 import ai.workley.gateway.chat.application.ports.outbound.messenger.MessageStore;
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.domain.Message;
+import ai.workley.gateway.chat.domain.content.Content;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,15 +29,15 @@ public class Messenger {
         return chatStore.findChat(id, participants);
     }
 
-    public Mono<Message<String>> addMessage(Message<String> message) {
+    public Mono<Message<? extends Content>> addMessage(Message<? extends Content> message) {
         return messageStore.save(message);
     }
 
-    public Flux<Message<String>> loadAllHistory(String chatId) {
+    public Flux<Message<? extends Content>> loadAllHistory(String chatId) {
         return messageStore.loadAll(chatId);
     }
 
-    public Flux<Message<String>> loadRecentHistory(String chatId, int limit) {
+    public Flux<Message<? extends Content>> loadRecentHistory(String chatId, int limit) {
         return messageStore.loadRecent(chatId, limit);
     }
 }

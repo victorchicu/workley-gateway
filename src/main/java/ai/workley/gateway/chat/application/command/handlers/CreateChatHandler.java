@@ -5,6 +5,7 @@ import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.chat.domain.command.CreateChat;
+import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
 import ai.workley.gateway.chat.application.ports.outbound.EventBus;
@@ -51,15 +52,15 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
         return Mono.defer(() -> {
             String chatId = randomIdGenerator.generate();
 
-            Message<String> dummy =
-                    Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), command.prompt());
+            Message<TextContent> dummy =
+                    Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), new TextContent(command.prompt()));
 
             ChatCreated chatCreated = new ChatCreated(actor, chatId, command.prompt());
 
             Mono<CreateChatPayload> tx =
                     transactionalOperator.transactional(
                             eventStore.append(actor, chatCreated, AggregateTypes.CHAT, chatId, -1L)
-                                    .thenReturn(CreateChatPayload.create(chatId, dummy)));
+                                    .thenReturn(CreateChatPayload.ack(chatId, dummy)));
 
             return tx.doOnSuccess(__ -> eventBus.publishEvent(chatCreated));
         }).onErrorMap(error -> {

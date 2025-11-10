@@ -3,6 +3,7 @@ package ai.workley.gateway.chat.infrastructure.intent;
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentSuggester;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
+import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.intent.IntentSuggestion;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,8 +28,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-public class IntentSuggesterImpl implements IntentSuggester {
-    private static final Logger log = LoggerFactory.getLogger(IntentSuggesterImpl.class);
+public class AiIntentSuggester implements IntentSuggester {
+    private static final Logger log = LoggerFactory.getLogger(AiIntentSuggester.class);
 
     private static final ChatOptions JSON_ONLY =
             OllamaOptions.builder()
@@ -59,19 +60,19 @@ public class IntentSuggesterImpl implements IntentSuggester {
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
 
-    public IntentSuggesterImpl(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
+    public AiIntentSuggester(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
         this.aiModel = aiModel;
         this.objectMapper = objectMapper;
         this.meterRegistry = meterRegistry;
     }
 
     @Override
-    public Mono<IntentSuggestion> suggest(Message<String> message) {
+    public Mono<IntentSuggestion> suggest(Message<TextContent> message) {
         log.info("Suggesting intent for: {}", message.content());
 
         Prompt prompt =
                 new Prompt(
-                        List.of(new SystemMessage(ASSISTANT_PROMPT), new UserMessage(message.content())),
+                        List.of(new SystemMessage(ASSISTANT_PROMPT), new UserMessage(message.content().value())),
                         JSON_ONLY
                 );
 

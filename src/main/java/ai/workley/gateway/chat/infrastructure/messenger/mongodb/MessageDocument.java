@@ -1,6 +1,7 @@
 package ai.workley.gateway.chat.infrastructure.messenger.mongodb;
 
 import ai.workley.gateway.chat.domain.Role;
+import ai.workley.gateway.chat.domain.content.Content;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -8,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
 
 @Document(collection = "message_history")
-public class MessageDocument<T> {
+public class MessageDocument<T extends Content> {
     @Id
     private String id;
     private Role role;
@@ -19,7 +20,7 @@ public class MessageDocument<T> {
     private Instant createdAt;
     private T content;
 
-    public static <T> MessageDocument<T> create(Role role, String chatId, String ownedBy, String messageId, Instant createdAt, T content) {
+    public static <T extends Content> MessageDocument<T> create(Role role, String chatId, String ownedBy, String messageId, Instant createdAt, T content) {
         return new MessageDocument<T>()
                 .setRole(role)
                 .setChatId(chatId)

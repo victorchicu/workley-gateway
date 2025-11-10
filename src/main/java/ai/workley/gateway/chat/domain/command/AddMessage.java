@@ -1,6 +1,7 @@
 package ai.workley.gateway.chat.domain.command;
 
 import ai.workley.gateway.chat.domain.Message;
+import ai.workley.gateway.chat.domain.content.TextContent;
 
-public record AddMessage(String chatId, Message<String> message) implements Command {
+public record AddMessage(String chatId, Message<TextContent> message) implements Command {
 }

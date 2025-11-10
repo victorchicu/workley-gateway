@@ -7,6 +7,7 @@ import ai.workley.gateway.chat.domain.aggregations.AggregateCommit;
 import ai.workley.gateway.chat.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.chat.domain.aggregations.ChatAggregate;
 import ai.workley.gateway.chat.domain.command.AddMessage;
+import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.domain.payloads.AddMessagePayload;
 import ai.workley.gateway.chat.domain.events.MessageAdded;
@@ -97,7 +98,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         Mono<AddMessagePayload> tx =
                 transactionalOperator.transactional(
                         eventStore.append(actor, commit.event(), AggregateTypes.CHAT, command.chatId(), commit.version())
-                                .thenReturn(AddMessagePayload.create(aggregate.chatId(), commit.event().message()))
+                                .thenReturn(AddMessagePayload.ack(aggregate.chatId(), commit.event().message()))
                 );
 
         return tx.doOnSuccess(__ -> eventBus.publishEvent(commit.event()));
@@ -107,7 +108,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         String dummyId =
                 UUID.randomUUID().toString();
 
-        Message<String> message =
+        Message<TextContent> message =
                 Message.create(dummyId, command.chatId(), actor, Role.ANONYMOUS, Instant.now(), command.message().content());
 
         return aggregate.addMessage(actor, message);
