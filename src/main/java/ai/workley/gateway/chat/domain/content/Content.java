@@ -8,4 +8,5 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = TextContent.class, name = "text"),
 })
 public interface Content {
+    String text();
 }

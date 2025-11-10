@@ -101,13 +101,11 @@ public class ReplyStreaming {
 //        list.add(new SystemMessage(classification.getSystemPrompt()));
 
         for (Message<? extends Content> message : history) {
-            if (message.content() instanceof TextContent(String value)) {
-                switch (message.role()) {
-                    case ANONYMOUS,
-                         CUSTOMER -> list.add(new UserMessage(value));
-                    case ASSISTANT -> list.add(new AssistantMessage(value));
-                    default -> log.warn("Ignoring role in history: {}", message.role());
-                }
+            switch (message.role()) {
+                case ANONYMOUS,
+                     CUSTOMER -> list.add(new UserMessage(message.content().text()));
+                case ASSISTANT -> list.add(new AssistantMessage(message.content().text()));
+                default -> log.warn("Ignoring role in history: {}", message.role());
             }
         }
 
@@ -123,8 +121,6 @@ public class ReplyStreaming {
 
         Flux<String> chunks = aiModel.stream(buildPrompt(e, classification, history))
                 .timeout(Duration.ofSeconds(30), Flux.empty())
-                .publish()
-                .autoConnect()
                 .flatMapIterable(resp -> {
                     List<Generation> gens = resp != null
                             ? resp.getResults()
@@ -132,7 +128,7 @@ public class ReplyStreaming {
                     return gens != null ? gens : List.of();
                 })
                 .map(Generation::getOutput)
-                .map(AbstractMessage::getText)
+                .mapNotNull(AbstractMessage::getText)
                 .filter(chunk -> chunk != null && !chunk.isBlank())
                 .doOnNext(chunk -> emitChunkSafe(e, replyId, chunk))
                 .doOnError(error ->
@@ -147,11 +143,9 @@ public class ReplyStreaming {
                 .defaultIfEmpty("")
                 .flatMap(fullReply -> {
                     TextContent content = new TextContent(fullReply);
-
                     eventBus.publishEvent(
                             new ReplyCompleted(
                                     e.actor(), e.chatId(), Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), content)));
-
                     return Mono.empty();
                 })
                 .then();
