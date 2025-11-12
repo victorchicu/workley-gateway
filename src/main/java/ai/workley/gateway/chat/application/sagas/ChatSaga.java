@@ -64,13 +64,13 @@ public class ChatSaga {
                 .timeout(Duration.ofSeconds(60))
                 .retryWhen(retryBackoffSpec)
                 .doOnSubscribe(subscription ->
-                        log.info("Dispatching {} command (actor={}, chatId={})",
+                        log.info("Dispatching [{}] command (actor={}, chatId={})",
                                 command.getClass().getSimpleName(), e.actor(), e.chatId()))
                 .doOnSuccess(payload ->
-                        log.info("{} dispatched successfully (actor={}, chatId={})",
+                        log.info("[{}] dispatched successfully (actor={}, chatId={})",
                                 command.getClass().getSimpleName(), e.actor(), e.chatId()))
                 .doOnError(error ->
-                        log.error("{} failed (actor={}, chatId={}, error={})",
+                        log.error("[{}] failed (actor={}, chatId={}, error={})",
                                 command.getClass().getSimpleName(), e.actor(), e.chatId(), error.getMessage(), error))
                 .onErrorResume(error -> Mono.empty())
                 .then();
@@ -92,13 +92,13 @@ public class ChatSaga {
                 .timeout(Duration.ofSeconds(60))
                 .retryWhen(retryBackoffSpec)
                 .doOnSubscribe(subscription ->
-                        log.info("Dispatching {} command (actor={}, chatId={})",
+                        log.info("Dispatching [{}] command (actor={}, chatId={})",
                                 command.getClass().getSimpleName(), actor, chatId))
                 .doOnSuccess(payload ->
-                        log.info("{} dispatched successfully (actor={}, chatId={})",
+                        log.info("[{}] dispatched successfully (actor={}, chatId={})",
                                 command.getClass().getSimpleName(), actor, chatId))
                 .doOnError(error ->
-                        log.error("{} failed (actor={}, chatId={}, error={})",
+                        log.error("[{}] failed (actor={}, chatId={}, error={})",
                                 command.getClass().getSimpleName(), actor, chatId, error.getMessage(), error))
                 .onErrorResume(error -> Mono.empty())
                 .then();

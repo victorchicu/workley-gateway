@@ -53,7 +53,8 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
             String chatId = randomIdGenerator.generate();
 
             Message<TextContent> dummy =
-                    Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), new TextContent(command.prompt()));
+                    Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(),
+                            new TextContent(command.prompt()));
 
             ChatCreated chatCreated = new ChatCreated(actor, chatId, command.prompt());
 

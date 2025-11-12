@@ -8,6 +8,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import java.util.List;
+
 @Configuration
 public class SecurityConfiguration {
     private final AnonymousJwtSecret jwtSecret;
@@ -32,9 +34,11 @@ public class SecurityConfiguration {
     }
 
     private static Customizer<ServerHttpSecurity.AuthorizeExchangeSpec> withAuthorizeExchange() {
+        String[] endpointsWhitelist = List.of("/api/chats/**", "/api/command/**", "/actuator/**")
+                .toArray(new String[0]);
         return (ServerHttpSecurity.AuthorizeExchangeSpec authorizeExchangeSpec) ->
                 authorizeExchangeSpec
-                        .pathMatchers("/api/command/**", "/api/chats/**", "/actuator/**")
+                        .pathMatchers(endpointsWhitelist)
                         .permitAll()
                         .anyExchange()
                         .authenticated();

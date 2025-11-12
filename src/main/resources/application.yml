@@ -25,7 +25,7 @@ spring:
       chat:
         options:
           top-p: 0.9
-          model: llama3.1:8b
+          model: llama3.2:1b
           max-tokens: 1000
           temperature: 0.8
       base-url: http://localhost:7869
@@ -52,8 +52,8 @@ spring:
             - id: workley-gateway
               uri: http://localhost:8443
               predicates:
-                - Path=/api/command/**
                 - Path=/api/chats/**
+                - Path=/api/command/**
   rsocket:
     server:
       transport: websocket
