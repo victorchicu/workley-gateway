@@ -12,11 +12,11 @@ import reactor.core.publisher.Mono;
 import java.util.Collection;
 
 @Service
-public class Messenger {
+public class ChatSession {
     private final ChatStore chatStore;
     private final MessageStore messageStore;
 
-    public Messenger(ChatStore chatStore, MessageStore messageStore) {
+    public ChatSession(ChatStore chatStore, MessageStore messageStore) {
         this.chatStore = chatStore;
         this.messageStore = messageStore;
     }

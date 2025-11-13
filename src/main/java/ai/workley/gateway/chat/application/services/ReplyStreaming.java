@@ -47,20 +47,20 @@ public class ReplyStreaming {
 
     private final AiModel aiModel;
     private final EventBus eventBus;
-    private final Messenger messenger;
+    private final ChatSession chatSession;
     private final IntentClassifier intentClassifier;
     private final Sinks.Many<Message<TextContent>> chatSink;
 
     public ReplyStreaming(
             AiModel aiModel,
             EventBus eventBus,
-            Messenger messenger,
+            ChatSession chatSession,
             IntentClassifier intentClassifier,
             Sinks.Many<Message<TextContent>> chatSink
     ) {
         this.aiModel = aiModel;
         this.eventBus = eventBus;
-        this.messenger = messenger;
+        this.chatSession = chatSession;
         this.intentClassifier = intentClassifier;
         this.chatSink = chatSink;
     }
@@ -68,7 +68,7 @@ public class ReplyStreaming {
     @EventListener
     @Order(1)
     public Mono<Void> on(ReplyStarted e) {
-        return messenger.loadRecentHistory(e.chatId(), 100)
+        return chatSession.loadRecentHistory(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
                     return intentClassifier.classify(e.message())
