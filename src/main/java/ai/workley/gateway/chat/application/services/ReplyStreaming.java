@@ -10,6 +10,8 @@ import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
 import ai.workley.gateway.chat.application.ports.outbound.EventBus;
 import ai.workley.gateway.chat.domain.intent.IntentClassification;
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentClassifier;
+import ai.workley.gateway.chat.application.ports.outbound.intent.IntentSuggester;
+import ai.workley.gateway.chat.domain.intent.IntentSuggestion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -50,6 +52,7 @@ public class ReplyStreaming {
     private final EventBus eventBus;
     private final ChatSession chatSession;
     private final IntentClassifier intentClassifier;
+    private final IntentSuggester intentSuggester;
     private final Sinks.Many<Message<TextContent>> chatSink;
 
     public ReplyStreaming(
@@ -57,12 +60,14 @@ public class ReplyStreaming {
             EventBus eventBus,
             ChatSession chatSession,
             IntentClassifier intentClassifier,
+            IntentSuggester intentSuggester,
             Sinks.Many<Message<TextContent>> chatSink
     ) {
         this.aiModel = aiModel;
         this.eventBus = eventBus;
         this.chatSession = chatSession;
         this.intentClassifier = intentClassifier;
+        this.intentSuggester = intentSuggester;
         this.chatSink = chatSink;
     }
 
@@ -72,12 +77,29 @@ public class ReplyStreaming {
         return chatSession.loadRecentHistory(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
-                    return intentClassifier.classify(e.message())
+                    Mono<IntentClassification> classificationMono = intentClassifier.classify(e.message())
+                            .timeout(Duration.ofSeconds(60))
+                            .retryWhen(retryBackoffSpec);
+
+                    Mono<IntentSuggestion> suggestionMono = intentSuggester.suggest(e.message())
                             .timeout(Duration.ofSeconds(60))
                             .retryWhen(retryBackoffSpec)
-                            .flatMap(classification -> {
-                                log.info("Intent classified as {} with confidence {} (actor={}, chatId={})",
-                                        classification.intent(), classification.confidence(), e.actor(), e.chatId());
+                            .doOnError(err -> {
+                                log.error("Intent suggestion failed (actor={}, chatId={})",
+                                        e.actor(), e.chatId(), err);
+                            })
+                            .onErrorResume(err -> Mono.just(new IntentSuggestion("UNKNOWN", 0f)));
+
+                    return Mono.zip(classificationMono, suggestionMono)
+                            .flatMap(tuple -> {
+                                IntentClassification classification = tuple.getT1();
+                                IntentSuggestion suggestion = tuple.getT2();
+
+                                log.info("Intent classified as {} with confidence {} | Suggested: {} with confidence {} (actor={}, chatId={})",
+                                        classification.intent(), classification.confidence(),
+                                        suggestion.suggestion(), suggestion.confidence(),
+                                        e.actor(), e.chatId());
+
                                 return streamReply(e, classification, history);
                             })
                             .doOnError(err -> {
