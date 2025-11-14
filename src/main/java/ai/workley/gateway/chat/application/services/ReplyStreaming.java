@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -98,7 +99,7 @@ public class ReplyStreaming {
     private Prompt buildPrompt(ReplyStarted e, IntentClassification classification, List<Message<? extends Content>> history) {
         List<org.springframework.ai.chat.messages.Message> list = new ArrayList<>();
 
-//        list.add(new SystemMessage(classification.getSystemPrompt()));
+        list.add(new SystemMessage(classification.getSystemPrompt()));
 
         for (Message<? extends Content> message : history) {
             switch (message.role()) {

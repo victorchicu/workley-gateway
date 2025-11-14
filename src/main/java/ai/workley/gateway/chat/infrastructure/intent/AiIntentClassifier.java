@@ -29,8 +29,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-public class AiIntentClassifer implements IntentClassifier {
-    private static final Logger log = LoggerFactory.getLogger(AiIntentClassifer.class);
+public class AiIntentClassifier implements IntentClassifier {
+    private static final Logger log = LoggerFactory.getLogger(AiIntentClassifier.class);
 
     private static final ChatOptions JSON_ONLY =
             OllamaOptions.builder()
@@ -63,7 +63,7 @@ public class AiIntentClassifer implements IntentClassifier {
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
 
-    public AiIntentClassifer(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
+    public AiIntentClassifier(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
         this.aiModel = aiModel;
         this.objectMapper = objectMapper;
         this.meterRegistry = meterRegistry;
