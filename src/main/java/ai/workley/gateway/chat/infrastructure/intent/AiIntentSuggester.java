@@ -33,27 +33,26 @@ public class AiIntentSuggester implements IntentSuggester {
 
     private static final ChatOptions JSON_ONLY =
             OllamaOptions.builder()
-                    .model("llama3.2:3b")
                     .format("json")
-                    .temperature(0.2)
+                    .temperature(0.0)
                     .stop(List.of("```"))
                     .build();
 
     private static final String ASSISTANT_PROMPT = """
             Describe what the user message is about in 2-3 words.
-            Use UPPER_CASE format like: JOB_LISTING, CAREER_ADVICE, GREETING, etc.
+            Use UPPER_CASE format like: GREETING, JOB_LISTING, CAREER_ADVICE, etc.
             
             Return JSON only:
             {
-              "suggestion": "JOB_LISTING",
+              "suggestion": "GREETING",
               "confidence": 0.95
             }
             
             Examples:
-            "show me software jobs" -> {"suggestion":"JOB_LISTING","confidence":0.95}
-            "how to prepare for interview" -> {"suggestion":"CAREER_ADVICE","confidence":0.92}
-            "search React developers" -> {"suggestion":"CANDIDATE_SEARCH","confidence":0.94}
             "hello" -> {"suggestion":"GREETING","confidence":0.98}
+            "show me software jobs" -> {"suggestion":"JOB_LISTING","confidence":0.95}
+            "search React developers" -> {"suggestion":"CANDIDATE_SEARCH","confidence":0.94}
+            "how to prepare for interview" -> {"suggestion":"CAREER_ADVICE","confidence":0.92}
             """;
 
     private final AiModel aiModel;
@@ -110,7 +109,8 @@ public class AiIntentSuggester implements IntentSuggester {
         try {
             return objectMapper.readValue(text, IntentSuggestion.class);
         } catch (Exception e) {
-            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + text, e);
+            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + text,
+                    e);
         }
     }
 }

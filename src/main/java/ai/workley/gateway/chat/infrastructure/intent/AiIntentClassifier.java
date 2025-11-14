@@ -75,9 +75,7 @@ public class AiIntentClassifier implements IntentClassifier {
 
         Prompt prompt =
                 new Prompt(
-                        List.of(
-                                new SystemMessage(ASSISTANT_PROMPT_CLASSIFICATION),
-                                new UserMessage(message.content().value())),
+                        List.of(new SystemMessage(ASSISTANT_PROMPT_CLASSIFICATION), new UserMessage(message.content().value())),
                         JSON_ONLY
                 );
 

@@ -1,5 +1,7 @@
 package ai.workley.gateway.chat.application.services;
 
+import ai.workley.gateway.chat.application.ports.outbound.intent.IntentSuggester;
+import ai.workley.gateway.chat.domain.IntentType;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.content.Content;
@@ -10,6 +12,7 @@ import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
 import ai.workley.gateway.chat.application.ports.outbound.EventBus;
 import ai.workley.gateway.chat.domain.intent.IntentClassification;
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentClassifier;
+import ai.workley.gateway.chat.domain.intent.IntentSuggestion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -49,21 +52,24 @@ public class ReplyStreaming {
     private final AiModel aiModel;
     private final EventBus eventBus;
     private final ChatSession chatSession;
+    private final IntentSuggester intentSuggester;
     private final IntentClassifier intentClassifier;
-    private final Sinks.Many<Message<TextContent>> chatSink;
+    private final Sinks.Many<Message<TextContent>> chatSessionSink;
 
     public ReplyStreaming(
             AiModel aiModel,
             EventBus eventBus,
             ChatSession chatSession,
+            IntentSuggester intentSuggester,
             IntentClassifier intentClassifier,
-            Sinks.Many<Message<TextContent>> chatSink
+            Sinks.Many<Message<TextContent>> chatSessionSink
     ) {
         this.aiModel = aiModel;
         this.eventBus = eventBus;
         this.chatSession = chatSession;
+        this.intentSuggester = intentSuggester;
         this.intentClassifier = intentClassifier;
-        this.chatSink = chatSink;
+        this.chatSessionSink = chatSessionSink;
     }
 
     @EventListener
@@ -72,13 +78,30 @@ public class ReplyStreaming {
         return chatSession.loadRecentHistory(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
-                    return intentClassifier.classify(e.message())
+                    Mono<IntentSuggestion> suggester = intentSuggester.suggest(e.message())
                             .timeout(Duration.ofSeconds(60))
                             .retryWhen(retryBackoffSpec)
+                            .doOnError(err -> {
+                                log.error("Intent suggestion failed (actor={}, chatId={})",
+                                        e.actor(), e.chatId(), err);
+                            });
+
+                    Mono<IntentClassification> classifier = intentClassifier.classify(e.message())
+                            .timeout(Duration.ofSeconds(60))
+                            .retryWhen(retryBackoffSpec)
+                            .doOnError(err -> {
+                                log.error("Intent classification failed (actor={}, chatId={})",
+                                        e.actor(), e.chatId(), err);
+                            })
+                            .onErrorResume(throwable ->
+                                    Mono.just(
+                                            new IntentClassification(IntentType.UNRELATED, 1.0f)));
+
+                    return Mono.zip(classifier, suggester)
                             .flatMap(classification -> {
-                                log.info("Intent classified as {} with confidence {} (actor={}, chatId={})",
-                                        classification.intent(), classification.confidence(), e.actor(), e.chatId());
-                                return streamReply(e, classification, history);
+                                log.info("Intent classified as {} with confidence {} | Suggested: {} with confidence {} (actor={}, chatId={})",
+                                        classification.getT1().intent(), classification.getT1().confidence(), classification.getT2().suggestion(), classification.getT2().confidence(), e.actor(), e.chatId());
+                                return streamReply(e, classification.getT1(), history);
                             })
                             .doOnError(err -> {
                                 log.error("Intent classification failed (actor={}, chatId={})",
@@ -90,7 +113,7 @@ public class ReplyStreaming {
 
     private void emitChunkSafe(ReplyStarted e, String replyId, String chunk) {
         Message<TextContent> dummy = Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), new TextContent(chunk));
-        Sinks.EmitResult emitResult = chatSink.tryEmitNext(dummy);
+        Sinks.EmitResult emitResult = chatSessionSink.tryEmitNext(dummy);
         if (emitResult.isFailure()) {
             log.warn("Dropped chunk (actor={}, chatId={}, reason={})", e.actor(), e.chatId(), emitResult);
         }

@@ -11,15 +11,15 @@ import reactor.core.publisher.Sinks;
 
 @Controller
 public class ChatStreamRSocketController {
-    private final Sinks.Many<Message<TextContent>> chatSink;
+    private final Sinks.Many<Message<TextContent>> chatSessionSink;
 
-    ChatStreamRSocketController(Sinks.Many<Message<TextContent>> chatSink) {
-        this.chatSink = chatSink;
+    ChatStreamRSocketController(Sinks.Many<Message<TextContent>> chatSessionSink) {
+        this.chatSessionSink = chatSessionSink;
     }
 
     @MessageMapping("chat.stream.{chatId}")
     public Flux<Message<TextContent>> stream(@DestinationVariable String chatId) {
-        return chatSink.asFlux().filter((Message<TextContent> message) -> {
+        return chatSessionSink.asFlux().filter((Message<TextContent> message) -> {
             return chatId.equals(message.chatId());
         });
     }

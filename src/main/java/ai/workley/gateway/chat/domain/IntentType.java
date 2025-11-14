@@ -1,5 +1,13 @@
 package ai.workley.gateway.chat.domain;
 
+//TODO: Make confidence configurable for each intent
+//TODO: Add prompt versioning to track which version performed better
+
+/**
+ * JOB_LISTING
+ * PROFESSIONAL_INTRODUCTION
+ */
+
 public enum IntentType {
     FIND_JOB(
             // High Confidence
