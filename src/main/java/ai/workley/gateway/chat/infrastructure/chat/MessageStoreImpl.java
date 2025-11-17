@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.infrastructure.messenger;
+package ai.workley.gateway.chat.infrastructure.chat;
 
 import ai.workley.gateway.chat.application.ports.outbound.messenger.MessageStore;
 import ai.workley.gateway.chat.domain.Message;

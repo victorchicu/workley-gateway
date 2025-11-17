@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.infrastructure.messenger.mongodb;
+package ai.workley.gateway.chat.infrastructure.chat.mongodb;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;

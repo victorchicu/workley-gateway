@@ -1,9 +1,8 @@
-package ai.workley.gateway.chat.infrastructure.messenger;
+package ai.workley.gateway.chat.infrastructure.chat;
 
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
-import ai.workley.gateway.chat.domain.content.TextContent;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

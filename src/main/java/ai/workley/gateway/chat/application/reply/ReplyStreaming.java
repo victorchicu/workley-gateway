@@ -1,6 +1,7 @@
-package ai.workley.gateway.chat.application.services;
+package ai.workley.gateway.chat.application.reply;
 
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentSuggester;
+import ai.workley.gateway.chat.application.chat.ChatSession;
 import ai.workley.gateway.chat.domain.IntentType;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
@@ -54,6 +55,7 @@ public class ReplyStreaming {
     private final ChatSession chatSession;
     private final IntentSuggester intentSuggester;
     private final IntentClassifier intentClassifier;
+    private final ReplyContentBuilderRegistry replyContentBuilderRegistry;
     private final Sinks.Many<Message<TextContent>> chatSessionSink;
 
     public ReplyStreaming(
@@ -62,6 +64,7 @@ public class ReplyStreaming {
             ChatSession chatSession,
             IntentSuggester intentSuggester,
             IntentClassifier intentClassifier,
+            ReplyContentBuilderRegistry replyContentBuilderRegistry,
             Sinks.Many<Message<TextContent>> chatSessionSink
     ) {
         this.aiModel = aiModel;
@@ -69,6 +72,7 @@ public class ReplyStreaming {
         this.chatSession = chatSession;
         this.intentSuggester = intentSuggester;
         this.intentClassifier = intentClassifier;
+        this.replyContentBuilderRegistry = replyContentBuilderRegistry;
         this.chatSessionSink = chatSessionSink;
     }
 
@@ -161,12 +165,14 @@ public class ReplyStreaming {
                 .onErrorResume(error -> Flux.empty())
                 .share();
 
+        ReplyContentBuilder<? extends Content> replyContentBuilder = replyContentBuilderRegistry.get(classification.intent());
+
         return chunks
                 .reduce(new StringBuilder(), StringBuilder::append)
                 .map(StringBuilder::toString)
                 .defaultIfEmpty("")
                 .flatMap(fullReply -> {
-                    TextContent content = new TextContent(fullReply);
+                    Content content = replyContentBuilder.build(fullReply, classification, history);
                     eventBus.publishEvent(
                             new ReplyCompleted(
                                     e.actor(), e.chatId(), Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), content)));

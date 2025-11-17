@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.infrastructure.messenger.mongodb;
+package ai.workley.gateway.chat.infrastructure.chat.mongodb;
 
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;

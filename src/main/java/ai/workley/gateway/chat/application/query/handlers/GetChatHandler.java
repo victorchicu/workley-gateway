@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.query.handlers;
 
-import ai.workley.gateway.chat.application.services.ChatSession;
+import ai.workley.gateway.chat.application.chat.ChatSession;
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.domain.query.GetChat;
 import ai.workley.gateway.chat.domain.payloads.GetChatPayload;

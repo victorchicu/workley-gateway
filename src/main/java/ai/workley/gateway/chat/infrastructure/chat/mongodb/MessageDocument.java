@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.infrastructure.messenger.mongodb;
+package ai.workley.gateway.chat.infrastructure.chat.mongodb;
 
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.content.Content;

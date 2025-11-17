@@ -1,7 +1,6 @@
-package ai.workley.gateway.chat.infrastructure.messenger.mongodb;
+package ai.workley.gateway.chat.infrastructure.chat.mongodb;
 
 import ai.workley.gateway.chat.domain.content.Content;
-import ai.workley.gateway.chat.domain.content.TextContent;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;

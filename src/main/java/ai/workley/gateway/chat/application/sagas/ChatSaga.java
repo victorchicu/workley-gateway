@@ -63,12 +63,6 @@ public class ChatSaga {
         return commandBus.execute(e.actor(), command)
                 .timeout(Duration.ofSeconds(60))
                 .retryWhen(retryBackoffSpec)
-                .doOnSubscribe(subscription ->
-                        log.info("Dispatching [{}] command (actor={}, chatId={})",
-                                command.getClass().getSimpleName(), e.actor(), e.chatId()))
-                .doOnSuccess(payload ->
-                        log.info("[{}] dispatched successfully (actor={}, chatId={})",
-                                command.getClass().getSimpleName(), e.actor(), e.chatId()))
                 .doOnError(error ->
                         log.error("[{}] failed (actor={}, chatId={}, error={})",
                                 command.getClass().getSimpleName(), e.actor(), e.chatId(), error.getMessage(), error))
@@ -91,12 +85,6 @@ public class ChatSaga {
         return commandBus.execute(actor, command)
                 .timeout(Duration.ofSeconds(60))
                 .retryWhen(retryBackoffSpec)
-                .doOnSubscribe(subscription ->
-                        log.info("Dispatching [{}] command (actor={}, chatId={})",
-                                command.getClass().getSimpleName(), actor, chatId))
-                .doOnSuccess(payload ->
-                        log.info("[{}] dispatched successfully (actor={}, chatId={})",
-                                command.getClass().getSimpleName(), actor, chatId))
                 .doOnError(error ->
                         log.error("[{}] failed (actor={}, chatId={}, error={})",
                                 command.getClass().getSimpleName(), actor, chatId, error.getMessage(), error))
