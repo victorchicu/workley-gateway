@@ -33,7 +33,7 @@ public class OllamaAiModel implements AiModel {
     private Flux<ChatResponse> fallback(Throwable throwable) {
         return Flux.just(
                 new ChatResponse(
-                        List.of(new Generation(new AssistantMessage("Sorry, Workley service is unavailable. Please  try again later."))))
+                        List.of(new Generation(new AssistantMessage("Workley is currently under heavy load. Please try again later."))))
         );
     }
 }
