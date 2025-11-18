@@ -29,8 +29,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
-import reactor.util.retry.Retry;
-import reactor.util.retry.RetryBackoffSpec;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -41,24 +39,6 @@ import java.util.UUID;
 @Service
 public class ReplyStreaming {
     private static final Logger log = LoggerFactory.getLogger(ReplyStreaming.class);
-
-    private final RetryBackoffSpec intentClassificationRetry =
-            Retry.backoff(5, Duration.ofMillis(500))
-                    .jitter(0.50)
-                    .maxBackoff(Duration.ofSeconds(5))
-                    .doBeforeRetry(retrySignal -> {
-                        log.warn("Retrying intent classification attempt #{} due to {}",
-                                retrySignal.totalRetries() + 1, retrySignal.failure().toString());
-                    });
-
-    private final RetryBackoffSpec intentSuggestionRetry =
-            Retry.backoff(5, Duration.ofMillis(500))
-                    .jitter(0.50)
-                    .maxBackoff(Duration.ofSeconds(5))
-                    .doBeforeRetry(retrySignal -> {
-                        log.warn("Retrying intent suggestion attempt #{} due to {}",
-                                retrySignal.totalRetries() + 1, retrySignal.failure().toString());
-                    });
 
     private final AiModel aiModel;
     private final EventBus eventBus;
@@ -93,8 +73,7 @@ public class ReplyStreaming {
                 .collectList()
                 .flatMapMany(history -> {
                     Mono<IntentSuggestion> suggester = intentSuggester.suggest(e.message())
-                            .timeout(Duration.ofSeconds(60))
-                            .retryWhen(intentSuggestionRetry)
+                            .timeout(Duration.ofSeconds(30))
                             .doOnError(err -> {
                                 log.error("Intent suggestion failed (actor={}, chatId={})",
                                         e.actor(), e.chatId(), err);
@@ -104,8 +83,7 @@ public class ReplyStreaming {
                                             new IntentSuggestion("UNKNOWN", 1.0f)));
 
                     Mono<IntentClassification> classifier = intentClassifier.classify(e.message())
-                            .timeout(Duration.ofSeconds(60))
-                            .retryWhen(intentClassificationRetry)
+                            .timeout(Duration.ofSeconds(30))
                             .doOnError(err -> {
                                 log.error("Intent classification failed (actor={}, chatId={})",
                                         e.actor(), e.chatId(), err);
@@ -161,7 +139,7 @@ public class ReplyStreaming {
         final String replyId = UUID.randomUUID().toString();
 
         Flux<String> chunks = aiModel.stream(buildPrompt(e, classification, history))
-                .timeout(Duration.ofSeconds(30), Flux.empty())
+                .timeout(Duration.ofSeconds(30))
                 .flatMapIterable(resp -> {
                     List<Generation> gens = resp != null
                             ? resp.getResults()
@@ -172,10 +150,6 @@ public class ReplyStreaming {
                 .mapNotNull(AbstractMessage::getText)
                 .filter(chunk -> chunk != null && !chunk.isBlank())
                 .doOnNext(chunk -> emitChunkSafe(e, replyId, chunk))
-                .onErrorResume(AiModelUnavailableException.class, ex -> {
-                    log.error("AI model unavailable during streaming (chatId={}, actor={})", e.chatId(), e.actor());
-                    return Flux.just(ex.getMessage());
-                })
                 .onErrorResume(ex -> {
                     log.error("Stream reply failed", ex);
                     return Flux.just("Oops! Something went wrong. Please try again later.");

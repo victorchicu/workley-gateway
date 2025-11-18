@@ -69,6 +69,8 @@ management:
   health:
     rabbit:
       enabled: false
+    ratelimiters:
+      enabled: true
     circuitbreakers:
       enabled: true
   endpoint:
@@ -82,17 +84,16 @@ management:
     tags:
       application: workley-gateway
 resilience4j:
-  retry:
-    instances:
-      reply-streaming:
-        max-attempts: 3
-        wait-duration: 300ms
+  timelimiter:
+    configs:
+      ollama-ai-model:
+        timeout-duration: 300s
+        cancel-running-future: false
   circuitbreaker:
-    instances:
-      reply-streaming:
+    configs:
+      ollama-ai-model:
         sliding-window-size: 10
-        failure-rate-threshold: 50
         minimum-number-of-calls: 5
-        wait-duration-in-open-state: 5s
-
-
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
