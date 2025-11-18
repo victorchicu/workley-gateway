@@ -74,34 +74,39 @@ public class ReplyStreaming {
                 .flatMapMany(history -> {
                     Mono<IntentSuggestion> suggester = intentSuggester.suggest(e.message())
                             .timeout(Duration.ofSeconds(30))
-                            .doOnError(err -> {
-                                log.error("Intent suggestion failed (actor={}, chatId={})",
-                                        e.actor(), e.chatId(), err);
-                            })
+                            .doOnError(err ->
+                                    log.error("Intent suggestion failed (actor={}, chatId={})",
+                                            e.actor(), e.chatId(), err))
                             .onErrorResume(throwable ->
                                     Mono.just(
                                             new IntentSuggestion("UNKNOWN", 1.0f)));
 
                     Mono<IntentClassification> classifier = intentClassifier.classify(e.message())
                             .timeout(Duration.ofSeconds(30))
-                            .doOnError(err -> {
-                                log.error("Intent classification failed (actor={}, chatId={})",
-                                        e.actor(), e.chatId(), err);
-                            })
+                            .doOnError(err ->
+                                    log.error("Intent classification failed (actor={}, chatId={})",
+                                            e.actor(), e.chatId(), err))
                             .onErrorResume(throwable ->
                                     Mono.just(
-                                            new IntentClassification(IntentType.UNRELATED, 1.0f)));
+                                            new IntentClassification(IntentType.UNRELATED, 1.0f)))
+                            .cache();
 
-                    return Mono.zip(classifier, suggester)
-                            .flatMap(classification -> {
-                                log.info("Intent classified as {}({}%)/{}(%{}) (actor={}, chatId={})",
-                                        classification.getT1().intent(), classification.getT1().confidence(), classification.getT2().suggestion(), classification.getT2().confidence(), e.actor(), e.chatId());
-                                return streamReply(e, classification.getT1(), history);
-                            })
-                            .doOnError(err -> {
-                                log.error("Intent classification failed (actor={}, chatId={})",
-                                        e.actor(), e.chatId(), err);
-                            });
+                    Mono<Void> print = Mono.zip(classifier, suggester)
+                            .doOnNext(t ->
+                                    log.info("Intent classified as {}({}%)/{}(%{}) (actor={}, chatId={})",
+                                            t.getT1().intent(), t.getT1().confidence(), t.getT2().suggestion(), t.getT2().confidence(), e.actor(), e.chatId()))
+                            .then();
+
+                    return classifier
+                            .flatMap(classification ->
+                                    streamReply(e, classification, history))
+                            .doOnSubscribe(subscription ->
+                                    print.subscribe(null, throwable ->
+                                            log.error("Intent classification subscription failed (actor={}, chatId={})",
+                                                    e.actor(), e.chatId(), throwable)))
+                            .doOnError(err ->
+                                    log.error("Intent classification failed (actor={}, chatId={})",
+                                            e.actor(), e.chatId(), err));
                 })
                 .then();
     }
