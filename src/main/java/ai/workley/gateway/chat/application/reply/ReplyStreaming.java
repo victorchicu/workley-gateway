@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+import reactor.core.publisher.SignalType;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -72,16 +73,6 @@ public class ReplyStreaming {
         return chatSession.loadRecentHistory(e.chatId(), 100)
                 .collectList()
                 .flatMapMany(history -> {
-                    Mono<IntentSuggestion> suggester = intentSuggester.suggest(e.message())
-                            .timeout(Duration.ofSeconds(30))
-                            .doOnError(err -> {
-                                log.error("Intent suggestion failed (actor={}, chatId={})",
-                                        e.actor(), e.chatId(), err);
-                            })
-                            .onErrorResume(throwable ->
-                                    Mono.just(
-                                            new IntentSuggestion("UNKNOWN", 1.0f)));
-
                     Mono<IntentClassification> classifier = intentClassifier.classify(e.message())
                             .timeout(Duration.ofSeconds(30))
                             .doOnError(err -> {
@@ -90,13 +81,31 @@ public class ReplyStreaming {
                             })
                             .onErrorResume(throwable ->
                                     Mono.just(
-                                            new IntentClassification(IntentType.UNRELATED, 1.0f)));
+                                            new IntentClassification(IntentType.UNRELATED, 1.0f)))
+                            .cache();
 
-                    return Mono.zip(classifier, suggester)
-                            .flatMap(classification -> {
-                                log.info("Intent classified as {}({}%)/{}(%{}) (actor={}, chatId={})",
-                                        classification.getT1().intent(), classification.getT1().confidence(), classification.getT2().suggestion(), classification.getT2().confidence(), e.actor(), e.chatId());
-                                return streamReply(e, classification.getT1(), history);
+                    return classifier
+                            .flatMap(intentClassification -> {
+                                Mono<Void> logging = intentSuggester.suggest(e.message())
+                                        .timeout(Duration.ofSeconds(30))
+                                        .doOnError(err -> {
+                                            log.error("Intent suggestion failed (actor={}, chatId={})",
+                                                    e.actor(), e.chatId(), err);
+                                        })
+                                        .onErrorResume(throwable ->
+                                                Mono.just(
+                                                        new IntentSuggestion("UNKNOWN", 1.0f)))
+                                        .doOnNext(suggestion -> log.info(
+                                                "Intent classified as {}({}%)/{}({}%) (actor={}, chatId={})",
+                                                intentClassification.intent(), intentClassification.confidence(),
+                                                suggestion.suggestion(), suggestion.confidence(), e.actor(), e.chatId()))
+                                        .then();
+
+                                return streamReply(e, intentClassification, history)
+                                        .doFinally(signalType -> logging.subscribe(
+                                                null,
+                                                err -> log.error("Intent classification logging failed (actor={}, chatId={})",
+                                                        e.actor(), e.chatId(), err)));
                             })
                             .doOnError(err -> {
                                 log.error("Intent classification failed (actor={}, chatId={})",
