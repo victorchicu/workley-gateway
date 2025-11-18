@@ -24,10 +24,20 @@ public class OllamaAiModel implements AiModel {
 
     @Override
     public Flux<ChatResponse> stream(Prompt prompt) {
-        return reactiveCircuitBreaker.run(ollamaChatModel.stream(prompt), this::fallback);
+        return Flux.defer(() ->
+                reactiveCircuitBreaker.run(
+                        ollamaChatModel.stream(prompt)
+                                .onErrorMap(this::toAiModelUnavailableException), this::fallback)
+        );
+    }
+
+    private Throwable toAiModelUnavailableException(Throwable ex) {
+        return ex instanceof AiModelUnavailableException
+                ? ex
+                : new AiModelUnavailableException(ex);
     }
 
     private Flux<ChatResponse> fallback(Throwable ex) {
-        return Flux.error(new AiModelUnavailableException(ex));
+        return Flux.error(toAiModelUnavailableException(ex));
     }
 }

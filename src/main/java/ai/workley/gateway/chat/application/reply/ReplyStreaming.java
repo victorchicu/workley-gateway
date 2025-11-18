@@ -23,8 +23,6 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
-import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
@@ -44,12 +42,21 @@ import java.util.UUID;
 public class ReplyStreaming {
     private static final Logger log = LoggerFactory.getLogger(ReplyStreaming.class);
 
-    private final RetryBackoffSpec retryBackoffSpec =
+    private final RetryBackoffSpec intentClassificationRetry =
             Retry.backoff(5, Duration.ofMillis(500))
                     .jitter(0.50)
                     .maxBackoff(Duration.ofSeconds(5))
                     .doBeforeRetry(retrySignal -> {
-                        log.warn("Retrying classify intent attempt #{} due to {}",
+                        log.warn("Retrying intent classification attempt #{} due to {}",
+                                retrySignal.totalRetries() + 1, retrySignal.failure().toString());
+                    });
+
+    private final RetryBackoffSpec intentSuggestionRetry =
+            Retry.backoff(5, Duration.ofMillis(500))
+                    .jitter(0.50)
+                    .maxBackoff(Duration.ofSeconds(5))
+                    .doBeforeRetry(retrySignal -> {
+                        log.warn("Retrying intent suggestion attempt #{} due to {}",
                                 retrySignal.totalRetries() + 1, retrySignal.failure().toString());
                     });
 
@@ -87,7 +94,7 @@ public class ReplyStreaming {
                 .flatMapMany(history -> {
                     Mono<IntentSuggestion> suggester = intentSuggester.suggest(e.message())
                             .timeout(Duration.ofSeconds(60))
-                            .retryWhen(retryBackoffSpec)
+                            .retryWhen(intentSuggestionRetry)
                             .doOnError(err -> {
                                 log.error("Intent suggestion failed (actor={}, chatId={})",
                                         e.actor(), e.chatId(), err);
@@ -98,7 +105,7 @@ public class ReplyStreaming {
 
                     Mono<IntentClassification> classifier = intentClassifier.classify(e.message())
                             .timeout(Duration.ofSeconds(60))
-                            .retryWhen(retryBackoffSpec)
+                            .retryWhen(intentClassificationRetry)
                             .doOnError(err -> {
                                 log.error("Intent classification failed (actor={}, chatId={})",
                                         e.actor(), e.chatId(), err);
@@ -167,10 +174,10 @@ public class ReplyStreaming {
                 .doOnNext(chunk -> emitChunkSafe(e, replyId, chunk))
                 .onErrorResume(AiModelUnavailableException.class, ex -> {
                     log.error("AI model unavailable during streaming (chatId={}, actor={})", e.chatId(), e.actor());
-                    return Flux.just("AI model unavailable, please try again later.");
+                    return Flux.just(ex.getMessage());
                 })
                 .onErrorResume(ex -> {
-                    log.error("Stream failed", ex);
+                    log.error("Stream reply failed", ex);
                     return Flux.just("Oops! Something went wrong. Please try again later.");
                 })
                 .share();
@@ -183,6 +190,7 @@ public class ReplyStreaming {
                 .defaultIfEmpty("")
                 .flatMap(fullReply -> {
                     Content content = replyContentBuilder.build(fullReply, classification, history);
+                    log.info("Sending reply: {}", content);
                     eventBus.publishEvent(
                             new ReplyCompleted(
                                     e.actor(), e.chatId(), Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), content)));
