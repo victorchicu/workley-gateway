@@ -10,7 +10,6 @@ import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFac
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @Primary
 @Component
@@ -25,12 +24,10 @@ public class OllamaAiModel implements AiModel {
 
     @Override
     public Flux<ChatResponse> stream(Prompt prompt) {
-        return reactiveCircuitBreaker.run(
-                Mono.fromSupplier(() ->
-                        ollamaChatModel.stream(prompt)), this::fallback).flatMapMany(flux -> flux);
+        return reactiveCircuitBreaker.run(ollamaChatModel.stream(prompt), this::fallback);
     }
 
-    private Mono<Flux<ChatResponse>> fallback(Throwable ex) {
-        return Mono.error(new AiModelUnavailableException(ex));
+    private Flux<ChatResponse> fallback(Throwable ex) {
+        return Flux.error(new AiModelUnavailableException(ex));
     }
 }
