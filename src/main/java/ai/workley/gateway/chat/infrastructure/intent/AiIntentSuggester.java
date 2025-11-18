@@ -3,6 +3,7 @@ package ai.workley.gateway.chat.infrastructure.intent;
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentSuggester;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
+import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.intent.IntentSuggestion;
@@ -66,12 +67,12 @@ public class AiIntentSuggester implements IntentSuggester {
     }
 
     @Override
-    public Mono<IntentSuggestion> suggest(Message<TextContent> message) {
+    public Mono<IntentSuggestion> suggest(Message<? extends Content> message) {
         log.info("Suggesting intent for: {}", message.content());
 
         Prompt prompt =
                 new Prompt(
-                        List.of(new SystemMessage(ASSISTANT_PROMPT), new UserMessage(message.content().value())),
+                        List.of(new SystemMessage(ASSISTANT_PROMPT), new UserMessage(message.content().text())),
                         JSON_ONLY
                 );
 
@@ -86,11 +87,7 @@ public class AiIntentSuggester implements IntentSuggester {
                 .map(this::parseText)
                 .name("intent.suggest")
                 .tag("operation", "suggestion")
-                .tap(Micrometer.metrics(meterRegistry))
-                .onErrorResume(error -> {
-                    log.error("Suggestion failed", error);
-                    return Mono.just(new IntentSuggestion("UNKNOWN", 0f));
-                });
+                .tap(Micrometer.metrics(meterRegistry));
     }
 
     private String extractText(ChatResponse response) {

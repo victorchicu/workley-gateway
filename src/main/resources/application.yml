@@ -69,6 +69,8 @@ management:
   health:
     rabbit:
       enabled: false
+    circuitbreakers:
+      enabled: true
   endpoint:
     health:
       show-details: always
@@ -79,4 +81,18 @@ management:
   metrics:
     tags:
       application: workley-gateway
+resilience4j:
+  retry:
+    instances:
+      reply-streaming:
+        max-attempts: 3
+        wait-duration: 300ms
+  circuitbreaker:
+    instances:
+      reply-streaming:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 5s
+
 

@@ -14,6 +14,7 @@ import ai.workley.gateway.chat.application.ports.outbound.EventBus;
 import ai.workley.gateway.chat.domain.intent.IntentClassification;
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentClassifier;
 import ai.workley.gateway.chat.domain.intent.IntentSuggestion;
+import ai.workley.gateway.chat.infrastructure.exceptions.AiModelUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AbstractMessage;
@@ -22,6 +23,8 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
@@ -88,7 +91,10 @@ public class ReplyStreaming {
                             .doOnError(err -> {
                                 log.error("Intent suggestion failed (actor={}, chatId={})",
                                         e.actor(), e.chatId(), err);
-                            });
+                            })
+                            .onErrorResume(throwable ->
+                                    Mono.just(
+                                            new IntentSuggestion("UNKNOWN", 1.0f)));
 
                     Mono<IntentClassification> classifier = intentClassifier.classify(e.message())
                             .timeout(Duration.ofSeconds(60))
@@ -103,7 +109,7 @@ public class ReplyStreaming {
 
                     return Mono.zip(classifier, suggester)
                             .flatMap(classification -> {
-                                log.info("Intent classified as {} with confidence {} | Suggested: {} with confidence {} (actor={}, chatId={})",
+                                log.info("Intent classified as {}({}%)/{}(%{}) (actor={}, chatId={})",
                                         classification.getT1().intent(), classification.getT1().confidence(), classification.getT2().suggestion(), classification.getT2().confidence(), e.actor(), e.chatId());
                                 return streamReply(e, classification.getT1(), history);
                             })
@@ -138,7 +144,7 @@ public class ReplyStreaming {
         }
 
         if (history.isEmpty() || !history.getLast().id().equals(e.message().id())) {
-            list.add(new UserMessage(e.message().content().value()));
+            list.add(new UserMessage(e.message().content().text()));
         }
 
         return new Prompt(list);
@@ -159,10 +165,14 @@ public class ReplyStreaming {
                 .mapNotNull(AbstractMessage::getText)
                 .filter(chunk -> chunk != null && !chunk.isBlank())
                 .doOnNext(chunk -> emitChunkSafe(e, replyId, chunk))
-                .doOnError(error ->
-                        log.error("Stream message failed (actor={}, chatId={})",
-                                e.actor(), e.chatId(), error))
-                .onErrorResume(error -> Flux.empty())
+                .onErrorResume(AiModelUnavailableException.class, ex -> {
+                    log.error("AI model unavailable during streaming (chatId={}, actor={})", e.chatId(), e.actor());
+                    return Flux.just("AI model unavailable, please try again later.");
+                })
+                .onErrorResume(ex -> {
+                    log.error("Stream failed", ex);
+                    return Flux.just("Oops! Something went wrong. Please try again later.");
+                })
                 .share();
 
         ReplyContentBuilder<? extends Content> replyContentBuilder = replyContentBuilderRegistry.get(classification.intent());

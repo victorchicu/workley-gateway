@@ -3,6 +3,7 @@ package ai.workley.gateway.chat.infrastructure.intent;
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentClassifier;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
+import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.IntentType;
@@ -70,12 +71,12 @@ public class AiIntentClassifier implements IntentClassifier {
     }
 
     @Override
-    public Mono<IntentClassification> classify(Message<TextContent> message) {
+    public Mono<IntentClassification> classify(Message<? extends Content> message) {
         log.info("Classifying intent for: {}", message.content());
 
         Prompt prompt =
                 new Prompt(
-                        List.of(new SystemMessage(ASSISTANT_PROMPT_CLASSIFICATION), new UserMessage(message.content().value())),
+                        List.of(new SystemMessage(ASSISTANT_PROMPT_CLASSIFICATION), new UserMessage(message.content().text())),
                         JSON_ONLY
                 );
 
@@ -90,11 +91,7 @@ public class AiIntentClassifier implements IntentClassifier {
                 .map(this::parseText)
                 .name("intent.classify")
                 .tag("operation", "classification")
-                .tap(Micrometer.metrics(meterRegistry))
-                .onErrorResume(error -> {
-                    log.error("Classification failed", error);
-                    return Mono.just(new IntentClassification(IntentType.UNRELATED, 0f));
-                });
+                .tap(Micrometer.metrics(meterRegistry));
     }
 
     private String extractText(ChatResponse response) {

@@ -7,6 +7,7 @@ import ai.workley.gateway.chat.domain.aggregations.AggregateCommit;
 import ai.workley.gateway.chat.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.chat.domain.aggregations.ChatAggregate;
 import ai.workley.gateway.chat.domain.command.AddMessage;
+import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.domain.payloads.AddMessagePayload;
@@ -108,7 +109,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         String dummyId =
                 UUID.randomUUID().toString();
 
-        Message<TextContent> message =
+        Message<? extends Content> message =
                 Message.create(dummyId, command.chatId(), actor, Role.ANONYMOUS, Instant.now(), command.message().content());
 
         return aggregate.addMessage(actor, message);

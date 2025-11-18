@@ -1,6 +1,7 @@
 package ai.workley.gateway.chat.domain.aggregations;
 
 import ai.workley.gateway.chat.domain.Message;
+import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
@@ -24,7 +25,7 @@ public record ChatAggregate(String chatId, Set<String> participants, long versio
         return aggregate;
     }
 
-    public AggregateCommit<MessageAdded> addMessage(String actor, Message<TextContent> message) {
+    public AggregateCommit<MessageAdded> addMessage(String actor, Message<? extends Content> message) {
         Objects.requireNonNull(actor, "actor must not be null");
         Objects.requireNonNull(message, "message must not be null");
 
