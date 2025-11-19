@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.reply.converters;
+package ai.workley.gateway.chat.application.reply;
 
 import ai.workley.gateway.chat.domain.content.TextContent;
 import org.jspecify.annotations.Nullable;

@@ -1,6 +1,5 @@
-package ai.workley.gateway.chat.application.reply.builders;
+package ai.workley.gateway.chat.application.reply;
 
-import ai.workley.gateway.chat.application.reply.PromptBuilder;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
 import org.jspecify.annotations.NonNull;

@@ -1,6 +1,5 @@
-package ai.workley.gateway.chat.application.reply.builders;
+package ai.workley.gateway.chat.application.reply;
 
-import ai.workley.gateway.chat.application.reply.ReplyContentBuilder;
 import ai.workley.gateway.chat.domain.IntentType;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
