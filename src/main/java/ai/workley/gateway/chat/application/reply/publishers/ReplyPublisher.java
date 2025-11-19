@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.reply;
+package ai.workley.gateway.chat.application.reply.publishers;
 
 import ai.workley.gateway.chat.application.ports.outbound.EventBus;
 import ai.workley.gateway.chat.domain.Message;

@@ -1,5 +1,7 @@
-package ai.workley.gateway.chat.application.reply;
+package ai.workley.gateway.chat.application.reply.decoders;
 
+import ai.workley.gateway.chat.application.reply.exceptions.ReplyException;
+import ai.workley.gateway.chat.application.reply.types.ReplyType;
 import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.infrastructure.ai.ChunkReply;
 import ai.workley.gateway.chat.infrastructure.ai.ErrorCode;

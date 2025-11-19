@@ -5,7 +5,6 @@ import ai.workley.gateway.chat.domain.payloads.Payload;
 import ai.workley.gateway.chat.domain.query.Query;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.application.ports.inbound.QueryBus;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -16,10 +15,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-public class LocalQueryBus implements QueryBus {
+public class AppQueryBus implements QueryBus {
     private final Map<Class<? extends Query>, QueryHandler<? extends Query, ? extends Payload>> handlers;
 
-    public LocalQueryBus(List<QueryHandler<? extends Query, ? extends Payload>> source) {
+    public AppQueryBus(List<QueryHandler<? extends Query, ? extends Payload>> source) {
         this.handlers = source.stream()
                 .collect(Collectors.toMap(QueryHandler::supported,
                         Function.identity()));

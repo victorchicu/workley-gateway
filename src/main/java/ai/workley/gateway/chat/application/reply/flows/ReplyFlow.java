@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.reply;
+package ai.workley.gateway.chat.application.reply.flows;
 
 import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import reactor.core.publisher.Mono;

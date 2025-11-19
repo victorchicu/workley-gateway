@@ -14,10 +14,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-public class LocalCommandBus implements CommandBus {
+public class AppCommandBus implements CommandBus {
     private final Map<Class<? extends Command>, CommandHandler<?, ?>> handlers;
 
-    public LocalCommandBus(List<CommandHandler<?, ?>> source) {
+    public AppCommandBus(List<CommandHandler<?, ?>> source) {
         this.handlers = source.stream()
                 .collect(Collectors.toMap(CommandHandler::supported,
                         Function.identity()));

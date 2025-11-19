@@ -1,8 +1,7 @@
-package ai.workley.gateway.chat.application.reply;
+package ai.workley.gateway.chat.application.reply.emitters;
 
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
-import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -18,10 +17,10 @@ public class ChatChunkEmitter {
         this.chatSessionSink = chatSessionSink;
     }
 
-    public void emit(ReplyStarted e, Message<?> message) {
+    public void emit(Message<?> message) {
         Sinks.EmitResult result = chatSessionSink.tryEmitNext(message);
         if (result.isFailure()) {
-            log.warn("Dropped value (actor={}, chatId={}, reason={})", e.actor(), e.chatId(), result);
+            log.warn("Dropped value (actor={}, chatId={}, reason={})", message.ownedBy(), message.chatId(), result);
         }
     }
 }

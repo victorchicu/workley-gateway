@@ -6,10 +6,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LocalEventBus implements EventBus {
+public class AppEventBus implements EventBus {
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public LocalEventBus(ApplicationEventPublisher applicationEventPublisher) {
+    public AppEventBus(ApplicationEventPublisher applicationEventPublisher) {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 

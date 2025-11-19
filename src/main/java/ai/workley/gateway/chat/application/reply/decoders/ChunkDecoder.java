@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.reply;
+package ai.workley.gateway.chat.application.reply.decoders;
 
 import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.infrastructure.ai.ReplyEvent;

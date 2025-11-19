@@ -1,7 +1,13 @@
-package ai.workley.gateway.chat.application.reply;
+package ai.workley.gateway.chat.application.reply.flows;
 
 import ai.workley.gateway.chat.application.chat.ChatSession;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
+import ai.workley.gateway.chat.application.reply.aggregators.ReplyAggregator;
+import ai.workley.gateway.chat.application.reply.decoders.ChunkDecoder;
+import ai.workley.gateway.chat.application.reply.exceptions.ReplyException;
+import ai.workley.gateway.chat.application.reply.prompts.PromptBuilder;
+import ai.workley.gateway.chat.application.reply.publishers.ReplyPublisher;
+import ai.workley.gateway.chat.application.reply.emitters.ChatChunkEmitter;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.content.Content;
@@ -19,8 +25,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class DefaultReplyFlow implements ReplyFlow {
-    private static final Logger log = LoggerFactory.getLogger(DefaultReplyFlow.class);
+public class SimpleTalkReplyFlow implements ReplyFlow {
+    private static final Logger log = LoggerFactory.getLogger(SimpleTalkReplyFlow.class);
 
     private final AiModel aiModel;
     private final ChatSession chatSession;
@@ -30,7 +36,7 @@ public class DefaultReplyFlow implements ReplyFlow {
     private final ReplyAggregator replyAggregator;
     private final ChatChunkEmitter chatChunkEmitter;
 
-    public DefaultReplyFlow(
+    public SimpleTalkReplyFlow(
             AiModel aiModel,
             ChatSession chatSession,
             ChunkDecoder chunkDecoder,
@@ -64,7 +70,7 @@ public class DefaultReplyFlow implements ReplyFlow {
         Flux<TextContent> chunks = aiModel.stream(prompt)
                 .map(chunkDecoder::decode)
                 .doOnNext(chunk ->
-                        chatChunkEmitter.emit(e,
+                        chatChunkEmitter.emit(
                                 Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk))
                 )
                 .onErrorResume(ReplyException.class, exception -> {
