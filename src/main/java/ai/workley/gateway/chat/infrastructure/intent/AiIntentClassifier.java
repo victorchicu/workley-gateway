@@ -6,6 +6,7 @@ import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.intent.IntentClassification;
+import ai.workley.gateway.chat.infrastructure.ai.ChunkReply;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -74,13 +75,11 @@ public class AiIntentClassifier implements IntentClassifier {
                         JSON_ONLY
                 );
 
-        return aiModel.stream(prompt)
+        return aiModel.call(prompt)
                 .timeout(Duration.ofSeconds(60))
-//                .map(this::extractText)
                 .filter(Objects::nonNull)
-//                .filter(s -> !s.isEmpty())
-                .reduce(new StringBuilder(), StringBuilder::append)
-                .map(StringBuilder::toString)
+                .cast(ChunkReply.class)
+                .map(ChunkReply::text)
                 .filter(content -> !content.isEmpty())
                 .map(this::parseText)
                 .name("intent.classify")
@@ -88,15 +87,11 @@ public class AiIntentClassifier implements IntentClassifier {
                 .tap(Micrometer.metrics(meterRegistry));
     }
 
-//    private String extractText(ReplyEvent event) {
-//        return event.chunk();
-//    }
-
-    private IntentClassification parseText(String text) {
+    private IntentClassification parseText(String content) {
         try {
-            return objectMapper.readValue(text, IntentClassification.class);
+            return objectMapper.readValue(content, IntentClassification.class);
         } catch (Exception e) {
-            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + text,
+            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + content,
                     e);
         }
     }

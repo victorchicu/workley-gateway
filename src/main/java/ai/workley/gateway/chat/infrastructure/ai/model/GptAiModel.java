@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
@@ -29,6 +30,11 @@ public class GptAiModel implements AiModel {
     public GptAiModel(OpenAiChatModel openAiChatModel, ReactiveResilience4JCircuitBreakerFactory reactiveResilience4JCircuitBreakerFactory) {
         this.openAiChatModel = openAiChatModel;
         this.reactiveCircuitBreaker = reactiveResilience4JCircuitBreakerFactory.create("gpt-ai-model");
+    }
+
+    @Override
+    public Mono<ReplyEvent> call(Prompt prompt) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override

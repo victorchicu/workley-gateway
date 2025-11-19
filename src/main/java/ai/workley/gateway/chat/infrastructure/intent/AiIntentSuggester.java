@@ -6,6 +6,7 @@ import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
 import ai.workley.gateway.chat.domain.intent.IntentSuggestion;
+import ai.workley.gateway.chat.infrastructure.ai.ChunkReply;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -68,7 +69,7 @@ public class AiIntentSuggester implements IntentSuggester {
     public Mono<IntentSuggestion> suggest(Message<? extends Content> message) {
         log.info("Suggesting intent for: {}", message.content());
 
-        String text = Objects.requireNonNull(conversionService.convert(message, String.class),
+        String text = Objects.requireNonNull(conversionService.convert(message.content(), String.class),
                 "Can't unwrap value content");
 
         Prompt prompt =
@@ -77,13 +78,11 @@ public class AiIntentSuggester implements IntentSuggester {
                         JSON_ONLY
                 );
 
-        return aiModel.stream(prompt)
+        return aiModel.call(prompt)
                 .timeout(Duration.ofSeconds(60))
-//                .map(this::extractText)
                 .filter(Objects::nonNull)
-//                .filter(s -> !s.isEmpty())
-                .reduce(new StringBuilder(), StringBuilder::append)
-                .map(StringBuilder::toString)
+                .cast(ChunkReply.class)
+                .map(ChunkReply::text)
                 .filter(content -> !content.isEmpty())
                 .map(this::parseText)
                 .name("intent.suggest")
@@ -91,15 +90,11 @@ public class AiIntentSuggester implements IntentSuggester {
                 .tap(Micrometer.metrics(meterRegistry));
     }
 
-//    private String extractText(ReplyEvent streamEvent) {
-//        return streamEvent.chunk();
-//    }
-
-    private IntentSuggestion parseText(String text) {
+    private IntentSuggestion parseText(String content) {
         try {
-            return objectMapper.readValue(text, IntentSuggestion.class);
+            return objectMapper.readValue(content, IntentSuggestion.class);
         } catch (Exception e) {
-            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + text,
+            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + content,
                     e);
         }
     }

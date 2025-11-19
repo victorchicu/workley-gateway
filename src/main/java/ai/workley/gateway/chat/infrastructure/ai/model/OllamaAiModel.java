@@ -1,12 +1,14 @@
 package ai.workley.gateway.chat.infrastructure.ai.model;
 
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
+import ai.workley.gateway.chat.application.ports.outbound.messenger.MessageStore;
 import ai.workley.gateway.chat.infrastructure.ai.ErrorReply;
 import ai.workley.gateway.chat.infrastructure.ai.ErrorCode;
 import ai.workley.gateway.chat.infrastructure.ai.ReplyEvent;
 import ai.workley.gateway.chat.infrastructure.ai.ChunkReply;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.springframework.ai.chat.messages.AbstractMessage;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.OllamaChatModel;
@@ -17,9 +19,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Primary
 @Component
@@ -28,15 +32,21 @@ public class OllamaAiModel implements AiModel {
     private final OllamaChatModel ollamaChatModel;
     private final ReactiveCircuitBreaker reactiveCircuitBreaker;
 
-    public OllamaAiModel(OllamaChatModel ollamaChatModel, ReactiveResilience4JCircuitBreakerFactory reactiveResilience4JCircuitBreakerFactory) {
+    public OllamaAiModel(OllamaChatModel ollamaChatModel, ReactiveResilience4JCircuitBreakerFactory reactiveResilience4JCircuitBreakerFactory, MessageStore messageStore) {
         this.ollamaChatModel = ollamaChatModel;
         this.reactiveCircuitBreaker = reactiveResilience4JCircuitBreakerFactory.create("ollama-ai-model");
     }
 
     @Override
-    public Flux<ReplyEvent> stream(Prompt prompt) {
-        return reactiveCircuitBreaker.run(internalStream(prompt), this::fallback);
+    public Mono<ReplyEvent> call(Prompt prompt) {
+        return reactiveCircuitBreaker.run(internalCall(prompt), this::callFallback);
     }
+
+    @Override
+    public Flux<ReplyEvent> stream(Prompt prompt) {
+        return reactiveCircuitBreaker.run(internalStream(prompt), this::streamFallback);
+    }
+
 
     private ErrorReply toError(Throwable t) {
         if (t instanceof CallNotPermittedException) {
@@ -57,8 +67,32 @@ public class OllamaAiModel implements AiModel {
         );
     }
 
-    private Flux<ReplyEvent> fallback(Throwable t) {
+    private Mono<ReplyEvent> callFallback(Throwable t) {
+        return Mono.just(toError(t));
+    }
+
+    private Flux<ReplyEvent> streamFallback(Throwable t) {
         return Flux.just(toError(t));
+    }
+
+    private Mono<ReplyEvent> internalCall(Prompt prompt) {
+        ChatResponse chatResponse = ollamaChatModel.call(prompt);
+
+        List<Generation> generations =
+                chatResponse != null
+                        ? chatResponse.getResults()
+                        : null;
+
+        String fullReply =
+                generations != null
+                        ?
+                        generations.stream()
+                                .map(Generation::getOutput)
+                                .map(AbstractMessage::getText)
+                                .collect(Collectors.joining("\n"))
+                        : "";
+
+        return Mono.just(new ChunkReply(fullReply));
     }
 
     private Flux<ReplyEvent> internalStream(Prompt prompt) {
