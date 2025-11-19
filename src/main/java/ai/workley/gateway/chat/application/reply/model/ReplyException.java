@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.reply.exceptions;
+package ai.workley.gateway.chat.application.reply.model;
 
 import ai.workley.gateway.chat.infrastructure.ai.ErrorCode;
 

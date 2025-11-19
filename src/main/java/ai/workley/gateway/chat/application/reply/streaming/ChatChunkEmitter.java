@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.reply.emitters;
+package ai.workley.gateway.chat.application.reply.streaming;
 
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
@@ -20,7 +20,7 @@ public class ChatChunkEmitter {
     public void emit(Message<?> message) {
         Sinks.EmitResult result = chatSessionSink.tryEmitNext(message);
         if (result.isFailure()) {
-            log.warn("Dropped value (actor={}, chatId={}, reason={})", message.ownedBy(), message.chatId(), result);
+            log.warn("Chunk dropped (actor={}, chatId={}, reason={})", message.ownedBy(), message.chatId(), result);
         }
     }
 }

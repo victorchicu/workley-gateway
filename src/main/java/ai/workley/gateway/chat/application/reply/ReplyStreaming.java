@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.reply;
 
-import ai.workley.gateway.chat.application.reply.flows.ReplyFlow;
+import ai.workley.gateway.chat.application.reply.core.ReplyFlow;
 import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;

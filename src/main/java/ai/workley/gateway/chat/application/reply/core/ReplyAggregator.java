@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.reply.aggregators;
+package ai.workley.gateway.chat.application.reply.core;
 
 import ai.workley.gateway.chat.domain.content.TextContent;
 import reactor.core.publisher.Flux;

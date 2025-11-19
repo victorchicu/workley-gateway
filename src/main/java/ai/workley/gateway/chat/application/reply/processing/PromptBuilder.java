@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.application.reply.prompts;
+package ai.workley.gateway.chat.application.reply.processing;
 
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;

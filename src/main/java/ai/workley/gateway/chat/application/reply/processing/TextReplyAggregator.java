@@ -1,5 +1,6 @@
-package ai.workley.gateway.chat.application.reply.aggregators;
+package ai.workley.gateway.chat.application.reply.processing;
 
+import ai.workley.gateway.chat.application.reply.core.ReplyAggregator;
 import ai.workley.gateway.chat.domain.content.TextContent;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;

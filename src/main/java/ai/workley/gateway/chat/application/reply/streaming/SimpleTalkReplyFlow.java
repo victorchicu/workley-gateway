@@ -1,13 +1,13 @@
-package ai.workley.gateway.chat.application.reply.flows;
+package ai.workley.gateway.chat.application.reply.streaming;
 
 import ai.workley.gateway.chat.application.chat.ChatSession;
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
-import ai.workley.gateway.chat.application.reply.aggregators.ReplyAggregator;
-import ai.workley.gateway.chat.application.reply.decoders.ChunkDecoder;
-import ai.workley.gateway.chat.application.reply.exceptions.ReplyException;
-import ai.workley.gateway.chat.application.reply.prompts.PromptBuilder;
-import ai.workley.gateway.chat.application.reply.publishers.ReplyPublisher;
-import ai.workley.gateway.chat.application.reply.emitters.ChatChunkEmitter;
+import ai.workley.gateway.chat.application.reply.core.ReplyAggregator;
+import ai.workley.gateway.chat.application.reply.processing.ChunkDecoder;
+import ai.workley.gateway.chat.application.reply.model.ReplyException;
+import ai.workley.gateway.chat.application.reply.core.ReplyFlow;
+import ai.workley.gateway.chat.application.reply.processing.PromptBuilder;
+import ai.workley.gateway.chat.application.reply.core.ReplyPublisher;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.content.Content;
