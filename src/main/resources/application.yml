@@ -86,11 +86,20 @@ management:
 resilience4j:
   timelimiter:
     configs:
+      gpt-ai-model:
+        timeout-duration: 300s
+        cancel-running-future: false
       ollama-ai-model:
         timeout-duration: 300s
         cancel-running-future: false
   circuitbreaker:
     configs:
+      gpt-ai-model:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
       ollama-ai-model:
         sliding-window-size: 10
         minimum-number-of-calls: 5

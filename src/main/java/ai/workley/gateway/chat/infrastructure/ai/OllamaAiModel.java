@@ -1,9 +1,7 @@
 package ai.workley.gateway.chat.infrastructure.ai;
 
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
-import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
@@ -11,8 +9,6 @@ import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
-
-import java.util.List;
 
 @Primary
 @Component
@@ -27,13 +23,6 @@ public class OllamaAiModel implements AiModel {
 
     @Override
     public Flux<ChatResponse> stream(Prompt prompt) {
-        return reactiveCircuitBreaker.run(ollamaChatModel.stream(prompt), this::fallback);
-    }
-
-    private Flux<ChatResponse> fallback(Throwable throwable) {
-        return Flux.just(
-                new ChatResponse(
-                        List.of(new Generation(new AssistantMessage("Workley is currently under heavy load. Please try again later."))))
-        );
+        return reactiveCircuitBreaker.run(ollamaChatModel.stream(prompt), this::underHeavyLoad);
     }
 }
