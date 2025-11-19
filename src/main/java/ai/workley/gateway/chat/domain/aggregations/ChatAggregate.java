@@ -2,7 +2,6 @@ package ai.workley.gateway.chat.domain.aggregations;
 
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
-import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.domain.events.MessageAdded;

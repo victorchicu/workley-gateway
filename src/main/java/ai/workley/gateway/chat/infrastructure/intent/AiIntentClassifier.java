@@ -1,22 +1,17 @@
 package ai.workley.gateway.chat.infrastructure.intent;
 
+import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
 import ai.workley.gateway.chat.application.ports.outbound.intent.IntentClassifier;
 import ai.workley.gateway.chat.domain.Message;
-import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
 import ai.workley.gateway.chat.domain.content.Content;
-import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.exceptions.InfrastructureErrors;
-import ai.workley.gateway.chat.domain.IntentType;
 import ai.workley.gateway.chat.domain.intent.IntentClassification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.api.OllamaOptions;
@@ -27,7 +22,6 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 public class AiIntentClassifier implements IntentClassifier {
@@ -76,15 +70,15 @@ public class AiIntentClassifier implements IntentClassifier {
 
         Prompt prompt =
                 new Prompt(
-                        List.of(new SystemMessage(ASSISTANT_PROMPT_CLASSIFICATION), new UserMessage(message.content().text())),
+                        List.of(new SystemMessage(ASSISTANT_PROMPT_CLASSIFICATION), new UserMessage(message.content().toString())),
                         JSON_ONLY
                 );
 
         return aiModel.stream(prompt)
                 .timeout(Duration.ofSeconds(60))
-                .map(this::extractText)
+//                .map(this::extractText)
                 .filter(Objects::nonNull)
-                .filter(s -> !s.isEmpty())
+//                .filter(s -> !s.isEmpty())
                 .reduce(new StringBuilder(), StringBuilder::append)
                 .map(StringBuilder::toString)
                 .filter(content -> !content.isEmpty())
@@ -94,17 +88,9 @@ public class AiIntentClassifier implements IntentClassifier {
                 .tap(Micrometer.metrics(meterRegistry));
     }
 
-    private String extractText(ChatResponse response) {
-        if (response == null) return "";
-        List<Generation> generations = response.getResults();
-        if (generations == null || generations.isEmpty()) return "";
-        return generations.stream()
-                .filter(Objects::nonNull)
-                .map(Generation::getOutput)
-                .map(AbstractMessage::getText)
-                .filter(Objects::nonNull)
-                .collect(Collectors.joining());
-    }
+//    private String extractText(ReplyEvent event) {
+//        return event.chunk();
+//    }
 
     private IntentClassification parseText(String text) {
         try {

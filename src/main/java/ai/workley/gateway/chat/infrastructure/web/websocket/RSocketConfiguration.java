@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.infrastructure.web.websocket;
 
 import ai.workley.gateway.chat.domain.Message;
-import ai.workley.gateway.chat.domain.content.TextContent;
+import ai.workley.gateway.chat.domain.content.Content;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Sinks;
@@ -9,7 +9,7 @@ import reactor.core.publisher.Sinks;
 @Configuration
 public class RSocketConfiguration {
     @Bean
-    Sinks.Many<Message<TextContent>> chatSessionSink() {
+    Sinks.Many<Message<? extends Content>> chatSessionSink() {
         return Sinks.many().multicast().onBackpressureBuffer(1024, false);
     }
 }

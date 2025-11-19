@@ -34,7 +34,6 @@ public enum IntentType {
             Keep it casual and brief.
             """
     ),
-
     FIND_TALENT(
             // High Confidence
             """
@@ -56,7 +55,6 @@ public enum IntentType {
             Ask casually: "Are you looking to hire someone?"
             """
     ),
-
     CREATE_RESUME(
             // High Confidence
             """
@@ -76,7 +74,6 @@ public enum IntentType {
             Ask: "Working on your resume?" Keep it light and supportive.
             """
     ),
-
     UNRELATED(
             // High Confidence
             """
