@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class SimpleTalkReplyFlow implements ReplyFlow {
-    private static final Logger log = LoggerFactory.getLogger(SimpleTalkReplyFlow.class);
+public class ChatReplyFlow implements ReplyFlow {
+    private static final Logger log = LoggerFactory.getLogger(ChatReplyFlow.class);
 
     private final AiModel aiModel;
     private final ChatSession chatSession;
@@ -36,7 +36,7 @@ public class SimpleTalkReplyFlow implements ReplyFlow {
     private final ReplyAggregator replyAggregator;
     private final ChatChunkEmitter chatChunkEmitter;
 
-    public SimpleTalkReplyFlow(
+    public ChatReplyFlow(
             AiModel aiModel,
             ChatSession chatSession,
             ChunkDecoder chunkDecoder,
