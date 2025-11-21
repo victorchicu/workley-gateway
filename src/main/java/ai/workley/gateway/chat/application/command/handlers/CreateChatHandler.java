@@ -1,5 +1,6 @@
 package ai.workley.gateway.chat.application.command.handlers;
 
+import ai.workley.gateway.chat.application.eventstore.EventService;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
@@ -8,9 +9,8 @@ import ai.workley.gateway.chat.domain.command.CreateChat;
 import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
-import ai.workley.gateway.chat.application.ports.outbound.EventBus;
+import ai.workley.gateway.chat.application.ports.outbound.bus.EventBus;
 import ai.workley.gateway.chat.infrastructure.id.IdGenerator;
-import ai.workley.gateway.chat.application.ports.outbound.EventStore;
 import ai.workley.gateway.chat.application.command.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,18 +26,18 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
     private static final Logger log = LoggerFactory.getLogger(CreateChatHandler.class);
 
     private final EventBus eventBus;
-    private final EventStore eventStore;
+    private final EventService eventService;
     private final IdGenerator randomIdGenerator;
     private final TransactionalOperator transactionalOperator;
 
     public CreateChatHandler(
             EventBus eventBus,
-            EventStore eventStore,
+            EventService eventService,
             IdGenerator randomIdGenerator,
             TransactionalOperator transactionalOperator
     ) {
         this.eventBus = eventBus;
-        this.eventStore = eventStore;
+        this.eventService = eventService;
         this.randomIdGenerator = randomIdGenerator;
         this.transactionalOperator = transactionalOperator;
     }
@@ -65,7 +65,7 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
 
             Mono<CreateChatPayload> tx =
                     transactionalOperator.transactional(
-                            eventStore.append(actor, chatCreated, AggregateTypes.CHAT, chatId, -1L)
+                            eventService.append(chatCreated, AggregateTypes.CHAT, chatId, -1L)
                                     .thenReturn(CreateChatPayload.ack(chatId, dummy)));
 
             return tx.doOnSuccess(__ -> eventBus.publishEvent(chatCreated));

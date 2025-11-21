@@ -5,7 +5,7 @@ import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.payloads.GenerateReplyPayload;
 import ai.workley.gateway.chat.application.command.CommandHandler;
-import ai.workley.gateway.chat.application.ports.outbound.EventBus;
+import ai.workley.gateway.chat.application.ports.outbound.bus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

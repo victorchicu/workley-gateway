@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.reply.core;
 
-import ai.workley.gateway.chat.application.ports.outbound.EventBus;
+import ai.workley.gateway.chat.application.ports.outbound.bus.EventBus;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.TextContent;
 import ai.workley.gateway.chat.domain.events.ReplyCompleted;

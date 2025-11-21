@@ -1,31 +1,31 @@
-package ai.workley.gateway.chat.infrastructure.eventstore;
+package ai.workley.gateway.chat.application.eventstore;
 
-import ai.workley.gateway.chat.application.ports.outbound.EventStore;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
+import ai.workley.gateway.chat.application.ports.outbound.eventstore.EventStore;
 import ai.workley.gateway.chat.infrastructure.eventstore.mongodb.EventDocument;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-@Component
-public class EventStoreImpl implements EventStore {
-    private final EventRepository eventRepository;
+//TODO:
 
-    public EventStoreImpl(EventRepository eventRepository) {
-        this.eventRepository = eventRepository;
+@Service
+public class EventService {
+    private final EventStore eventStore;
+
+    public EventService(EventStore eventStore) {
+        this.eventStore = eventStore;
     }
 
-    @Override
     public <T extends DomainEvent> Flux<EventDocument<T>> load(String aggregateType, String aggregateId) {
-        return eventRepository.findRecentEvents(aggregateType, aggregateId);
+        return eventStore.findRecentEvents(aggregateType, aggregateId);
     }
 
-    @Override
-    public <T extends DomainEvent> Mono<EventDocument<T>> append(String actor, T data, String aggregateType, String aggregateId, Long expectedVersion) {
-        return eventRepository
+    public <T extends DomainEvent> Mono<EventDocument<T>> append(T data, String aggregateType, String aggregateId, Long expectedVersion) {
+        return eventStore
                 .findLastEvent(aggregateType, aggregateId)
                 .map(EventDocument::getVersion)
                 .defaultIfEmpty(-1L)
@@ -44,8 +44,7 @@ public class EventStoreImpl implements EventStore {
                                     .setAggregateType(aggregateType)
                                     .setVersion(nextVersion)
                                     .setEventData(data);
-
-                    return eventRepository.saveEvent(eventDocument);
+                    return eventStore.saveEvent(eventDocument);
                 });
     }
 }

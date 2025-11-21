@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.infrastructure.bus;
 
-import ai.workley.gateway.chat.application.ports.outbound.EventBus;
+import ai.workley.gateway.chat.application.ports.outbound.bus.EventBus;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;

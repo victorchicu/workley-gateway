@@ -1,19 +1,20 @@
 package ai.workley.gateway.chat.infrastructure.eventstore.mongodb;
 
 import ai.workley.gateway.chat.domain.events.DomainEvent;
-import ai.workley.gateway.chat.infrastructure.eventstore.EventRepository;
+import ai.workley.gateway.chat.application.ports.outbound.eventstore.EventStore;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+//TODO: Add conversion event domain <> event document
+
 @Component
-public class MongoEventRepositoryAdapter implements EventRepository {
+public class MongoEventRepositoryAdapter implements EventStore {
     private final MongoEventRepository mongoEventRepository;
 
     public MongoEventRepositoryAdapter(MongoEventRepository mongoEventRepository) {
         this.mongoEventRepository = mongoEventRepository;
     }
-
 
     @Override
     public <T extends DomainEvent> Mono<EventDocument<T>> saveEvent(EventDocument<T> eventDocument) {

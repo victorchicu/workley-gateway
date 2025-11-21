@@ -1,5 +1,6 @@
 package ai.workley.gateway.chat.application.command.handlers;
 
+import ai.workley.gateway.chat.application.eventstore.EventService;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
@@ -11,9 +12,8 @@ import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
 import ai.workley.gateway.chat.domain.payloads.AddMessagePayload;
 import ai.workley.gateway.chat.domain.events.MessageAdded;
-import ai.workley.gateway.chat.application.ports.outbound.EventBus;
+import ai.workley.gateway.chat.application.ports.outbound.bus.EventBus;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
-import ai.workley.gateway.chat.application.ports.outbound.EventStore;
 import ai.workley.gateway.chat.application.command.CommandHandler;
 import ai.workley.gateway.chat.infrastructure.eventstore.mongodb.EventDocument;
 import org.slf4j.Logger;
@@ -31,16 +31,16 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
     private static final Logger log = LoggerFactory.getLogger(AddMessageHandler.class);
 
     private final EventBus eventBus;
-    private final EventStore eventStore;
+    private final EventService eventService;
     private final TransactionalOperator transactionalOperator;
 
     public AddMessageHandler(
             EventBus eventBus,
-            EventStore eventStore,
+            EventService eventService,
             TransactionalOperator transactionalOperator
     ) {
         this.eventBus = eventBus;
-        this.eventStore = eventStore;
+        this.eventService = eventService;
         this.transactionalOperator = transactionalOperator;
     }
 
@@ -57,7 +57,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
     @Override
     public Mono<AddMessagePayload> handle(String actor, AddMessage command, String idempotencyKey) {
         return Mono.defer(() ->
-                        eventStore.load(AggregateTypes.CHAT, command.chatId())
+                        eventService.load(AggregateTypes.CHAT, command.chatId())
                                 .collectList()
                                 .flatMap(history -> replay(actor, command, history)))
                 .onErrorMap(this::handleError);
@@ -102,7 +102,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
 
         Mono<AddMessagePayload> tx =
                 transactionalOperator.transactional(
-                        eventStore.append(actor, commit.event(), AggregateTypes.CHAT, command.chatId(), commit.version())
+                        eventService.append(commit.event(), AggregateTypes.CHAT, command.chatId(), commit.version())
                                 .thenReturn(AddMessagePayload.ack(aggregate.chatId(), commit.event().message()))
                 );
 
