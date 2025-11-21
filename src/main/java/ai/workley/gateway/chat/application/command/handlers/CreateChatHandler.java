@@ -2,11 +2,13 @@ package ai.workley.gateway.chat.application.command.handlers;
 
 import ai.workley.gateway.chat.application.eventstore.EventService;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
+import ai.workley.gateway.chat.application.idempotency.IdempotencyService;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.chat.domain.command.CreateChat;
 import ai.workley.gateway.chat.domain.content.TextContent;
+import ai.workley.gateway.chat.domain.idempotency.Idempotency;
 import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
 import ai.workley.gateway.chat.application.ports.outbound.bus.EventBus;
@@ -28,17 +30,20 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
     private final EventBus eventBus;
     private final EventService eventService;
     private final IdGenerator randomIdGenerator;
+    private final IdempotencyService idempotencyService;
     private final TransactionalOperator transactionalOperator;
 
     public CreateChatHandler(
             EventBus eventBus,
             EventService eventService,
             IdGenerator randomIdGenerator,
+            IdempotencyService idempotencyService,
             TransactionalOperator transactionalOperator
     ) {
         this.eventBus = eventBus;
         this.eventService = eventService;
         this.randomIdGenerator = randomIdGenerator;
+        this.idempotencyService = idempotencyService;
         this.transactionalOperator = transactionalOperator;
     }
 
@@ -65,13 +70,29 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
 
             Mono<CreateChatPayload> tx =
                     transactionalOperator.transactional(
-                            eventService.append(chatCreated, AggregateTypes.CHAT, chatId, -1L)
-                                    .thenReturn(CreateChatPayload.ack(chatId, dummy)));
+                            ensureIdempotency(idempotencyKey, chatId)
+                                    .then(eventService.append(chatCreated, AggregateTypes.CHAT, chatId, -1L))
+                                    .then(markIdempotentCompleted(idempotencyKey, chatId))
+                                    .thenReturn(CreateChatPayload.ack(chatId, dummy))
+                    );
 
-            return tx.doOnSuccess(__ -> eventBus.publishEvent(chatCreated));
+            return tx.flatMap(payload ->
+                    Mono.fromRunnable(() -> eventBus.publishEvent(chatCreated))
+                            .thenReturn(payload)
+            );
         }).onErrorMap(error -> {
             log.error("Oops! Could not create chat.", error);
             return new ApplicationError("Oops! Could not create chat.");
         });
+    }
+
+    private Mono<Idempotency> ensureIdempotency(String key, String chatId) {
+        if (key == null) return Mono.empty();
+        return idempotencyService.ensureIdempotency(key);
+    }
+
+    private Mono<Idempotency> markIdempotentCompleted(String key, String chatId) {
+        if (key == null) return Mono.empty();
+        return idempotencyService.markIdempotentCompleted(key);
     }
 }

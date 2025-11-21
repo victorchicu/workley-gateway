@@ -15,7 +15,7 @@ public class IdempotencyService {
         this.idempotencyStore = idempotencyStore;
     }
 
-    public Mono<Idempotency> start(String idempotencyKey) {
+    public Mono<Idempotency> ensureIdempotency(String idempotencyKey) {
         Idempotency idempotency = new Idempotency()
                 .setId(idempotencyKey)
                 .setState(IdempotencyState.PROCESSING);
@@ -25,7 +25,7 @@ public class IdempotencyService {
                         throwable -> idempotencyStore.findIdempotencyByKey(idempotencyKey));
     }
 
-    public Mono<Idempotency> complete(String idempotencyKey) {
+    public Mono<Idempotency> markIdempotentCompleted(String idempotencyKey) {
         return idempotencyStore.findIdempotencyByKey(idempotencyKey)
                 .map(idempotency -> idempotency.setState(IdempotencyState.COMPLETED))
                 .flatMap(idempotencyStore::saveIdempotency);
