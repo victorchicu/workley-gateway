@@ -51,6 +51,11 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
 
     @Override
     public Mono<AddMessagePayload> handle(String actor, AddMessage command) {
+        return handle(actor, command, null);
+    }
+
+    @Override
+    public Mono<AddMessagePayload> handle(String actor, AddMessage command, String idempotencyKey) {
         return Mono.defer(() ->
                         eventStore.load(AggregateTypes.CHAT, command.chatId())
                                 .collectList()

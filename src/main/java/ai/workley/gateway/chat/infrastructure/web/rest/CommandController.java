@@ -5,6 +5,8 @@ import ai.workley.gateway.chat.domain.payloads.Payload;
 import ai.workley.gateway.chat.domain.payloads.ErrorPayload;
 import ai.workley.gateway.chat.domain.command.Command;
 import ai.workley.gateway.chat.application.exceptions.ApplicationError;
+import ai.workley.gateway.chat.infrastructure.web.rest.idempotency.IdempotencyKey;
+import ai.workley.gateway.chat.infrastructure.web.rest.idempotency.IdempotencyKeyContext;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,20 +29,26 @@ public class CommandController {
     }
 
     @PostMapping
+    @IdempotencyKey
     public <T extends Command> Mono<ResponseEntity<Payload>> execute(Principal actor, @Valid @RequestBody T command) {
-        log.info("Execute command (actor={}, command={})", actor.getName(), command.getClass().getSimpleName());
+        return Mono.deferContextual(contextView -> {
+            String idempotencyKey = IdempotencyKeyContext.get(contextView);
 
-        return commandBus.execute(actor.getName(), command)
-                .flatMap((Payload payload) ->
-                        Mono.just(ResponseEntity.ok()
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .body(payload))
-                )
-                .onErrorResume(ApplicationError.class,
-                        (ApplicationError error) ->
-                                Mono.just(ResponseEntity.badRequest()
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .body(new ErrorPayload(error.getMessage())))
-                );
+            log.info("Execute command (actor={}, command={}, idempotencyKey={})",
+                    actor.getName(), command.getClass().getSimpleName(), idempotencyKey);
+
+            return commandBus.execute(actor.getName(), command, idempotencyKey)
+                    .flatMap((Payload payload) ->
+                            Mono.just(ResponseEntity.ok()
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .body(payload))
+                    )
+                    .onErrorResume(ApplicationError.class,
+                            (ApplicationError error) ->
+                                    Mono.just(ResponseEntity.badRequest()
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .body(new ErrorPayload(error.getMessage())))
+                    );
+        });
     }
 }

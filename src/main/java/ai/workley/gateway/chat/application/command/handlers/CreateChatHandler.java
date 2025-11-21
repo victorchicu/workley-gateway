@@ -49,6 +49,11 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
 
     @Override
     public Mono<CreateChatPayload> handle(String actor, CreateChat command) {
+        return handle(actor, command, null);
+    }
+
+    @Override
+    public Mono<CreateChatPayload> handle(String actor, CreateChat command, String idempotencyKey) {
         return Mono.defer(() -> {
             String chatId = randomIdGenerator.generate();
 

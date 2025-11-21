@@ -23,8 +23,13 @@ public class AppCommandBus implements CommandBus {
                         Function.identity()));
     }
 
-    @SuppressWarnings("unchecked")
     public <T extends Command, R extends Payload> Mono<R> execute(String actor, T command) {
+        return execute(actor, command, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends Command, R extends Payload> Mono<R> execute(String actor, T command, String idempotencyKey) {
         CommandHandler<T, R> commandHandler = (CommandHandler<T, R>) handlers.get(command.getClass());
 
         if (commandHandler == null) {
@@ -33,6 +38,6 @@ public class AppCommandBus implements CommandBus {
             );
         }
 
-        return commandHandler.handle(actor, command);
+        return commandHandler.handle(actor, command, idempotencyKey);
     }
 }

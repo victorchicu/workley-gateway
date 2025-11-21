@@ -42,6 +42,11 @@ public class SaveEmbeddingHandler implements CommandHandler<SaveEmbedding, SaveE
 
     @Override
     public Mono<SaveEmbeddingPayload> handle(String actor, SaveEmbedding command) {
+        return handle(actor, command, null);
+    }
+
+    @Override
+    public Mono<SaveEmbeddingPayload> handle(String actor, SaveEmbedding command, String idempotencyKey) {
         return Mono.defer(() -> {
             EmbeddingSaved embeddingSaved =
                     new EmbeddingSaved(actor, command.text(), Collections.emptyMap());

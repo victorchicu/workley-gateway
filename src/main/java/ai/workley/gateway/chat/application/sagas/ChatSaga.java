@@ -60,10 +60,9 @@ public class ChatSaga {
         if (e.message().role() == Role.ASSISTANT) {
             return Mono.empty();
         }
-
+        String idempotencyKey = idGenerator.generate();
         GenerateReply command = new GenerateReply(e.chatId(), e.message());
-
-        return commandBus.execute(e.actor(), command)
+        return commandBus.execute(e.actor(), command, idempotencyKey)
                 .timeout(Duration.ofSeconds(60))
                 .retryWhen(RETRY_BACKOFF_SPEC)
                 .doOnError(error ->
@@ -85,7 +84,8 @@ public class ChatSaga {
 
 
     private Mono<Void> addMessage(String actor, String chatId, AddMessage command) {
-        return commandBus.execute(actor, command)
+        String idempotencyKey = idGenerator.generate();
+        return commandBus.execute(actor, command, idempotencyKey)
                 .timeout(Duration.ofSeconds(60))
                 .retryWhen(RETRY_BACKOFF_SPEC)
                 .doOnError(error ->
