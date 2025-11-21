@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.application.chat;
 
-import ai.workley.gateway.chat.application.ports.outbound.messenger.ChatStore;
-import ai.workley.gateway.chat.application.ports.outbound.messenger.MessageStore;
+import ai.workley.gateway.chat.application.ports.outbound.messaging.ChatStore;
+import ai.workley.gateway.chat.application.ports.outbound.messaging.MessageStore;
 import ai.workley.gateway.chat.domain.Chat;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
@@ -22,7 +22,7 @@ public class ChatSession {
     }
 
     public Mono<Chat> saveChat(Chat chat) {
-        return chatStore.save(chat);
+        return chatStore.saveChat(chat);
     }
 
     public Mono<Chat> findChat(String id, Collection<String> participants) {

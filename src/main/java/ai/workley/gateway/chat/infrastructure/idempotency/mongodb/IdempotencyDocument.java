@@ -2,16 +2,16 @@ package ai.workley.gateway.chat.infrastructure.idempotency.mongodb;
 
 import ai.workley.gateway.chat.domain.idempotency.IdempotencyState;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
 @Document(collection = "idempotency")
-@CompoundIndex(name = "idempotency_idx", def = "'idempotencyKey': 1}", unique = true)
 public class IdempotencyDocument {
     @Id
     private String id;
+    @Indexed(unique = true)
     private String idempotencyKey;
     private Instant createdAt;
     private IdempotencyState state;

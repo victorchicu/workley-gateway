@@ -1,7 +1,7 @@
 package ai.workley.gateway.chat.infrastructure.ai.model;
 
 import ai.workley.gateway.chat.application.ports.outbound.ai.AiModel;
-import ai.workley.gateway.chat.application.ports.outbound.messenger.MessageStore;
+import ai.workley.gateway.chat.application.ports.outbound.messaging.MessageStore;
 import ai.workley.gateway.chat.infrastructure.ai.ErrorReply;
 import ai.workley.gateway.chat.infrastructure.ai.ErrorCode;
 import ai.workley.gateway.chat.infrastructure.ai.ReplyEvent;

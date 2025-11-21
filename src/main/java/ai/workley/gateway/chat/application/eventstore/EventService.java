@@ -10,8 +10,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-//TODO:
-
 @Service
 public class EventService {
     private final EventStore eventStore;

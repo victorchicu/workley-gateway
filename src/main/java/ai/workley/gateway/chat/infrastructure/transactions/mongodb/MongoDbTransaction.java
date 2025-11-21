@@ -1,4 +1,4 @@
-package ai.workley.gateway.chat.infrastructure.chat.mongodb;
+package ai.workley.gateway.chat.infrastructure.transactions.mongodb;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
