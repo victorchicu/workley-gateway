@@ -2,6 +2,7 @@ package ai.workley.gateway.chat.domain.idempotency;
 
 public class Idempotency {
     private String id;
+    private String resourceId;
     private IdempotencyState state;
 
     public String getId() {
@@ -10,6 +11,15 @@ public class Idempotency {
 
     public Idempotency setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    public String getResourceId() {
+        return resourceId;
+    }
+
+    public Idempotency setResourceId(String resourceId) {
+        this.resourceId = resourceId;
         return this;
     }
 
