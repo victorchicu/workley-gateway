@@ -7,10 +7,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
-@Document(collection = "idempotency")
+@Document(collection = "idempotency_keys")
 public class IdempotencyDocument {
     @Id
     private String id;
+    private String resourceId;
     @Indexed(unique = true)
     private String idempotencyKey;
     private Instant createdAt;
@@ -22,6 +23,15 @@ public class IdempotencyDocument {
 
     public IdempotencyDocument setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    public String getResourceId() {
+        return resourceId;
+    }
+
+    public IdempotencyDocument setResourceId(String resourceId) {
+        this.resourceId = resourceId;
         return this;
     }
 

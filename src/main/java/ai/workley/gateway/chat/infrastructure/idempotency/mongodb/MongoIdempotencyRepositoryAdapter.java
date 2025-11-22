@@ -24,19 +24,21 @@ public class MongoIdempotencyRepositoryAdapter implements IdempotencyStore {
 
     @Override
     public Mono<Idempotency> findIdempotencyByKey(String idempotencyKey) {
-        return mongoIdempotencyRepository.findById(idempotencyKey)
+        return mongoIdempotencyRepository.findByIdempotencyKey(idempotencyKey)
                 .map(this::toIdempotency);
     }
 
     private Idempotency toIdempotency(IdempotencyDocument document) {
         return new Idempotency()
                 .setId(document.getId())
-                .setState(document.getState());
+                .setState(document.getState())
+                .setResourceId(document.getResourceId());
     }
 
     private IdempotencyDocument toIdempotencyDocument(Idempotency idempotency) {
         return new IdempotencyDocument()
                 .setIdempotencyKey(idempotency.getId())
-                .setState(idempotency.getState());
+                .setState(idempotency.getState())
+                .setResourceId(idempotency.getResourceId());
     }
 }
