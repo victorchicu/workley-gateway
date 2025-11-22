@@ -30,7 +30,7 @@ public class MongoIdempotencyRepositoryAdapter implements IdempotencyStore {
 
     private Idempotency toIdempotency(IdempotencyDocument document) {
         return new Idempotency()
-                .setId(document.getId())
+                .setId(document.getIdempotencyKey())
                 .setState(document.getState())
                 .setResourceId(document.getResourceId());
     }
