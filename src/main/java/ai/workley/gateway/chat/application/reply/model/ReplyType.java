@@ -1,6 +1,6 @@
 package ai.workley.gateway.chat.application.reply.model;
 
 public enum ReplyType {
-    CHUNK,
-    ERROR
+    TEXT_CHUNK,
+    ERROR_REPLY
 }

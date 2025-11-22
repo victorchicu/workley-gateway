@@ -8,7 +8,7 @@ import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.aggregations.AggregateTypes;
 import ai.workley.gateway.chat.domain.command.CreateChat;
-import ai.workley.gateway.chat.domain.content.TextContent;
+import ai.workley.gateway.chat.domain.content.ReplyChunk;
 import ai.workley.gateway.chat.domain.idempotency.Idempotency;
 import ai.workley.gateway.chat.domain.idempotency.IdempotencyState;
 import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
@@ -71,13 +71,13 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
             return idempotency.flatMap(idem -> {
                 String chatId = idem.getResourceId();
                 if (idempotencyKey != null && idem.getState() == IdempotencyState.COMPLETED) {
-                    Message<TextContent> dummy =
-                            Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), new TextContent(command.prompt()));
+                    Message<ReplyChunk> dummy =
+                            Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), new ReplyChunk(command.prompt()));
                     return Mono.just(CreateChatPayload.ack(chatId, dummy));
                 }
 
-                Message<TextContent> dummy =
-                        Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), new TextContent(command.prompt()));
+                Message<ReplyChunk> dummy =
+                        Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), new ReplyChunk(command.prompt()));
 
                 ChatCreated chatCreated = new ChatCreated(actor, chatId, command.prompt());
 

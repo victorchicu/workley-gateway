@@ -29,15 +29,16 @@ public class IdempotencyGuard {
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, throwable ->
                         idempotencyStore.findIdempotencyByKey(key)
                                 .flatMap(existing -> {
-                                    if (existing.getResourceId() != null && !existing.getResourceId().equals(resourceId)) {
-                                        return Mono.error(new ApplicationError(
-                                                "Idempotency key '" + key + "' already used for another chat '" + existing.getResourceId() + "'."));
+                                    if (existing.getResourceId() != null
+                                            && !existing.getResourceId().equals(resourceId)) {
+                                        return Mono.error(
+                                                new ApplicationError(
+                                                        "Idempotency key '" + key + "' already used for another chat '" + existing.getResourceId() + "'."));
                                     }
-                                    if (existing.getResourceId() == null) {
-                                        existing.setResourceId(resourceId);
-                                        return idempotencyStore.saveIdempotency(existing);
+                                    if (existing.getResourceId() != null) {
+                                        return Mono.just(existing);
                                     }
-                                    return Mono.just(existing);
+                                    return idempotencyStore.saveIdempotency(existing.setResourceId(resourceId));
                                 })
                 );
     }

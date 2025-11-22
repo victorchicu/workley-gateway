@@ -11,7 +11,9 @@ import ai.workley.gateway.chat.application.reply.core.ReplyPublisher;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.Role;
 import ai.workley.gateway.chat.domain.content.Content;
-import ai.workley.gateway.chat.domain.content.TextContent;
+import ai.workley.gateway.chat.domain.content.ReplyChunk;
+import ai.workley.gateway.chat.domain.content.ReplyError;
+import ai.workley.gateway.chat.domain.content.ReplyCompleted;
 import ai.workley.gateway.chat.domain.events.ReplyStarted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,21 +69,32 @@ public class ChatReplyFlow implements ReplyFlow {
 
         Prompt prompt = promptBuilder.build(e.message(), history);
 
-        Flux<TextContent> chunks = aiModel.stream(prompt)
+        Flux<ReplyChunk> chunks = aiModel.stream(prompt)
                 .map(chunkDecoder::decode)
                 .doOnNext(chunk ->
                         chatChunkEmitter.emit(
-                                Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), chunk))
+                                Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(),
+                                        chunk))
                 )
+                .doOnComplete(() -> {
+                    chatChunkEmitter.emit(
+                            Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(),
+                                    new ReplyCompleted("\n")));
+                })
                 .onErrorResume(ReplyException.class, exception -> {
-                    log.error("Error streaming reply: {}", exception.getMessage());
+                    log.error("Error reply: {}", exception.getMessage());
+                    chatChunkEmitter.emit(
+                            Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(),
+                                    new ReplyError(exception.getCode(), exception.getMessage())));
                     return Flux.empty();
                 });
 
         return replyAggregator.aggregate(chunks)
-                .flatMap(fullReply ->
-                        replyPublisher.publish(
-                                Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(), new TextContent(fullReply))))
+                .flatMap(fullReply -> {
+                    return replyPublisher.publish(
+                            Message.create(replyId, e.chatId(), e.actor(), Role.ASSISTANT, Instant.now(),
+                                    new ReplyChunk(fullReply)));
+                })
                 .then();
     }
 }

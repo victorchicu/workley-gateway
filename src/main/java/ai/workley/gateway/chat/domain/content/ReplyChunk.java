@@ -1,9 +1,9 @@
 package ai.workley.gateway.chat.domain.content;
 
-public record TextContent(String value) implements Content {
+public record ReplyChunk(String text) implements Content {
 
     @Override
     public String type() {
-        return "TEXT";
+        return "REPLY_CHUNK";
     }
 }

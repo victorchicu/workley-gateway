@@ -2,7 +2,7 @@ package ai.workley.gateway.chat.application.reply.processing;
 
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
-import ai.workley.gateway.chat.domain.content.TextContent;
+import ai.workley.gateway.chat.domain.content.ReplyChunk;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class PromptBuilderImpl implements PromptBuilder {
     }
 
     private <T extends Content> @NonNull String extractText(Message<T> prompt) {
-        if (prompt.content() instanceof TextContent(String value)) {
+        if (prompt.content() instanceof ReplyChunk(String value)) {
             return value;
         }
         throw new UnsupportedOperationException("Unsupported content type: " + prompt.content().getClass());

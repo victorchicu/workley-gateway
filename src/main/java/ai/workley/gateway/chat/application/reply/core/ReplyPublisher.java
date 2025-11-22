@@ -2,7 +2,7 @@ package ai.workley.gateway.chat.application.reply.core;
 
 import ai.workley.gateway.chat.application.ports.outbound.bus.EventBus;
 import ai.workley.gateway.chat.domain.Message;
-import ai.workley.gateway.chat.domain.content.TextContent;
+import ai.workley.gateway.chat.domain.content.ReplyChunk;
 import ai.workley.gateway.chat.domain.events.ReplyCompleted;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -15,7 +15,7 @@ public class ReplyPublisher {
         this.eventBus = eventBus;
     }
 
-    public Mono<Void> publish(Message<TextContent> message) {
+    public Mono<Void> publish(Message<ReplyChunk> message) {
         eventBus.publishEvent(
                 new ReplyCompleted(
                         message.ownedBy(), message.chatId(), message));

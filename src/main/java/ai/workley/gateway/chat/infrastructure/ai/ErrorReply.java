@@ -4,6 +4,6 @@ public record ErrorReply(ErrorCode code, String message) implements ReplyEvent {
 
     @Override
     public String type() {
-        return "ERROR";
+        return "ERROR_REPLY";
     }
 }

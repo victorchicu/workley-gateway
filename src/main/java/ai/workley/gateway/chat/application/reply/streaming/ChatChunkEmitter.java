@@ -20,7 +20,7 @@ public class ChatChunkEmitter {
     public void emit(Message<?> message) {
         Sinks.EmitResult result = chatSessionSink.tryEmitNext(message);
         if (result.isFailure()) {
-            log.warn("Chunk dropped (actor={}, chatId={}, reason={})", message.ownedBy(), message.chatId(), result);
+            log.warn("ReplyChunk dropped (actor={}, chatId={}, reason={})", message.ownedBy(), message.chatId(), result);
         }
     }
 }

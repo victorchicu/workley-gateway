@@ -70,7 +70,7 @@ public class AiIntentSuggester implements IntentSuggester {
         log.info("Suggesting intent for: {}", message.content());
 
         String text = Objects.requireNonNull(conversionService.convert(message.content(), String.class),
-                "Can't unwrap value content");
+                "Can't unwrap text content");
 
         Prompt prompt =
                 new Prompt(

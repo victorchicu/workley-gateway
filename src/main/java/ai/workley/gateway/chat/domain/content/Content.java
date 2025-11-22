@@ -5,8 +5,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = TextContent.class, name = "TEXT"),
-        @JsonSubTypes.Type(value = ErrorContent.class, name = "ERROR")
+
+        @JsonSubTypes.Type(value = Text.class, name = "TEXT"),
+        @JsonSubTypes.Type(value = ReplyChunk.class, name = "REPLY_CHUNK"),
+        @JsonSubTypes.Type(value = ReplyCompleted.class, name = "REPLY_COMPLETED"),
+        @JsonSubTypes.Type(value = ReplyError.class, name = "REPLY_ERROR")
 })
 public interface Content {
 

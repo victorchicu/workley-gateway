@@ -58,7 +58,7 @@ public class SaveEmbeddingHandler implements CommandHandler<SaveEmbedding, SaveE
 
             return tx.doOnSuccess(__ -> eventBus.publishEvent(embeddingSaved));
         }).onErrorMap(error -> {
-            log.error("Oops! Could not save embedding. value={}", command.text(), error);
+            log.error("Oops! Could not save embedding. text={}", command.text(), error);
             return (error instanceof ApplicationError) ? error
                     : new ApplicationError("Oops! Something went wrong, please try again.", error);
         });
