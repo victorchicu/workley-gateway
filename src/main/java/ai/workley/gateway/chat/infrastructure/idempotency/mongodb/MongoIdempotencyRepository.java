@@ -7,5 +7,4 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface MongoIdempotencyRepository extends ReactiveCrudRepository<IdempotencyDocument, String> {
 
-    Mono<IdempotencyDocument> findByIdempotencyKey(String key);
 }

@@ -11,9 +11,8 @@ import java.time.Instant;
 public class IdempotencyDocument {
     @Id
     private String id;
-    private String resourceId;
     @Indexed(unique = true)
-    private String idempotencyKey;
+    private String resourceId;
     private Instant createdAt;
     private IdempotencyState state;
 
@@ -32,15 +31,6 @@ public class IdempotencyDocument {
 
     public IdempotencyDocument setResourceId(String resourceId) {
         this.resourceId = resourceId;
-        return this;
-    }
-
-    public String getIdempotencyKey() {
-        return idempotencyKey;
-    }
-
-    public IdempotencyDocument setIdempotencyKey(String idempotencyKey) {
-        this.idempotencyKey = idempotencyKey;
         return this;
     }
 

@@ -22,10 +22,8 @@ public class IdempotencyGuard {
             return Mono.empty();
         }
 
-        Idempotency idempotency = new Idempotency()
-                .setId(key)
-                .setResourceId(resourceId)
-                .setState(IdempotencyState.PROCESSING);
+        Idempotency idempotency =
+                new Idempotency().setId(key).setResourceId(resourceId).setState(IdempotencyState.PROCESSING);
 
         return idempotencyStore.saveIdempotency(idempotency)
                 .onErrorResume(InfrastructureErrors::isDuplicateKey, throwable ->
