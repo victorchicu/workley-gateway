@@ -50,7 +50,7 @@ spring:
         webflux:
           routes:
             - id: workley-gateway
-              uri: http://localhost:8443
+              uri: http://workley.ai:8443
               predicates:
                 - Path=/api/chats/**
                 - Path=/api/command/**
