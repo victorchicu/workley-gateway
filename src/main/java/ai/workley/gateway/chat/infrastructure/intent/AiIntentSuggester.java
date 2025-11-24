@@ -74,8 +74,7 @@ public class AiIntentSuggester implements IntentSuggester {
 
         Prompt prompt =
                 new Prompt(
-                        List.of(new SystemMessage(ASSISTANT_PROMPT), new UserMessage(text)),
-                        JSON_ONLY
+                        List.of(new SystemMessage(ASSISTANT_PROMPT), new UserMessage(text))
                 );
 
         return aiModel.call(prompt)
