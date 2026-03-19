@@ -34,8 +34,9 @@ public class SecurityConfiguration {
     }
 
     private static Customizer<ServerHttpSecurity.AuthorizeExchangeSpec> withAuthorizeExchange() {
-        String[] endpointsWhitelist = List.of("/api/chats/**", "/api/command/**", "/actuator/**")
-                .toArray(new String[0]);
+        String[] endpointsWhitelist =
+                List.of("/api/chats/**", "/api/command/**", "/actuator/**")
+                        .toArray(new String[0]);
         return (ServerHttpSecurity.AuthorizeExchangeSpec authorizeExchangeSpec) ->
                 authorizeExchangeSpec
                         .pathMatchers(endpointsWhitelist)

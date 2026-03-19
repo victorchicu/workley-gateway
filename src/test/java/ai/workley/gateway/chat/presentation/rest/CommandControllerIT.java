@@ -3,6 +3,7 @@ package ai.workley.gateway.chat.presentation.rest;
 import ai.workley.gateway.chat.TestRunner;
 import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.command.AddMessage;
+import ai.workley.gateway.chat.domain.content.Text;
 import ai.workley.gateway.chat.domain.payloads.AddMessagePayload;
 import ai.workley.gateway.chat.domain.command.CreateChat;
 import ai.workley.gateway.chat.domain.payloads.CreateChatPayload;
@@ -60,7 +61,7 @@ public class CommandControllerIT extends TestRunner {
         WebTestClient.ResponseSpec addMessageSpec = post(
                 cookie.getValue(),
                 new AddMessage(createChatView.chatId(),
-                        Message.create("Java Developer")), API_COMMAND_URL);
+                        Message.create(new Text("Java Developer"))), API_COMMAND_URL);
 
         AddMessagePayload addMessagePayload = addMessageSpec.expectStatus().isOk()
                 .expectBody(AddMessagePayload.class)
