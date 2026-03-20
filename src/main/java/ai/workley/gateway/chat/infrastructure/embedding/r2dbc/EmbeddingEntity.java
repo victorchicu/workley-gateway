@@ -1,27 +1,29 @@
-package ai.workley.gateway.chat.infrastructure.embedding.mongodb;
+package ai.workley.gateway.chat.infrastructure.embedding.r2dbc;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
 
-@Document(collection = "embeddings")
-public class EmbeddingDocument {
+@Table("embeddings")
+public class EmbeddingEntity {
     @Id
-    private String id;
+    private Long id;
     private String model;
     private String actor;
     private Integer dimension;
     private float[] embedding;
     @CreatedDate
+    @Column("created_at")
     private Instant createdAt;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public EmbeddingDocument setId(String id) {
+    public EmbeddingEntity setId(Long id) {
         this.id = id;
         return this;
     }
@@ -30,7 +32,7 @@ public class EmbeddingDocument {
         return model;
     }
 
-    public EmbeddingDocument setModel(String model) {
+    public EmbeddingEntity setModel(String model) {
         this.model = model;
         return this;
     }
@@ -39,7 +41,7 @@ public class EmbeddingDocument {
         return actor;
     }
 
-    public EmbeddingDocument setActor(String actor) {
+    public EmbeddingEntity setActor(String actor) {
         this.actor = actor;
         return this;
     }
@@ -48,7 +50,7 @@ public class EmbeddingDocument {
         return dimension;
     }
 
-    public EmbeddingDocument setDimension(Integer dimension) {
+    public EmbeddingEntity setDimension(Integer dimension) {
         this.dimension = dimension;
         return this;
     }
@@ -57,7 +59,7 @@ public class EmbeddingDocument {
         return embedding;
     }
 
-    public EmbeddingDocument setEmbedding(float[] embedding) {
+    public EmbeddingEntity setEmbedding(float[] embedding) {
         this.embedding = embedding;
         return this;
     }
@@ -66,7 +68,7 @@ public class EmbeddingDocument {
         return createdAt;
     }
 
-    public EmbeddingDocument setCreatedAt(Instant createdAt) {
+    public EmbeddingEntity setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
         return this;
     }

@@ -2,8 +2,7 @@ package ai.workley.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.mongodb.config.EnableReactiveMongoAuditing;
-import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
+import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -11,8 +10,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 @EnableAsync
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
-@EnableReactiveMongoAuditing
-@EnableReactiveMongoRepositories
+@EnableR2dbcAuditing
 @SpringBootApplication
 public class WorkleyGatewayApplication {
 

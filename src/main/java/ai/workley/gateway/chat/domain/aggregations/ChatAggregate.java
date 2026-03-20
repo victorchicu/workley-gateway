@@ -4,8 +4,8 @@ import ai.workley.gateway.chat.domain.Message;
 import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.domain.events.ChatCreated;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
+import ai.workley.gateway.chat.domain.events.EventEnvelope;
 import ai.workley.gateway.chat.domain.events.MessageAdded;
-import ai.workley.gateway.chat.infrastructure.eventstore.mongodb.EventDocument;
 
 import java.util.*;
 
@@ -16,9 +16,9 @@ public record ChatAggregate(String chatId, Set<String> participants, long versio
         this.version = version;
     }
 
-    public static <T extends DomainEvent> ChatAggregate rehydrate(List<EventDocument<T>> history) {
+    public static <T extends DomainEvent> ChatAggregate rehydrate(List<EventEnvelope<T>> history) {
         ChatAggregate aggregate = new ChatAggregate(null, Set.of(), -1L);
-        for (EventDocument<T> entry : history) {
+        for (EventEnvelope<T> entry : history) {
             aggregate = aggregate.apply(entry);
         }
         return aggregate;
@@ -35,9 +35,9 @@ public record ChatAggregate(String chatId, Set<String> participants, long versio
         return new AggregateCommit<>(new MessageAdded(actor, chatId, message), version);
     }
 
-    private <T extends DomainEvent> ChatAggregate apply(EventDocument<T> entry) {
-        DomainEvent event = entry.getEventData();
-        long newVersion = entry.getVersion() != null ? entry.getVersion() : version + 1;
+    private <T extends DomainEvent> ChatAggregate apply(EventEnvelope<T> entry) {
+        DomainEvent event = entry.eventData();
+        long newVersion = entry.version() != null ? entry.version() : version + 1;
 
         if (event instanceof ChatCreated chatCreated) {
             Set<String> participants = new LinkedHashSet<>();

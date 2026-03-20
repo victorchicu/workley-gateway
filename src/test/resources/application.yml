@@ -19,9 +19,6 @@ spring:
         options:
           model: gpt-5-nano
           temperature: 0.8
-  data:
-    mongodb:
-      uri: mongodb://root:QAZwsx123@mongo:27017/workley?authSource=admin
   cloud:
     gateway:
       server:

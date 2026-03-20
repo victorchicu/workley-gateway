@@ -40,10 +40,6 @@ spring:
         options:
           model: text-embedding-3-small
           dimensions: 1536 #or 3072 for text-embedding-3-large
-  data:
-    mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI}
-      auto-index-creation: true
   cloud:
     gateway:
       server:
@@ -58,6 +54,20 @@ spring:
     server:
       transport: websocket
       mapping-path: /rsocket
+  r2dbc:
+    url: ${SPRING_R2DBC_URL}
+    username: ${SPRING_R2DBC_USERNAME}
+    password: ${SPRING_R2DBC_PASSWORD}
+  flyway:
+    url: ${SPRING_DATASOURCE_URL}
+    user: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    locations: classpath:/db/migration
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
   application:
     name: workley-gateway
 gateway:

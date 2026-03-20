@@ -10,12 +10,12 @@ import ai.workley.gateway.chat.domain.aggregations.ChatAggregate;
 import ai.workley.gateway.chat.domain.command.AddMessage;
 import ai.workley.gateway.chat.domain.content.Content;
 import ai.workley.gateway.chat.domain.events.DomainEvent;
+import ai.workley.gateway.chat.domain.events.EventEnvelope;
 import ai.workley.gateway.chat.domain.payloads.AddMessagePayload;
 import ai.workley.gateway.chat.domain.events.MessageAdded;
 import ai.workley.gateway.chat.application.ports.outbound.bus.EventBus;
 import ai.workley.gateway.chat.infrastructure.exceptions.ConcurrencyException;
 import ai.workley.gateway.chat.application.command.CommandHandler;
-import ai.workley.gateway.chat.infrastructure.eventstore.mongodb.EventDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -81,7 +81,7 @@ public class AddMessageHandler implements CommandHandler<AddMessage, AddMessageP
         );
     }
 
-    private Mono<AddMessagePayload> replay(String actor, AddMessage command, List<EventDocument<DomainEvent>> history) {
+    private Mono<AddMessagePayload> replay(String actor, AddMessage command, List<EventEnvelope<DomainEvent>> history) {
         ChatAggregate aggregate;
         try {
             aggregate = ChatAggregate.rehydrate(history);
