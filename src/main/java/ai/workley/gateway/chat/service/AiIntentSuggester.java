@@ -1,0 +1,100 @@
+package ai.workley.gateway.chat.service;
+
+import ai.workley.gateway.chat.service.AiModel;
+import ai.workley.gateway.chat.service.IntentSuggester;
+import ai.workley.gateway.chat.model.Message;
+import ai.workley.gateway.chat.model.Content;
+import ai.workley.gateway.chat.model.InfrastructureErrors;
+import ai.workley.gateway.chat.model.IntentSuggestion;
+import ai.workley.gateway.chat.model.ChunkReply;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.stereotype.Service;
+import reactor.core.observability.micrometer.Micrometer;
+import reactor.core.publisher.Mono;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Objects;
+
+@Service
+public class AiIntentSuggester implements IntentSuggester {
+    private static final Logger log = LoggerFactory.getLogger(AiIntentSuggester.class);
+
+    private static final ChatOptions JSON_ONLY =
+            OllamaOptions.builder()
+                    .format("json")
+                    .temperature(0.0)
+                    .stop(List.of("```"))
+                    .build();
+
+    private static final String ASSISTANT_PROMPT = """
+            Describe what the user message is about in 2-3 words.
+            Use UPPER_CASE format like: GREETING, JOB_LISTING, CAREER_ADVICE, etc.
+            
+            Return JSON only:
+            {
+              "suggestion": "GREETING",
+              "confidence": 0.95
+            }
+            
+            Examples:
+            "hello" -> {"suggestion":"GREETING","confidence":0.98}
+            "show me software jobs" -> {"suggestion":"JOB_LISTING","confidence":0.95}
+            "search React developers" -> {"suggestion":"CANDIDATE_SEARCH","confidence":0.94}
+            "how to prepare for interview" -> {"suggestion":"CAREER_ADVICE","confidence":0.92}
+            """;
+
+    private final AiModel aiModel;
+    private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry;
+    private final ConversionService conversionService;
+
+    public AiIntentSuggester(AiModel aiModel, ObjectMapper objectMapper, MeterRegistry meterRegistry, ConversionService conversionService) {
+        this.aiModel = aiModel;
+        this.objectMapper = objectMapper;
+        this.meterRegistry = meterRegistry;
+        this.conversionService = conversionService;
+    }
+
+    @Override
+    public Mono<IntentSuggestion> suggest(Message<? extends Content> message) {
+        log.info("Suggesting intent for: {}", message.content());
+
+        String text = Objects.requireNonNull(conversionService.convert(message.content(), String.class),
+                "Can't unwrap text content");
+
+        Prompt prompt =
+                new Prompt(
+                        List.of(new SystemMessage(ASSISTANT_PROMPT), new UserMessage(text))
+                );
+
+        return aiModel.call(prompt)
+                .timeout(Duration.ofSeconds(60))
+                .filter(Objects::nonNull)
+                .cast(ChunkReply.class)
+                .map(ChunkReply::text)
+                .filter(content -> !content.isEmpty())
+                .map(this::parseText)
+                .name("intent.suggest")
+                .tag("operation", "suggestion")
+                .tap(Micrometer.metrics(meterRegistry));
+    }
+
+    private IntentSuggestion parseText(String content) {
+        try {
+            return objectMapper.readValue(content, IntentSuggestion.class);
+        } catch (Exception e) {
+            throw InfrastructureErrors.runtimeException("Failed to convert AI model response: " + content,
+                    e);
+        }
+    }
+}

@@ -1,0 +1,56 @@
+package ai.workley.gateway.chat.model;
+
+import ai.workley.gateway.chat.model.Message;
+import ai.workley.gateway.chat.model.Content;
+import ai.workley.gateway.chat.model.ChatCreated;
+import ai.workley.gateway.chat.model.DomainEvent;
+import ai.workley.gateway.chat.model.EventEnvelope;
+import ai.workley.gateway.chat.model.MessageAdded;
+
+import java.util.*;
+
+public record ChatAggregate(String chatId, Set<String> participants, long version) {
+    public ChatAggregate(String chatId, Set<String> participants, long version) {
+        this.chatId = chatId;
+        this.participants = Collections.unmodifiableSet(new LinkedHashSet<>(participants));
+        this.version = version;
+    }
+
+    public static <T extends DomainEvent> ChatAggregate rehydrate(List<EventEnvelope<T>> history) {
+        ChatAggregate aggregate = new ChatAggregate(null, Set.of(), -1L);
+        for (EventEnvelope<T> entry : history) {
+            aggregate = aggregate.apply(entry);
+        }
+        return aggregate;
+    }
+
+    public AggregateCommit<MessageAdded> addMessage(String actor, Message<? extends Content> message) {
+        Objects.requireNonNull(actor, "actor must not be null");
+        Objects.requireNonNull(message, "message must not be null");
+
+        if (!participants.contains(actor)) {
+            throw new IllegalStateException("Actor is not part of this chat");
+        }
+
+        return new AggregateCommit<>(new MessageAdded(actor, chatId, message), version);
+    }
+
+    private <T extends DomainEvent> ChatAggregate apply(EventEnvelope<T> entry) {
+        DomainEvent event = entry.eventData();
+        long newVersion = entry.version() != null ? entry.version() : version + 1;
+
+        if (event instanceof ChatCreated chatCreated) {
+            Set<String> participants = new LinkedHashSet<>();
+            participants.add(chatCreated.actor());
+            return new ChatAggregate(chatCreated.chatId(), participants, newVersion);
+        }
+
+        if (event instanceof MessageAdded messageAdded) {
+            Set<String> participants = new LinkedHashSet<>(this.participants);
+            participants.add(messageAdded.message().ownedBy());
+            return new ChatAggregate(chatId, participants, newVersion);
+        }
+
+        return new ChatAggregate(chatId, participants, newVersion);
+    }
+}

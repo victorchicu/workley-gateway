@@ -1,0 +1,17 @@
+package ai.workley.gateway.chat.service;
+
+import ai.workley.gateway.chat.service.ReplyAggregator;
+import ai.workley.gateway.chat.model.ReplyChunk;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@Component
+public class TextReplyAggregator implements ReplyAggregator {
+    public Mono<String> aggregate(Flux<ReplyChunk> chunks) {
+        return chunks
+                .reduce(new StringBuilder(), (textBuilder, chunk) -> textBuilder.append(chunk.text()))
+                .map(StringBuilder::toString)
+                .defaultIfEmpty("");
+    }
+}
