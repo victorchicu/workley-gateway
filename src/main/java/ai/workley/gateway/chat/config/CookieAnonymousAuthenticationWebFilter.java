@@ -68,8 +68,12 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     }
 
     private DecodedJWT createAnonymousJwtToken(ServerWebExchange exchange) {
+        return createAnonymousJwtToken(exchange, UUID.randomUUID().toString());
+    }
+
+    private DecodedJWT createAnonymousJwtToken(ServerWebExchange exchange, String subject) {
         String token = JWT.create()
-                .withSubject(UUID.randomUUID().toString())
+                .withSubject(subject)
                 .withExpiresAt(Instant.now().plus(TOKEN_EXPIRES_THRESHOLD))
                 .sign(jwtSecret.getAlgorithm());
 
@@ -91,10 +95,8 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
     }
 
     private DecodedJWT maybeRefreshAnonymousJwtToken(ServerWebExchange exchange, String token) {
-        DecodedJWT jwt;
         try {
-            jwt = JWT.require(jwtSecret.getAlgorithm()).build()
-                    .verify(token);
+            DecodedJWT jwt = JWT.require(jwtSecret.getAlgorithm()).build().verify(token);
 
             Instant expiresAt = Optional.ofNullable(jwt.getExpiresAt())
                     .map(Date::toInstant)
@@ -102,12 +104,17 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
 
             if (expiresAt == null
                     || expiresAt.isBefore(Instant.now().plus(TOKEN_REFRESH_THRESHOLD))) {
-                jwt = createAnonymousJwtToken(exchange);
+                return createAnonymousJwtToken(exchange, jwt.getSubject());
             }
 
+            return jwt;
+        } catch (TokenExpiredException e) {
+            // Token expired but signature was valid — preserve the subject
+            String existingSubject = JWT.decode(token).getSubject();
+            return createAnonymousJwtToken(exchange, existingSubject);
         } catch (JWTVerificationException e) {
-            jwt = createAnonymousJwtToken(exchange);
+            // Token tampered or malformed — generate fresh identity
+            return createAnonymousJwtToken(exchange);
         }
-        return jwt;
     }
 }

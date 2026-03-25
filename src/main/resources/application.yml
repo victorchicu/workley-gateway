@@ -50,6 +50,7 @@ spring:
               predicates:
                 - Path=/api/chats/**
                 - Path=/api/command/**
+                - Path=/api/auth/**
   rsocket:
     server:
       transport: websocket
@@ -75,6 +76,11 @@ gateway:
     anonymous:
       jwt:
         secret: ${GATEWAY_SECURITY_ANONYMOUS_JWT_SECRET}
+    auth:
+      jwt:
+        secret: ${GATEWAY_SECURITY_AUTH_JWT_SECRET}
+      cookie:
+        prefix: __HOST-
 management:
   health:
     rabbit:

@@ -29,8 +29,14 @@ spring:
               predicates:
                 - Path=/api/command/**
                 - Path=/api/chats/**
+                - Path=/api/auth/**
 gateway:
   security:
     anonymous:
       jwt:
         secret: secret
+    auth:
+      jwt:
+        secret: auth-secret
+      cookie:
+        prefix: ""
