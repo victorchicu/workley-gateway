@@ -1,19 +1,18 @@
 package ai.workley.gateway.auth;
 
 import ai.workley.gateway.chat.TestRunner;
-import ai.workley.gateway.auth.model.AuthRequest.*;
-import ai.workley.gateway.auth.model.AuthResponse.*;
+import ai.workley.gateway.auth.model.AuthenticationRequest.*;
+import ai.workley.gateway.auth.model.AuthenticationResponse.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseCookie;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AuthControllerIT extends TestRunner {
+public class AuthenticationControllerIT extends TestRunner {
     private static final String AUTH_URL = "/api/auth";
 
     @Container

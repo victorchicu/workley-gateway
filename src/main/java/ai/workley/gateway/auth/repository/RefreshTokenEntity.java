@@ -20,14 +20,48 @@ public class RefreshTokenEntity {
     @Column("created_at")
     private Instant createdAt;
 
-    public UUID getId() { return id; }
-    public RefreshTokenEntity setId(UUID id) { this.id = id; return this; }
-    public UUID getUserId() { return userId; }
-    public RefreshTokenEntity setUserId(UUID userId) { this.userId = userId; return this; }
-    public String getTokenHash() { return tokenHash; }
-    public RefreshTokenEntity setTokenHash(String tokenHash) { this.tokenHash = tokenHash; return this; }
-    public Instant getExpiresAt() { return expiresAt; }
-    public RefreshTokenEntity setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; return this; }
-    public Instant getCreatedAt() { return createdAt; }
-    public RefreshTokenEntity setCreatedAt(Instant createdAt) { this.createdAt = createdAt; return this; }
+    public UUID getId() {
+        return id;
+    }
+
+    public RefreshTokenEntity setId(UUID id) {
+        this.id = id;
+        return this;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public RefreshTokenEntity setUserId(UUID userId) {
+        this.userId = userId;
+        return this;
+    }
+
+    public String getTokenHash() {
+        return tokenHash;
+    }
+
+    public RefreshTokenEntity setTokenHash(String tokenHash) {
+        this.tokenHash = tokenHash;
+        return this;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
+    public RefreshTokenEntity setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
+        return this;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public RefreshTokenEntity setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
 }

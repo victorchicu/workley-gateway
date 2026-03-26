@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 
 @Component
-public class AuthJwtSecret {
+public class AuthenticationJwtSecret {
     private final Algorithm algorithm;
 
-    public AuthJwtSecret(@Value("${gateway.security.auth.jwt.secret}") String secret) {
+    public AuthenticationJwtSecret(@Value("${gateway.security.auth.jwt.secret}") String secret) {
         this.algorithm = Algorithm.HMAC256(secret.getBytes(StandardCharsets.UTF_8));
     }
 

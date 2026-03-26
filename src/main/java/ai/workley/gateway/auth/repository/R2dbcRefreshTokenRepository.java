@@ -8,7 +8,10 @@ import java.util.UUID;
 
 @Repository
 public interface R2dbcRefreshTokenRepository extends ReactiveCrudRepository<RefreshTokenEntity, UUID> {
-    Mono<RefreshTokenEntity> findByTokenHash(String tokenHash);
+
     Mono<Void> deleteByUserId(UUID userId);
+
     Mono<Void> deleteByTokenHash(String tokenHash);
+
+    Mono<RefreshTokenEntity> findByTokenHash(String tokenHash);
 }

@@ -1,6 +1,6 @@
 package ai.workley.gateway.auth.config;
 
-import ai.workley.gateway.auth.service.AuthService;
+import ai.workley.gateway.auth.service.AuthenticationService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -21,16 +21,18 @@ import java.util.Optional;
 
 @Component
 public class AuthenticatedJwtWebFilter implements WebFilter {
-    private final AuthJwtSecret jwtSecret;
-    private final AuthCookieProperties cookieProperties;
-    private final AuthService authService;
+    private final AuthenticationJwtSecret jwtSecret;
+    private final AuthenticationCookieProperties cookieProperties;
+    private final AuthenticationService authenticationService;
 
-    public AuthenticatedJwtWebFilter(AuthJwtSecret jwtSecret,
-                                      AuthCookieProperties cookieProperties,
-                                      AuthService authService) {
+    public AuthenticatedJwtWebFilter(
+            AuthenticationJwtSecret jwtSecret,
+            AuthenticationCookieProperties cookieProperties,
+            AuthenticationService authenticationService
+    ) {
         this.jwtSecret = jwtSecret;
         this.cookieProperties = cookieProperties;
-        this.authService = authService;
+        this.authenticationService = authenticationService;
     }
 
     public record AuthenticatedPrincipal(String userId, String email) implements java.security.Principal {
@@ -58,7 +60,7 @@ public class AuthenticatedJwtWebFilter implements WebFilter {
         } catch (TokenExpiredException e) {
             // Try silent refresh — returns new access token string if successful
             String refreshToken = extractCookie(exchange, cookieProperties.refreshTokenCookieName());
-            return authService.tryRefreshAccessToken(accessToken, refreshToken, exchange.getResponse())
+            return authenticationService.tryRefreshAccessToken(accessToken, refreshToken, exchange.getResponse())
                     .flatMap(newAccessToken -> {
                         // Set authenticated SecurityContext for the current request
                         DecodedJWT newJwt = JWT.require(jwtSecret.getAlgorithm()).build().verify(newAccessToken);
