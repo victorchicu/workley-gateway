@@ -4,6 +4,7 @@ public class Idempotency {
     private String id;
     private String resourceId;
     private IdempotencyState state;
+    private String responseBody;
 
     public String getId() {
         return id;
@@ -29,6 +30,15 @@ public class Idempotency {
 
     public Idempotency setState(IdempotencyState state) {
         this.state = state;
+        return this;
+    }
+
+    public String getResponseBody() {
+        return responseBody;
+    }
+
+    public Idempotency setResponseBody(String responseBody) {
+        this.responseBody = responseBody;
         return this;
     }
 }

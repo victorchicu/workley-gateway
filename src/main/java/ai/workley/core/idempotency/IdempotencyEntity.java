@@ -16,6 +16,8 @@ public class IdempotencyEntity implements Persistable<String> {
     @Column("resource_id")
     private String resourceId;
     private String state;
+    @Column("response_body")
+    private String responseBody;
     @CreatedDate
     @Column("created_at")
     private Instant createdAt;
@@ -57,6 +59,15 @@ public class IdempotencyEntity implements Persistable<String> {
 
     public IdempotencyEntity setState(String state) {
         this.state = state;
+        return this;
+    }
+
+    public String getResponseBody() {
+        return responseBody;
+    }
+
+    public IdempotencyEntity setResponseBody(String responseBody) {
+        this.responseBody = responseBody;
         return this;
     }
 

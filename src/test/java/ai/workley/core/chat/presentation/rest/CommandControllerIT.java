@@ -9,6 +9,7 @@ import ai.workley.core.chat.model.CreateChat;
 import ai.workley.core.chat.model.CreateChatPayload;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -16,6 +17,8 @@ import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
+
+import java.util.UUID;
 
 public class CommandControllerIT extends TestRunner {
     private static final String API_COMMAND_URL = "/api/command";
@@ -78,5 +81,83 @@ public class CommandControllerIT extends TestRunner {
                 .getResponseBody();
 
         Assertions.assertNotNull(addMessagePayload);
+    }
+
+    @Test
+    void createChat_duplicateIdempotencyKey_returnsIdenticalPayload() {
+        String idempotencyKey = UUID.randomUUID().toString();
+
+        CreateChatPayload first = webTestClient.post().uri(API_COMMAND_URL)
+                .header("Idempotency-Key", idempotencyKey)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(new CreateChat("Hello"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(CreateChatPayload.class)
+                .returnResult()
+                .getResponseBody();
+
+        CreateChatPayload second = webTestClient.post().uri(API_COMMAND_URL)
+                .header("Idempotency-Key", idempotencyKey)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(new CreateChat("Hello"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(CreateChatPayload.class)
+                .returnResult()
+                .getResponseBody();
+
+        Assertions.assertNotNull(first);
+        Assertions.assertNotNull(second);
+        Assertions.assertEquals(first.chatId(), second.chatId());
+        Assertions.assertEquals(first.message().id(), second.message().id());
+        Assertions.assertEquals(first.message().content().text(), second.message().content().text());
+    }
+
+    @Test
+    void addMessage_duplicateIdempotencyKey_returnsIdenticalPayload() {
+        EntityExchangeResult<CreateChatPayload> exchange =
+                webTestClient.post().uri(API_COMMAND_URL)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .bodyValue(new CreateChat("Setup"))
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectBody(CreateChatPayload.class)
+                        .returnResult();
+
+        ResponseCookie cookie = exchange.getResponseCookies().getFirst("__HOST-anonymousToken");
+        Assertions.assertNotNull(cookie);
+
+        CreateChatPayload chat = exchange.getResponseBody();
+        Assertions.assertNotNull(chat);
+
+        String idempotencyKey = UUID.randomUUID().toString();
+
+        AddMessagePayload first = webTestClient.post().uri(API_COMMAND_URL)
+                .cookie("__HOST-anonymousToken", cookie.getValue())
+                .header("Idempotency-Key", idempotencyKey)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(new AddMessage(chat.chatId(), Message.create(new Text("Test message"))))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AddMessagePayload.class)
+                .returnResult()
+                .getResponseBody();
+
+        AddMessagePayload second = webTestClient.post().uri(API_COMMAND_URL)
+                .cookie("__HOST-anonymousToken", cookie.getValue())
+                .header("Idempotency-Key", idempotencyKey)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(new AddMessage(chat.chatId(), Message.create(new Text("Test message"))))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AddMessagePayload.class)
+                .returnResult()
+                .getResponseBody();
+
+        Assertions.assertNotNull(first);
+        Assertions.assertNotNull(second);
+        Assertions.assertEquals(first.chatId(), second.chatId());
+        Assertions.assertEquals(first.message().id(), second.message().id());
     }
 }

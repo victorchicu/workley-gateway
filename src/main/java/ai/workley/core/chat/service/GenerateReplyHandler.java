@@ -26,11 +26,6 @@ public class GenerateReplyHandler implements CommandHandler<GenerateReply, Gener
 
     @Override
     public Mono<GenerateReplyPayload> handle(String actor, GenerateReply command) {
-        return handle(actor, command, null);
-    }
-
-    @Override
-    public Mono<GenerateReplyPayload> handle(String actor, GenerateReply command, String idempotencyKey) {
         return Mono.defer(() -> {
             eventBus.publishEvent(
                     new ReplyStarted(

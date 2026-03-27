@@ -45,10 +45,11 @@ CREATE TABLE embeddings (
 );
 
 CREATE TABLE idempotency_keys (
-    id          VARCHAR(100) PRIMARY KEY,
-    resource_id VARCHAR(100) NOT NULL UNIQUE,
-    state       VARCHAR(50) NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    id              VARCHAR(100) PRIMARY KEY,
+    resource_id     VARCHAR(100),
+    state           VARCHAR(50) NOT NULL,
+    response_body   JSONB,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE users (

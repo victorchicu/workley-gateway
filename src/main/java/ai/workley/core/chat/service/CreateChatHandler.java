@@ -6,9 +6,6 @@ import ai.workley.core.chat.model.Role;
 import ai.workley.core.chat.model.AggregateTypes;
 import ai.workley.core.chat.model.CreateChat;
 import ai.workley.core.chat.model.ReplyChunk;
-import ai.workley.core.idempotency.Idempotency;
-import ai.workley.core.idempotency.IdempotencyGuard;
-import ai.workley.core.idempotency.IdempotencyState;
 import ai.workley.core.chat.model.CreateChatPayload;
 import ai.workley.core.chat.model.ChatCreated;
 import org.slf4j.Logger;
@@ -27,20 +24,17 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
     private final EventBus eventBus;
     private final EventService eventService;
     private final IdGenerator randomIdGenerator;
-    private final IdempotencyGuard idempotencyGuard;
     private final TransactionalOperator transactionalOperator;
 
     public CreateChatHandler(
             EventBus eventBus,
             EventService eventService,
             IdGenerator randomIdGenerator,
-            IdempotencyGuard idempotencyGuard,
             TransactionalOperator transactionalOperator
     ) {
         this.eventBus = eventBus;
         this.eventService = eventService;
         this.randomIdGenerator = randomIdGenerator;
-        this.idempotencyGuard = idempotencyGuard;
         this.transactionalOperator = transactionalOperator;
     }
 
@@ -51,41 +45,21 @@ public class CreateChatHandler implements CommandHandler<CreateChat, CreateChatP
 
     @Override
     public Mono<CreateChatPayload> handle(String actor, CreateChat command) {
-        return handle(actor, command, null);
-    }
-
-    @Override
-    public Mono<CreateChatPayload> handle(String actor, CreateChat command, String idempotencyKey) {
         return Mono.defer(() -> {
-            String resourceId = randomIdGenerator.generate();
+            String chatId = randomIdGenerator.generate();
 
-            Mono<Idempotency> idempotency =
-                    idempotencyKey != null
-                            ? idempotencyGuard.ensureIdempotency(idempotencyKey, resourceId)
-                            : Mono.just(new Idempotency().setResourceId(resourceId).setState(IdempotencyState.PROCESSING));
+            Message<ReplyChunk> message =
+                    Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), new ReplyChunk(command.prompt()));
 
-            return idempotency.flatMap(idem -> {
-                String chatId = idem.getResourceId();
-                if (idempotencyKey != null && idem.getState() == IdempotencyState.COMPLETED) {
-                    Message<ReplyChunk> dummy =
-                            Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), new ReplyChunk(command.prompt()));
-                    return Mono.just(CreateChatPayload.ack(chatId, dummy));
-                }
+            ChatCreated chatCreated = new ChatCreated(actor, chatId, command.prompt());
 
-                Message<ReplyChunk> dummy =
-                        Message.create(UUID.randomUUID().toString(), chatId, actor, Role.ANONYMOUS, Instant.now(), new ReplyChunk(command.prompt()));
+            Mono<CreateChatPayload> tx =
+                    transactionalOperator.transactional(
+                            eventService.append(chatCreated, AggregateTypes.CHAT, chatId, -1L)
+                                    .thenReturn(CreateChatPayload.ack(chatId, message))
+                    );
 
-                ChatCreated chatCreated = new ChatCreated(actor, chatId, command.prompt());
-
-                Mono<CreateChatPayload> tx =
-                        transactionalOperator.transactional(
-                                eventService.append(chatCreated, AggregateTypes.CHAT, chatId, -1L)
-                                        .then(idempotencyGuard.markIdempotentCompleted(idempotencyKey, chatId))
-                                        .thenReturn(CreateChatPayload.ack(chatId, dummy))
-                        );
-
-                return tx.doOnSuccess(payload -> eventBus.publishEvent(chatCreated));
-            });
+            return tx.doOnSuccess(payload -> eventBus.publishEvent(chatCreated));
         }).onErrorMap(error -> {
             log.error("Oops! Could not create chat.", error);
             return new ApplicationError("Oops! Could not create chat.");

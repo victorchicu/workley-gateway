@@ -16,6 +16,7 @@ public class R2dbcIdempotencyRepositoryAdapter implements IdempotencyStore {
                 .map(existing -> {
                     existing.setState(idempotency.getState().name());
                     existing.setResourceId(idempotency.getResourceId());
+                    existing.setResponseBody(idempotency.getResponseBody());
                     existing.markExisting();
                     return existing;
                 })
@@ -34,13 +35,15 @@ public class R2dbcIdempotencyRepositoryAdapter implements IdempotencyStore {
         return new Idempotency()
                 .setId(entity.getId())
                 .setState(IdempotencyState.valueOf(entity.getState()))
-                .setResourceId(entity.getResourceId());
+                .setResourceId(entity.getResourceId())
+                .setResponseBody(entity.getResponseBody());
     }
 
     private IdempotencyEntity toEntity(Idempotency idempotency) {
         return new IdempotencyEntity()
                 .setId(idempotency.getId())
                 .setState(idempotency.getState().name())
-                .setResourceId(idempotency.getResourceId());
+                .setResourceId(idempotency.getResourceId())
+                .setResponseBody(idempotency.getResponseBody());
     }
 }
