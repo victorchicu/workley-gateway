@@ -8,6 +8,9 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
+
 import java.util.List;
 
 @Configuration
@@ -27,6 +30,9 @@ public class SecurityConfiguration {
                 .cors(ServerHttpSecurity.CorsSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
+                )
                 .anonymous((ServerHttpSecurity.AnonymousSpec anonymousSpec) ->
                         anonymousSpec.authenticationFilter(
                                 new CookieAnonymousAuthenticationWebFilter(this.jwtSecret))

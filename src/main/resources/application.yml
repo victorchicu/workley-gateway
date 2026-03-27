@@ -40,17 +40,6 @@ spring:
         options:
           model: text-embedding-3-small
           dimensions: 1536 #or 3072 for text-embedding-3-large
-  cloud:
-    gateway:
-      server:
-        webflux:
-          routes:
-            - id: workley-gateway
-              uri: http://workley.ai:8443
-              predicates:
-                - Path=/api/chats/**
-                - Path=/api/command/**
-                - Path=/api/auth/**
   rsocket:
     server:
       transport: websocket
