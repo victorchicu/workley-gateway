@@ -1,4 +1,4 @@
-package ai.workley.core.chat.config;
+package ai.workley.core.auth.config;
 
 import java.security.Principal;
 

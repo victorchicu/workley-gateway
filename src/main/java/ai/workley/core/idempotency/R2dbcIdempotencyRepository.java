@@ -1,4 +1,4 @@
-package ai.workley.core.chat.repository;
+package ai.workley.core.idempotency;
 
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;

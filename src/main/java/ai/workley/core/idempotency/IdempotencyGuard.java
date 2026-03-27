@@ -1,9 +1,7 @@
-package ai.workley.core.chat.service;
+package ai.workley.core.idempotency;
 
 import ai.workley.core.chat.model.ApplicationError;
 import ai.workley.core.chat.model.InfrastructureErrors;
-import ai.workley.core.chat.model.Idempotency;
-import ai.workley.core.chat.model.IdempotencyState;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 

@@ -1,6 +1,4 @@
-package ai.workley.core.chat.config;
-
-import ai.workley.core.auth.config.AuthenticatedJwtWebFilter;
+package ai.workley.core.auth.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;

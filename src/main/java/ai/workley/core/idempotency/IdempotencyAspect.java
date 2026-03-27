@@ -1,4 +1,4 @@
-package ai.workley.core.chat.config;
+package ai.workley.core.idempotency;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

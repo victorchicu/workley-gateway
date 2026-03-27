@@ -1,6 +1,4 @@
-package ai.workley.core.chat.service;
-
-import ai.workley.core.chat.model.Idempotency;
+package ai.workley.core.idempotency;
 import reactor.core.publisher.Mono;
 
 public interface IdempotencyStore {

@@ -1,4 +1,4 @@
-package ai.workley.core.chat.config;
+package ai.workley.core.auth.config;
 
 import com.auth0.jwt.algorithms.Algorithm;
 import org.springframework.beans.factory.annotation.Value;

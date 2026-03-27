@@ -1,4 +1,4 @@
-package ai.workley.core.chat.config;
+package ai.workley.core.idempotency;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;

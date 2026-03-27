@@ -1,4 +1,4 @@
-package ai.workley.core.chat.model;
+package ai.workley.core.idempotency;
 
 public class Idempotency {
     private String id;

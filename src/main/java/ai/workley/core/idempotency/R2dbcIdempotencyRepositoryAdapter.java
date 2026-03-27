@@ -1,8 +1,4 @@
-package ai.workley.core.chat.repository;
-
-import ai.workley.core.chat.service.IdempotencyStore;
-import ai.workley.core.chat.model.Idempotency;
-import ai.workley.core.chat.model.IdempotencyState;
+package ai.workley.core.idempotency;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 

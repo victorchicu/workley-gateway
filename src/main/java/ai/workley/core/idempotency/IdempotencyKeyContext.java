@@ -1,4 +1,4 @@
-package ai.workley.core.chat.config;
+package ai.workley.core.idempotency;
 
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;

@@ -1,4 +1,4 @@
-package ai.workley.core.chat.config;
+package ai.workley.core.idempotency;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

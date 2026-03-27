@@ -1,4 +1,4 @@
-package ai.workley.core.chat.config;
+package ai.workley.core.auth.config;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.*;
