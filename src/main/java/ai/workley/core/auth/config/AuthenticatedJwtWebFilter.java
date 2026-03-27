@@ -21,14 +21,14 @@ import java.util.Optional;
 
 @Component
 public class AuthenticatedJwtWebFilter implements WebFilter {
+    private final AuthenticationService authenticationService;
     private final AuthenticationJwtSecret jwtSecret;
     private final AuthenticationCookieProperties cookieProperties;
-    private final AuthenticationService authenticationService;
 
     public AuthenticatedJwtWebFilter(
+            AuthenticationService authenticationService,
             AuthenticationJwtSecret jwtSecret,
-            AuthenticationCookieProperties cookieProperties,
-            AuthenticationService authenticationService
+            AuthenticationCookieProperties cookieProperties
     ) {
         this.jwtSecret = jwtSecret;
         this.cookieProperties = cookieProperties;
@@ -37,7 +37,9 @@ public class AuthenticatedJwtWebFilter implements WebFilter {
 
     public record AuthenticatedPrincipal(String userId, String email) implements java.security.Principal {
         @Override
-        public String getName() { return userId; }
+        public String getName() {
+            return userId;
+        }
     }
 
     @Override

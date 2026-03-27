@@ -33,9 +33,9 @@ public class AuthenticationController {
     public Mono<ResponseEntity<AuthenticationResponse>> me() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(SecurityContext::getAuthentication)
-                .filter(auth ->
-                        auth != null && auth.isAuthenticated()
-                                && auth.getPrincipal() instanceof AuthenticatedJwtWebFilter.AuthenticatedPrincipal
+                .filter(authentication ->
+                        authentication != null && authentication.isAuthenticated()
+                                && authentication.getPrincipal() instanceof AuthenticatedJwtWebFilter.AuthenticatedPrincipal
                 )
                 .<ResponseEntity<AuthenticationResponse>>map(auth -> {
                     AuthenticatedJwtWebFilter.AuthenticatedPrincipal principal
@@ -54,8 +54,7 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public Mono<ResponseEntity<AuthenticationResponse>> logout(ServerHttpRequest request, ServerHttpResponse response) {
-        String refreshToken = Optional.ofNullable(
-                        request.getCookies().getFirst(cookieProperties.refreshTokenCookieName()))
+        String refreshToken = Optional.ofNullable(request.getCookies().getFirst(cookieProperties.refreshTokenCookieName()))
                 .map(HttpCookie::getValue)
                 .orElse(null);
         return authenticationService.logout(refreshToken, response)

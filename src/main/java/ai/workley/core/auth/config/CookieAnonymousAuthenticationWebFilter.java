@@ -43,9 +43,12 @@ public class CookieAnonymousAuthenticationWebFilter extends AnonymousAuthenticat
         return Mono.defer(() ->
                         ReactiveSecurityContextHolder.getContext()
                                 .switchIfEmpty(Mono.fromSupplier(() ->
-                                        new SecurityContextImpl(createAnonymousAuthentication(exchange)))))
-                .flatMap(context -> chain.filter(exchange)
-                        .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(context))));
+                                        new SecurityContextImpl(createAnonymousAuthentication(exchange))))
+                )
+                .flatMap(context ->
+                        chain.filter(exchange)
+                                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(context)))
+                );
     }
 
 
