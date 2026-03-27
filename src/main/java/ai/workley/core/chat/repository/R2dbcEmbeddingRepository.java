@@ -1,0 +1,8 @@
+package ai.workley.core.chat.repository;
+
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface R2dbcEmbeddingRepository extends ReactiveCrudRepository<EmbeddingEntity, Long> {
+}

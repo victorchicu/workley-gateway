@@ -59,7 +59,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   application:
-    name: workley-gateway
+    name: workley-core
 gateway:
   security:
     anonymous:
@@ -87,7 +87,7 @@ management:
         include: health, metrics
   metrics:
     tags:
-      application: workley-gateway
+      application: workley-core
 resilience4j:
   timelimiter:
     configs:

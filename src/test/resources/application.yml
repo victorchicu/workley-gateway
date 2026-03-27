@@ -19,17 +19,6 @@ spring:
         options:
           model: gpt-5-nano
           temperature: 0.8
-  cloud:
-    gateway:
-      server:
-        webflux:
-          routes:
-            - id: workley-gateway
-              uri: http://localhost:8443
-              predicates:
-                - Path=/api/command/**
-                - Path=/api/chats/**
-                - Path=/api/auth/**
 gateway:
   security:
     anonymous:
