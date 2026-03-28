@@ -1,7 +1,6 @@
 package ai.workley.core.chat.service;
 
 import ai.workley.core.chat.model.Chat;
-import ai.workley.core.chat.model.Content;
 import ai.workley.core.chat.model.Message;
 import ai.workley.core.chat.model.Role;
 import ai.workley.core.chat.model.ReplyChunk;
@@ -60,7 +59,6 @@ public class ChatService {
     public Mono<CreateChatPayload> createChat(String userId, String prompt) {
         return Mono.deferContextual(contextView -> {
             String idempotencyKey = IdempotencyKeyContext.get(contextView);
-
             Mono<CreateChatPayload> operation = Mono.defer(() -> {
                 String chatId = idGenerator.generate();
                 String messageId = UUID.randomUUID().toString();
@@ -68,14 +66,17 @@ public class ChatService {
                 Chat chat = Chat.create(chatId, Chat.Summary.create(prompt), Set.of(Chat.Participant.create(userId)));
                 Message<ReplyChunk> message = Message.create(messageId, chatId, userId, Role.ANONYMOUS, Instant.now(), new ReplyChunk(prompt));
 
-                return transactionalOperator.transactional(chatSession.saveChat(chat).then(chatSession.addMessage(message)).thenReturn(CreateChatPayload.ack(chatId, message))).doOnSuccess(payload -> {
+                return transactionalOperator.transactional(
+                        chatSession.saveChat(chat)
+                                .then(chatSession.addMessage(message))
+                                .thenReturn(CreateChatPayload.response(chatId, message))
+                ).doOnSuccess(payload -> {
                     chatReplyFlow.generate(userId, chatId, message)
                             .subscribeOn(Schedulers.boundedElastic())
                             .doOnError(error -> log.error("Reply generation failed (chatId={})", chatId, error))
                             .subscribe();
                 });
             });
-
             return withIdempotency(idempotencyKey, operation);
         }).onErrorMap(error -> {
             if (error instanceof ApplicationError) return error;
@@ -87,17 +88,22 @@ public class ChatService {
     public Mono<AddMessagePayload> addMessage(String userId, String chatId, String text) {
         return Mono.deferContextual(contextView -> {
             String idempotencyKey = IdempotencyKeyContext.get(contextView);
+            Mono<AddMessagePayload> operation =
+                    Mono.defer(() -> {
+                        String messageId = UUID.randomUUID().toString();
 
-            Mono<AddMessagePayload> operation = Mono.defer(() -> {
-                String messageId = UUID.randomUUID().toString();
-                Message<ReplyChunk> message = Message.create(messageId, chatId, userId, Role.ANONYMOUS, Instant.now(), new ReplyChunk(text));
-                return chatSession.addMessage(message).thenReturn(AddMessagePayload.ack(chatId, message));
-            }).doOnSuccess(payload -> {
-                chatReplyFlow.generate(userId, chatId, payload.message())
-                        .subscribeOn(Schedulers.boundedElastic())
-                        .doOnError(error -> log.error("Reply generation failed (chatId={})", chatId, error))
-                        .subscribe();
-            });
+                        Message<ReplyChunk> message =
+                                Message.create(
+                                        messageId, chatId, userId, Role.ANONYMOUS, Instant.now(), new ReplyChunk(text));
+
+                        return chatSession.addMessage(message)
+                                .thenReturn(AddMessagePayload.ack(chatId, message));
+                    }).doOnSuccess(payload -> {
+                        chatReplyFlow.generate(userId, chatId, payload.message())
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .doOnError(error -> log.error("Reply generation failed (chatId={})", chatId, error))
+                                .subscribe();
+                    });
 
             return withIdempotency(idempotencyKey, operation);
         }).onErrorMap(error -> {

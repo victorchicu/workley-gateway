@@ -8,7 +8,7 @@ public record CreateChatPayload(String chatId, Message<ReplyChunk> message) impl
         this.message = Objects.requireNonNull(message, "message must not be null");
     }
 
-    public static CreateChatPayload ack(String chatId, Message<ReplyChunk> message) {
+    public static CreateChatPayload response(String chatId, Message<ReplyChunk> message) {
         return new CreateChatPayload(chatId, message);
     }
 }
