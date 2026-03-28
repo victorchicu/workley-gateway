@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 @Service
 public class AuthenticationService {
     private static final int MIN_PASSWORD_LENGTH = 8;
-    private static final String HARDCODED_OTP = "1234";
+    private static final String HARDCODED_OTP = "123456";
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private static final Duration ACCESS_TOKEN_EXPIRY = Duration.ofMinutes(15);
     private static final Duration REFRESH_TOKEN_EXPIRY = Duration.ofDays(30);

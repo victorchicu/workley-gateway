@@ -81,7 +81,7 @@ public class AuthenticationControllerIT extends TestRunner {
 
         // Step 3: Verify OTP
         webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "1234"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectCookie().exists("accessToken")
@@ -101,7 +101,7 @@ public class AuthenticationControllerIT extends TestRunner {
                 .returnResult().getResponseBody();
 
         webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "1234"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
                 .exchange()
                 .expectStatus().isOk();
 
@@ -127,7 +127,7 @@ public class AuthenticationControllerIT extends TestRunner {
 
         // Verify OTP
         webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(loginResp.preAuthToken(), "1234"))
+                .bodyValue(new VerifyOtpRequest(loginResp.preAuthToken(), "123456"))
                 .exchange()
                 .expectStatus().isOk();
     }
@@ -144,7 +144,7 @@ public class AuthenticationControllerIT extends TestRunner {
                 .returnResult().getResponseBody();
 
         webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "1234"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
                 .exchange();
 
         webTestClient.post().uri(AUTH_URL + "/login")
@@ -163,7 +163,7 @@ public class AuthenticationControllerIT extends TestRunner {
                 .returnResult().getResponseBody();
 
         webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "9999"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "999999"))
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
@@ -187,7 +187,7 @@ public class AuthenticationControllerIT extends TestRunner {
                 .returnResult().getResponseBody();
 
         ResponseCookie accessCookie = webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "1234"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
                 .exchange()
                 .expectStatus().isOk()
                 .returnResult(Void.class)
@@ -218,7 +218,7 @@ public class AuthenticationControllerIT extends TestRunner {
                 .returnResult().getResponseBody();
 
         var verifyResult = webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "1234"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
                 .exchange()
                 .expectStatus().isOk()
                 .returnResult(Void.class);
