@@ -25,17 +25,31 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    public record CreateChatRequest(String prompt) {}
+    public record CreateChatRequest(String prompt) {
+    }
 
-    public record AddMessageRequest(String text) {}
+    public record AddMessageRequest(String text) {
+    }
+
+    @GetMapping("/{chatId}")
+    public Mono<ResponseEntity<Payload>> getChat(Principal principal, @PathVariable String chatId) {
+        log.info("Get chat (principal={}, chatId={})", principal.getName(), chatId);
+        return chatService.getChat(principal.getName(), chatId)
+                .map(payload -> ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body((Payload) payload))
+                .onErrorResume(ApplicationError.class, error ->
+                        Mono.just(ResponseEntity.badRequest()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(new ErrorPayload(error.getMessage()))));
+    }
 
     @PostMapping
     @IdempotencyKey
-    public Mono<ResponseEntity<Payload>> createChat(Principal actor, @RequestBody CreateChatRequest request) {
+    public Mono<ResponseEntity<Payload>> createChat(Principal principal, @RequestBody CreateChatRequest request) {
         return Mono.deferContextual(contextView -> {
-            log.info("Create chat (actor={})", actor.getName());
-
-            return chatService.createChat(actor.getName(), request.prompt())
+            log.info("Create chat (principal={})", principal.getName());
+            return chatService.createChat(principal.getName(), request.prompt())
                     .map(payload -> ResponseEntity.ok()
                             .contentType(MediaType.APPLICATION_JSON)
                             .body((Payload) payload))
@@ -48,12 +62,10 @@ public class ChatController {
 
     @PostMapping("/{chatId}/messages")
     @IdempotencyKey
-    public Mono<ResponseEntity<Payload>> addMessage(Principal actor, @PathVariable String chatId,
-                                                     @RequestBody AddMessageRequest request) {
+    public Mono<ResponseEntity<Payload>> addMessage(Principal principal, @PathVariable String chatId, @RequestBody AddMessageRequest request) {
         return Mono.deferContextual(contextView -> {
-            log.info("Add message (actor={}, chatId={})", actor.getName(), chatId);
-
-            return chatService.addMessage(actor.getName(), chatId, request.text())
+            log.info("Add message (principal={}, chatId={})", principal.getName(), chatId);
+            return chatService.addMessage(principal.getName(), chatId, request.text())
                     .map(payload -> ResponseEntity.ok()
                             .contentType(MediaType.APPLICATION_JSON)
                             .body((Payload) payload))
@@ -62,19 +74,5 @@ public class ChatController {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .body(new ErrorPayload(error.getMessage()))));
         });
-    }
-
-    @GetMapping("/{chatId}")
-    public Mono<ResponseEntity<Payload>> getChat(Principal actor, @PathVariable String chatId) {
-        log.info("Get chat (actor={}, chatId={})", actor.getName(), chatId);
-
-        return chatService.getChat(actor.getName(), chatId)
-                .map(payload -> ResponseEntity.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body((Payload) payload))
-                .onErrorResume(ApplicationError.class, error ->
-                        Mono.just(ResponseEntity.badRequest()
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .body(new ErrorPayload(error.getMessage()))));
     }
 }

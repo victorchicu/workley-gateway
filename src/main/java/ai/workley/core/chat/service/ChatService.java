@@ -47,7 +47,17 @@ public class ChatService {
         this.idempotencyGuard = idempotencyGuard;
     }
 
-    public Mono<CreateChatPayload> createChat(String actor, String prompt) {
+    public Mono<GetChatPayload> getChat(String actor, String chatId) {
+        return chatSession.findChat(chatId, Set.of(actor))
+                .switchIfEmpty(Mono.error(new ApplicationError("Oops. Chat not found.")))
+                .flatMap(chat ->
+                        chatSession.loadAllHistory(chat.id())
+                                .collectList()
+                                .map(messages -> new GetChatPayload(chat.id(), messages))
+                );
+    }
+
+    public Mono<CreateChatPayload> createChat(String userId, String prompt) {
         return Mono.deferContextual(contextView -> {
             String idempotencyKey = IdempotencyKeyContext.get(contextView);
 
@@ -55,27 +65,14 @@ public class ChatService {
                 String chatId = idGenerator.generate();
                 String messageId = UUID.randomUUID().toString();
 
-                Chat chat = Chat.create(
-                        chatId,
-                        Chat.Summary.create(prompt),
-                        Set.of(Chat.Participant.create(actor))
-                );
+                Chat chat = Chat.create(chatId, Chat.Summary.create(prompt), Set.of(Chat.Participant.create(userId)));
+                Message<ReplyChunk> message = Message.create(messageId, chatId, userId, Role.ANONYMOUS, Instant.now(), new ReplyChunk(prompt));
 
-                Message<ReplyChunk> message = Message.create(
-                        messageId, chatId, actor, Role.ANONYMOUS, Instant.now(), new ReplyChunk(prompt)
-                );
-
-                return transactionalOperator.transactional(
-                        chatSession.saveChat(chat)
-                                .then(chatSession.addMessage(message))
-                                .thenReturn(CreateChatPayload.ack(chatId, message))
-                ).doOnSuccess(payload -> {
-                    chatReplyFlow.generate(actor, chatId, message)
+                return transactionalOperator.transactional(chatSession.saveChat(chat).then(chatSession.addMessage(message)).thenReturn(CreateChatPayload.ack(chatId, message))).doOnSuccess(payload -> {
+                    chatReplyFlow.generate(userId, chatId, message)
                             .subscribeOn(Schedulers.boundedElastic())
-                            .subscribe(
-                                    unused -> {},
-                                    error -> log.error("Reply generation failed (chatId={})", chatId, error)
-                            );
+                            .doOnError(error -> log.error("Reply generation failed (chatId={})", chatId, error))
+                            .subscribe();
                 });
             });
 
@@ -87,26 +84,19 @@ public class ChatService {
         });
     }
 
-    public Mono<AddMessagePayload> addMessage(String actor, String chatId, String text) {
+    public Mono<AddMessagePayload> addMessage(String userId, String chatId, String text) {
         return Mono.deferContextual(contextView -> {
             String idempotencyKey = IdempotencyKeyContext.get(contextView);
 
             Mono<AddMessagePayload> operation = Mono.defer(() -> {
                 String messageId = UUID.randomUUID().toString();
-
-                Message<ReplyChunk> message = Message.create(
-                        messageId, chatId, actor, Role.ANONYMOUS, Instant.now(), new ReplyChunk(text)
-                );
-
-                return chatSession.addMessage(message)
-                        .thenReturn(AddMessagePayload.ack(chatId, message));
+                Message<ReplyChunk> message = Message.create(messageId, chatId, userId, Role.ANONYMOUS, Instant.now(), new ReplyChunk(text));
+                return chatSession.addMessage(message).thenReturn(AddMessagePayload.ack(chatId, message));
             }).doOnSuccess(payload -> {
-                chatReplyFlow.generate(actor, chatId, payload.message())
+                chatReplyFlow.generate(userId, chatId, payload.message())
                         .subscribeOn(Schedulers.boundedElastic())
-                        .subscribe(
-                                unused -> {},
-                                error -> log.error("Reply generation failed (chatId={})", chatId, error)
-                        );
+                        .doOnError(error -> log.error("Reply generation failed (chatId={})", chatId, error))
+                        .subscribe();
             });
 
             return withIdempotency(idempotencyKey, operation);
@@ -117,24 +107,14 @@ public class ChatService {
         });
     }
 
-    public Mono<GetChatPayload> getChat(String actor, String chatId) {
-        return chatSession.findChat(chatId, Set.of(actor))
-                .switchIfEmpty(Mono.error(new ApplicationError("Oops. Chat not found.")))
-                .flatMap(chat ->
-                        chatSession.loadAllHistory(chat.id())
-                                .collectList()
-                                .map(messages -> new GetChatPayload(chat.id(), messages))
-                );
-    }
-
     @SuppressWarnings("unchecked")
     private <R extends Payload> Mono<R> withIdempotency(String idempotencyKey, Mono<R> operation) {
         return idempotencyGuard.tryAcquire(idempotencyKey)
                 .map(cached -> (R) cached)
                 .switchIfEmpty(
                         operation.flatMap(payload ->
-                                idempotencyGuard.markCompleted(idempotencyKey, payload)
-                                        .thenReturn(payload))
+                                        idempotencyGuard.markCompleted(idempotencyKey, payload)
+                                                .thenReturn(payload))
                                 .onErrorResume(error ->
                                         idempotencyGuard.markFailed(idempotencyKey)
                                                 .then(Mono.error(error)))
