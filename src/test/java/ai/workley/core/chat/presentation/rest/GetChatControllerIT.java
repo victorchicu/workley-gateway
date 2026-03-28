@@ -1,7 +1,7 @@
 package ai.workley.core.chat.presentation.rest;
 
 import ai.workley.core.chat.TestRunner;
-import ai.workley.core.chat.model.CreateChat;
+import ai.workley.core.chat.controller.ChatController;
 import ai.workley.core.chat.model.CreateChatPayload;
 import ai.workley.core.chat.model.GetChatPayload;
 import org.junit.jupiter.api.Assertions;
@@ -15,8 +15,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
 public class GetChatControllerIT extends TestRunner {
-    private static final String API_COMMAND_URL = "/api/command";
-    private static final String API_CHATS_URL = "/api/chats/{chatId}";
+    private static final String API_CHATS_URL = "/api/chats";
+    private static final String API_CHAT_URL = "/api/chats/{chatId}";
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("pgvector/pgvector:pg17");
@@ -37,31 +37,30 @@ public class GetChatControllerIT extends TestRunner {
 
     @Test
     void getChatQuery() {
-        WebTestClient.ResponseSpec createChatSpec = post(
-                new CreateChat("I'm Developer"), API_COMMAND_URL);
-
         EntityExchangeResult<CreateChatPayload> exchange =
-                createChatSpec.expectStatus()
-                        .isOk()
+                post(new ChatController.CreateChatRequest("I'm Developer"), API_CHATS_URL)
+                        .expectStatus().isOk()
                         .expectBody(CreateChatPayload.class)
                         .returnResult();
 
-        CreateChatPayload createChatView = exchange.getResponseBody();
-        Assertions.assertNotNull(createChatView);
+        CreateChatPayload createResult = exchange.getResponseBody();
+        Assertions.assertNotNull(createResult);
 
         ResponseCookie cookie = exchange.getResponseCookies().getFirst("__HOST-anonymousToken");
         Assertions.assertNotNull(cookie);
 
-        WebTestClient.ResponseSpec getChatQuerySpec =
-                get(cookie.getValue(), API_CHATS_URL, createChatView.chatId());
+        WebTestClient.ResponseSpec getChatSpec =
+                get(cookie.getValue(), API_CHAT_URL, createResult.chatId());
 
         GetChatPayload getChatResult =
-                getChatQuerySpec.expectStatus()
+                getChatSpec.expectStatus()
                         .isOk()
                         .expectBody(GetChatPayload.class)
                         .returnResult()
                         .getResponseBody();
 
         Assertions.assertNotNull(getChatResult);
+        Assertions.assertNotNull(getChatResult.messages());
+        Assertions.assertFalse(getChatResult.messages().isEmpty());
     }
 }

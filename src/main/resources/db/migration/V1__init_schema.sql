@@ -1,15 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE events (
-    id              BIGSERIAL PRIMARY KEY,
-    aggregate_type  VARCHAR(100) NOT NULL,
-    aggregate_id    VARCHAR(100) NOT NULL,
-    version         BIGINT NOT NULL,
-    event_type      VARCHAR(100) NOT NULL,
-    event_data      JSONB NOT NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (aggregate_type, aggregate_id, version)
-);
 
 CREATE TABLE chat_sessions (
     id          BIGSERIAL PRIMARY KEY,

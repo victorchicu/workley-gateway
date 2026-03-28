@@ -7,17 +7,19 @@ import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import io.r2dbc.postgresql.codec.Json;
+
 import java.time.Instant;
 
 @Table("idempotency_keys")
 public class IdempotencyEntity implements Persistable<String> {
     @Id
     private String id;
+    private String state;
     @Column("resource_id")
     private String resourceId;
-    private String state;
     @Column("response_body")
-    private String responseBody;
+    private Json responseBody;
     @CreatedDate
     @Column("created_at")
     private Instant createdAt;
@@ -44,15 +46,6 @@ public class IdempotencyEntity implements Persistable<String> {
         return this;
     }
 
-    public String getResourceId() {
-        return resourceId;
-    }
-
-    public IdempotencyEntity setResourceId(String resourceId) {
-        this.resourceId = resourceId;
-        return this;
-    }
-
     public String getState() {
         return state;
     }
@@ -62,11 +55,20 @@ public class IdempotencyEntity implements Persistable<String> {
         return this;
     }
 
-    public String getResponseBody() {
+    public String getResourceId() {
+        return resourceId;
+    }
+
+    public IdempotencyEntity setResourceId(String resourceId) {
+        this.resourceId = resourceId;
+        return this;
+    }
+
+    public Json getResponseBody() {
         return responseBody;
     }
 
-    public IdempotencyEntity setResponseBody(String responseBody) {
+    public IdempotencyEntity setResponseBody(Json responseBody) {
         this.responseBody = responseBody;
         return this;
     }

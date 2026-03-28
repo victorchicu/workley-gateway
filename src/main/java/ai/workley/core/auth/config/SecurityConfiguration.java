@@ -42,7 +42,7 @@ public class SecurityConfiguration {
 
     private static Customizer<ServerHttpSecurity.AuthorizeExchangeSpec> withAuthorizeExchange() {
         String[] endpointsWhitelist =
-                List.of("/api/chats/**", "/api/command/**", "/api/auth/**", "/actuator/**")
+                List.of("/api/chats/**", "/api/auth/**", "/actuator/**")
                         .toArray(new String[0]);
         return (ServerHttpSecurity.AuthorizeExchangeSpec authorizeExchangeSpec) ->
                 authorizeExchangeSpec

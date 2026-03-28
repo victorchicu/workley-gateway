@@ -10,5 +10,4 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = AddMessagePayload.class, name = "AddMessage"),
 })
 public interface Payload {
-
 }

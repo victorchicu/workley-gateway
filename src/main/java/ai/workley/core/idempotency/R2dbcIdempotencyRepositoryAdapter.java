@@ -1,4 +1,6 @@
 package ai.workley.core.idempotency;
+
+import io.r2dbc.postgresql.codec.Json;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -16,7 +18,7 @@ public class R2dbcIdempotencyRepositoryAdapter implements IdempotencyStore {
                 .map(existing -> {
                     existing.setState(idempotency.getState().name());
                     existing.setResourceId(idempotency.getResourceId());
-                    existing.setResponseBody(idempotency.getResponseBody());
+                    existing.setResponseBody(toJson(idempotency.getResponseBody()));
                     existing.markExisting();
                     return existing;
                 })
@@ -36,7 +38,7 @@ public class R2dbcIdempotencyRepositoryAdapter implements IdempotencyStore {
                 .setId(entity.getId())
                 .setState(IdempotencyState.valueOf(entity.getState()))
                 .setResourceId(entity.getResourceId())
-                .setResponseBody(entity.getResponseBody());
+                .setResponseBody(entity.getResponseBody() != null ? entity.getResponseBody().asString() : null);
     }
 
     private IdempotencyEntity toEntity(Idempotency idempotency) {
@@ -44,6 +46,10 @@ public class R2dbcIdempotencyRepositoryAdapter implements IdempotencyStore {
                 .setId(idempotency.getId())
                 .setState(idempotency.getState().name())
                 .setResourceId(idempotency.getResourceId())
-                .setResponseBody(idempotency.getResponseBody());
+                .setResponseBody(toJson(idempotency.getResponseBody()));
+    }
+
+    private Json toJson(String value) {
+        return value != null ? Json.of(value) : null;
     }
 }
