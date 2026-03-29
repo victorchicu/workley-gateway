@@ -75,6 +75,7 @@ CREATE TABLE onboarding_steps
     id           BIGSERIAL PRIMARY KEY,
     user_id      UUID        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     step_name    VARCHAR(50) NOT NULL,
+    step_order   INTEGER     NOT NULL DEFAULT 0,
     completed    BOOLEAN     NOT NULL DEFAULT false,
     completed_at TIMESTAMPTZ,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),

@@ -25,13 +25,15 @@ public class OnboardingService {
     }
 
     public Flux<OnboardingStepEntity> initializeSteps(UUID userId) {
-        return Flux.fromArray(OnboardingStepType.values())
-                .map(step -> new OnboardingStepEntity()
+        OnboardingStepType[] steps = OnboardingStepType.values();
+        return Flux.range(0, steps.length)
+                .map(i -> new OnboardingStepEntity()
                         .setUserId(userId)
-                        .setStepName(step.name())
+                        .setStepName(steps[i].name())
+                        .setStepOrder(i + 1)
                         .setCompleted(false)
                         .setCreatedAt(Instant.now()))
-                .flatMap(onboardingStepRepository::save);
+                .concatMap(onboardingStepRepository::save);
     }
 
     public Mono<OnboardingStepEntity> markStepCompleted(UUID userId, OnboardingStepType step) {
@@ -44,7 +46,7 @@ public class OnboardingService {
     }
 
     public Flux<OnboardingStepEntity> findIncompleteSteps(UUID userId) {
-        return onboardingStepRepository.findByUserId(userId)
+        return onboardingStepRepository.findByUserIdOrderByStepOrder(userId)
                 .filter(step -> !step.isCompleted());
     }
 

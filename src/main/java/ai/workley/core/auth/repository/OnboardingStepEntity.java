@@ -15,6 +15,8 @@ public class OnboardingStepEntity {
     private UUID userId;
     @Column("step_name")
     private String stepName;
+    @Column("step_order")
+    private int stepOrder;
     private boolean completed;
     @Column("completed_at")
     private Instant completedAt;
@@ -45,6 +47,15 @@ public class OnboardingStepEntity {
 
     public OnboardingStepEntity setStepName(String stepName) {
         this.stepName = stepName;
+        return this;
+    }
+
+    public int getStepOrder() {
+        return stepOrder;
+    }
+
+    public OnboardingStepEntity setStepOrder(int stepOrder) {
+        this.stepOrder = stepOrder;
         return this;
     }
 

@@ -10,7 +10,7 @@ import java.util.UUID;
 @Repository
 public interface R2dbcOnboardingStepRepository extends ReactiveCrudRepository<OnboardingStepEntity, Long> {
 
-    Flux<OnboardingStepEntity> findByUserId(UUID userId);
+    Flux<OnboardingStepEntity> findByUserIdOrderByStepOrder(UUID userId);
 
     Mono<OnboardingStepEntity> findByUserIdAndStepName(UUID userId, String stepName);
 }
