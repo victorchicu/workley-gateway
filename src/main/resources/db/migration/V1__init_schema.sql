@@ -1,5 +1,22 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
+CREATE TABLE users (
+                       id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                       email           VARCHAR(255) NOT NULL UNIQUE,
+                       password_hash   VARCHAR(255) NOT NULL,
+                       status          VARCHAR(20) NOT NULL DEFAULT 'CREATED',
+                       created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+                       updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE embeddings (
+                            id          BIGSERIAL PRIMARY KEY,
+                            model       VARCHAR(100) NOT NULL,
+                            actor       VARCHAR(100) NOT NULL,
+                            dimension   INTEGER NOT NULL,
+                            embedding   vector(1536),
+                            created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
 CREATE TABLE chat_sessions (
     id          BIGSERIAL PRIMARY KEY,
@@ -25,29 +42,12 @@ CREATE TABLE message_history (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE embeddings (
-    id          BIGSERIAL PRIMARY KEY,
-    model       VARCHAR(100) NOT NULL,
-    actor       VARCHAR(100) NOT NULL,
-    dimension   INTEGER NOT NULL,
-    embedding   vector(1536),
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 CREATE TABLE idempotency_keys (
     id              VARCHAR(100) PRIMARY KEY,
     resource_id     VARCHAR(100),
     state           VARCHAR(50) NOT NULL,
     response_body   JSONB,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE users (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email           VARCHAR(255) NOT NULL UNIQUE,
-    password_hash   VARCHAR(255) NOT NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE refresh_tokens (
@@ -61,3 +61,29 @@ CREATE TABLE refresh_tokens (
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
+
+CREATE TABLE onboarding_steps (
+    id              BIGSERIAL PRIMARY KEY,
+    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    step_name       VARCHAR(50) NOT NULL,
+    completed       BOOLEAN NOT NULL DEFAULT false,
+    completed_at    TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (user_id, step_name)
+);
+
+CREATE INDEX idx_onboarding_steps_user_id ON onboarding_steps(user_id);
+
+CREATE TABLE otp_codes (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    email       VARCHAR(255) NOT NULL,
+    code_hash   VARCHAR(255) NOT NULL,
+    attempts    INTEGER NOT NULL DEFAULT 0,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    used_at     TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_otp_codes_user_id ON otp_codes(user_id);
+CREATE INDEX idx_otp_codes_email_created ON otp_codes(email, created_at);

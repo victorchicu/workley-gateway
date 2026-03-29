@@ -3,20 +3,32 @@ package ai.workley.core.auth;
 import ai.workley.core.chat.TestRunner;
 import ai.workley.core.auth.model.AuthenticationRequest.*;
 import ai.workley.core.auth.model.AuthenticationResponse.*;
+import ai.workley.core.auth.service.SendGridEmailService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
+import reactor.core.publisher.Mono;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 public class AuthenticationControllerIT extends TestRunner {
     private static final String AUTH_URL = "/api/auth";
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("pgvector/pgvector:pg17");
+
+    @MockitoBean
+    private SendGridEmailService sendGridEmailService;
+
+    private final ArgumentCaptor<String> otpCodeCaptor = ArgumentCaptor.forClass(String.class);
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -30,6 +42,18 @@ public class AuthenticationControllerIT extends TestRunner {
         registry.add("spring.flyway.url", postgres::getJdbcUrl);
         registry.add("spring.flyway.user", postgres::getUsername);
         registry.add("spring.flyway.password", postgres::getPassword);
+        registry.add("gateway.sendgrid.api-key", () -> "test-key");
+        registry.add("gateway.sendgrid.from-email", () -> "test@example.com");
+        registry.add("gateway.sendgrid.from-name", () -> "Test");
+    }
+
+    @BeforeEach
+    void setUpMocks() {
+        when(sendGridEmailService.sendOtp(anyString(), otpCodeCaptor.capture())).thenReturn(Mono.empty());
+    }
+
+    private String getLastCapturedOtp() {
+        return otpCodeCaptor.getValue();
     }
 
     @Test
@@ -57,7 +81,6 @@ public class AuthenticationControllerIT extends TestRunner {
     void fullRegistrationFlow() {
         String email = "register-test@example.com";
 
-        // Step 1: Continue
         ContinueResponse continueResp = webTestClient.post().uri(AUTH_URL + "/continue")
                 .bodyValue(new ContinueRequest(email))
                 .exchange()
@@ -67,7 +90,6 @@ public class AuthenticationControllerIT extends TestRunner {
 
         assertEquals("register", continueResp.nextStep());
 
-        // Step 2: Register
         StepResponse registerResp = webTestClient.post().uri(AUTH_URL + "/register")
                 .bodyValue(new RegisterRequest(email, "password123", "password123"))
                 .exchange()
@@ -79,9 +101,12 @@ public class AuthenticationControllerIT extends TestRunner {
         assertEquals("verify_otp", registerResp.nextStep());
         assertNotNull(registerResp.preAuthToken());
 
-        // Step 3: Verify OTP
+        String otp = getLastCapturedOtp();
+        assertNotNull(otp);
+        assertEquals(6, otp.length());
+
         webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), otp))
                 .exchange()
                 .expectStatus().isOk()
                 .expectCookie().exists("accessToken")
@@ -92,7 +117,6 @@ public class AuthenticationControllerIT extends TestRunner {
     void fullLoginFlow() {
         String email = "login-test@example.com";
 
-        // Register first
         StepResponse registerResp = webTestClient.post().uri(AUTH_URL + "/register")
                 .bodyValue(new RegisterRequest(email, "password123", "password123"))
                 .exchange()
@@ -100,12 +124,12 @@ public class AuthenticationControllerIT extends TestRunner {
                 .expectBody(StepResponse.class)
                 .returnResult().getResponseBody();
 
+        String otp = getLastCapturedOtp();
         webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), otp))
                 .exchange()
                 .expectStatus().isOk();
 
-        // Now continue should return login
         ContinueResponse continueResp = webTestClient.post().uri(AUTH_URL + "/continue")
                 .bodyValue(new ContinueRequest(email))
                 .exchange()
@@ -115,7 +139,8 @@ public class AuthenticationControllerIT extends TestRunner {
 
         assertEquals("login", continueResp.nextStep());
 
-        // Login
+        // Login — user is CREATED with incomplete onboarding (PERSONAL_INFORMATION)
+        // Backend returns StepResponse with next step name and issues tokens
         StepResponse loginResp = webTestClient.post().uri(AUTH_URL + "/login")
                 .bodyValue(new LoginRequest(email, "password123"))
                 .exchange()
@@ -123,29 +148,18 @@ public class AuthenticationControllerIT extends TestRunner {
                 .expectBody(StepResponse.class)
                 .returnResult().getResponseBody();
 
-        assertEquals("verify_otp", loginResp.nextStep());
-
-        // Verify OTP
-        webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(loginResp.preAuthToken(), "123456"))
-                .exchange()
-                .expectStatus().isOk();
+        assertNotNull(loginResp);
+        assertEquals("PERSONAL_INFORMATION", loginResp.nextStep());
     }
 
     @Test
     void wrongPassword_shouldReturn401() {
         String email = "wrong-pass@example.com";
 
-        StepResponse registerResp = webTestClient.post().uri(AUTH_URL + "/register")
+        webTestClient.post().uri(AUTH_URL + "/register")
                 .bodyValue(new RegisterRequest(email, "password123", "password123"))
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(StepResponse.class)
-                .returnResult().getResponseBody();
-
-        webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
-                .exchange();
+                .expectStatus().isOk();
 
         webTestClient.post().uri(AUTH_URL + "/login")
                 .bodyValue(new LoginRequest(email, "wrongpassword"))
@@ -163,7 +177,7 @@ public class AuthenticationControllerIT extends TestRunner {
                 .returnResult().getResponseBody();
 
         webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "999999"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "000000"))
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
@@ -186,8 +200,9 @@ public class AuthenticationControllerIT extends TestRunner {
                 .expectBody(StepResponse.class)
                 .returnResult().getResponseBody();
 
+        String otp = getLastCapturedOtp();
         ResponseCookie accessCookie = webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), otp))
                 .exchange()
                 .expectStatus().isOk()
                 .returnResult(Void.class)
@@ -217,8 +232,9 @@ public class AuthenticationControllerIT extends TestRunner {
                 .expectBody(StepResponse.class)
                 .returnResult().getResponseBody();
 
+        String otp = getLastCapturedOtp();
         var verifyResult = webTestClient.post().uri(AUTH_URL + "/verify-otp")
-                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), "123456"))
+                .bodyValue(new VerifyOtpRequest(registerResp.preAuthToken(), otp))
                 .exchange()
                 .expectStatus().isOk()
                 .returnResult(Void.class);

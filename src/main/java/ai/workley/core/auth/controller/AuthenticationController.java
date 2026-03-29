@@ -46,8 +46,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<AuthenticationResponse>> login(@RequestBody LoginRequest request) {
-        return authenticationService.login(request.email(), request.password())
+    public Mono<ResponseEntity<AuthenticationResponse>> login(@RequestBody LoginRequest request, ServerHttpResponse response) {
+        return authenticationService.login(request.email(), request.password(), response)
                 .<ResponseEntity<AuthenticationResponse>>map(ResponseEntity::ok)
                 .onErrorResume(AuthenticationError.class, this::handleError);
     }
@@ -79,13 +79,18 @@ public class AuthenticationController {
 
     @PostMapping("/continue")
     public Mono<ResponseEntity<AuthenticationResponse>> continueAuth(@RequestBody ContinueRequest request) {
-        return authenticationService.continueAuth(request.email())
+        return authenticationService.continueOnboarding(request.email())
                 .<ResponseEntity<AuthenticationResponse>>map(ResponseEntity::ok)
                 .onErrorResume(AuthenticationError.class, this::handleError);
     }
 
 
     private Mono<ResponseEntity<AuthenticationResponse>> handleError(AuthenticationError error) {
+        if ("onboarding_incomplete".equals(error.getErrorCode())) {
+            return Mono.just(ResponseEntity.status(error.getStatus())
+                    .body(new AuthenticationResponse.OnboardingIncompleteResponse(
+                            error.getErrorCode(), "Onboarding incomplete", error.getMessage())));
+        }
         return Mono.just(ResponseEntity.status(error.getStatus())
                 .body(new AuthenticationResponse.AuthenticationErrorResponse(error.getErrorCode(), error.getMessage())));
     }

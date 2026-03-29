@@ -14,6 +14,7 @@ public class UserEntity {
     private String email;
     @Column("password_hash")
     private String passwordHash;
+    private String status;
     @Column("created_at")
     private Instant createdAt;
     @Column("updated_at")
@@ -43,6 +44,15 @@ public class UserEntity {
 
     public UserEntity setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+        return this;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public UserEntity setStatus(String status) {
+        this.status = status;
         return this;
     }
 

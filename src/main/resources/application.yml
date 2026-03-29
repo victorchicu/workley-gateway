@@ -61,6 +61,9 @@ spring:
   application:
     name: workley-core
 gateway:
+  otp:
+    expiry: 5m
+    max-attempts: 5
   security:
     anonymous:
       jwt:
@@ -70,6 +73,10 @@ gateway:
         secret: ${GATEWAY_SECURITY_AUTH_JWT_SECRET}
       cookie:
         prefix: __HOST-
+  sendgrid:
+    api-key: ${SENDGRID_API_KEY}
+    from-email: iam.victorchicu@gmail.com
+    from-name: Workley Assistant
 management:
   health:
     rabbit:
