@@ -75,7 +75,7 @@ gateway:
         prefix: __HOST-
   sendgrid:
     api-key: ${SENDGRID_API_KEY}
-    from-email: iam.victorchicu@gmail.com
+    from-email: noreply@roselweiss.com
     from-name: Workley Assistant
 management:
   health:

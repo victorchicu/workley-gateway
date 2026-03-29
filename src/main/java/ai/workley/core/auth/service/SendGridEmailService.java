@@ -1,6 +1,7 @@
 package ai.workley.core.auth.service;
 
 import ai.workley.core.auth.config.SendGridProperties;
+import ai.workley.core.auth.model.AuthenticationError;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
@@ -49,7 +50,8 @@ public class SendGridEmailService {
 
             Response response = sendGrid.api(request);
             if (response.getStatusCode() >= 400) {
-                throw new RuntimeException("SendGrid error: " + response.getStatusCode() + " " + response.getBody());
+                log.error("SendGrid error sending OTP to {}: status={}, body={}", toEmail, response.getStatusCode(), response.getBody());
+                throw AuthenticationError.emailDeliveryFailed();
             }
             log.info("OTP email sent to {} (status: {})", toEmail, response.getStatusCode());
             return (Void) null;

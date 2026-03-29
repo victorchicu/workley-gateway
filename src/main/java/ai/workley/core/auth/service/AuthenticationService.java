@@ -49,23 +49,23 @@ public class AuthenticationService {
     private final AuthenticationCookieProperties cookieProperties;
 
     public AuthenticationService(
-            PasswordEncoder passwordEncoder,
-            AuthenticationJwtSecret jwtSecret,
-            AuthenticationCookieProperties cookieProperties,
-            R2dbcUserRepository userRepository,
-            R2dbcRefreshTokenRepository refreshTokenRepository,
             OtpService otpService,
+            PasswordEncoder passwordEncoder,
+            OnboardingService onboardingService,
+            R2dbcUserRepository userRepository,
             SendGridEmailService sendGridEmailService,
-            OnboardingService onboardingService
+            AuthenticationJwtSecret jwtSecret,
+            R2dbcRefreshTokenRepository refreshTokenRepository,
+            AuthenticationCookieProperties cookieProperties
     ) {
-        this.passwordEncoder = passwordEncoder;
         this.jwtSecret = jwtSecret;
-        this.cookieProperties = cookieProperties;
-        this.userRepository = userRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
         this.otpService = otpService;
-        this.sendGridEmailService = sendGridEmailService;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.cookieProperties = cookieProperties;
         this.onboardingService = onboardingService;
+        this.sendGridEmailService = sendGridEmailService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     public Mono<Void> logout(String refreshTokenValue, ServerHttpResponse response) {

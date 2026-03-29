@@ -48,6 +48,9 @@ public class AuthenticationError extends RuntimeException {
     public static AuthenticationError otpRateLimited() {
         return new AuthenticationError("otp_rate_limited", "Too many requests, please wait before requesting a new code", HttpStatus.TOO_MANY_REQUESTS);
     }
+    public static AuthenticationError emailDeliveryFailed() {
+        return new AuthenticationError("email_delivery_failed", "Something went wrong while sending the verification email, please try again later", HttpStatus.SERVICE_UNAVAILABLE);
+    }
     public static AuthenticationError onboardingIncomplete(String nextStep) {
         return new AuthenticationError("onboarding_incomplete", nextStep, HttpStatus.FORBIDDEN);
     }
