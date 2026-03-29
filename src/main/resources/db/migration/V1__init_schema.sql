@@ -87,3 +87,12 @@ CREATE TABLE otp_codes (
 
 CREATE INDEX idx_otp_codes_user_id ON otp_codes(user_id);
 CREATE INDEX idx_otp_codes_email_created ON otp_codes(email, created_at);
+
+CREATE TABLE user_profiles (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    full_name   VARCHAR(255) NOT NULL,
+    age         INTEGER NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);

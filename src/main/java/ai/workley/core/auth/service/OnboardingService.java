@@ -18,12 +18,6 @@ public class OnboardingService {
         this.onboardingStepRepository = onboardingStepRepository;
     }
 
-    public Mono<Boolean> isStepCompleted(UUID userId, OnboardingStepType step) {
-        return onboardingStepRepository.findByUserIdAndStepName(userId, step.name())
-                .map(OnboardingStepEntity::isCompleted)
-                .defaultIfEmpty(false);
-    }
-
     public Mono<Boolean> isFullyOnboarded(UUID userId) {
         return findIncompleteSteps(userId)
                 .hasElements()

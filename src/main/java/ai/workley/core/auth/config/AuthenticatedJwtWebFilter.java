@@ -23,12 +23,12 @@ import java.util.Optional;
 public class AuthenticatedJwtWebFilter implements WebFilter {
     private final AuthenticationService authenticationService;
     private final AuthenticationJwtSecret jwtSecret;
-    private final AuthenticationCookieProperties cookieProperties;
+    private final CookieProperties cookieProperties;
 
     public AuthenticatedJwtWebFilter(
             AuthenticationService authenticationService,
             AuthenticationJwtSecret jwtSecret,
-            AuthenticationCookieProperties cookieProperties
+            CookieProperties cookieProperties
     ) {
         this.jwtSecret = jwtSecret;
         this.cookieProperties = cookieProperties;

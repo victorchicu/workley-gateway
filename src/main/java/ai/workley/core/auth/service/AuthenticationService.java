@@ -1,6 +1,6 @@
 package ai.workley.core.auth.service;
 
-import ai.workley.core.auth.config.AuthenticationCookieProperties;
+import ai.workley.core.auth.config.CookieProperties;
 import ai.workley.core.auth.config.AuthenticationJwtSecret;
 import ai.workley.core.auth.model.AuthenticationError;
 import ai.workley.core.auth.model.AuthenticationResponse;
@@ -46,7 +46,7 @@ public class AuthenticationService {
     private final SendGridEmailService sendGridEmailService;
     private final AuthenticationJwtSecret jwtSecret;
     private final R2dbcRefreshTokenRepository refreshTokenRepository;
-    private final AuthenticationCookieProperties cookieProperties;
+    private final CookieProperties cookieProperties;
 
     public AuthenticationService(
             OtpService otpService,
@@ -56,7 +56,7 @@ public class AuthenticationService {
             SendGridEmailService sendGridEmailService,
             AuthenticationJwtSecret jwtSecret,
             R2dbcRefreshTokenRepository refreshTokenRepository,
-            AuthenticationCookieProperties cookieProperties
+            CookieProperties cookieProperties
     ) {
         this.jwtSecret = jwtSecret;
         this.otpService = otpService;
